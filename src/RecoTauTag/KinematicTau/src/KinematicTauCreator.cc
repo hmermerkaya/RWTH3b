@@ -1,8 +1,15 @@
 #include "RecoTauTag/KinematicTau/KinematicTauCreator.h"
 
-KinematicTauCreator::KinematicTauCreator(const edm::ParameterSet& iConfig, const edm::ParameterSet& cfg)
+
+KinematicTauCreator::KinematicTauCreator()
 {
-    
+    kcvFitter = KinematicConstrainedVertexFitter();
+}
+
+KinematicTauCreator::KinematicTauCreator(const edm::ParameterSet& cfg)
+{
+    kcvFitter = KinematicConstrainedVertexFitter();
+    kcvFitter.setParameters(cfg);
 }
 
 KinematicTauCreator::~KinematicTauCreator()

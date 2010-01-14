@@ -1,19 +1,24 @@
 //
 // Original Author:  Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id$
+// $Id: KinematicTauCreator.h,v 1.1 2010/01/14 10:37:17 sauerlan Exp $
 //
 //
 
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+
+#include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
 
 
 class KinematicTauCreator
 {
 public:
-    explicit KinematicTauCreator(const edm::ParameterSet& cfg=0);
+    KinematicTauCreator();
+    KinematicTauCreator(const edm::ParameterSet& cfg);
     ~KinematicTauCreator();
         
 protected:
