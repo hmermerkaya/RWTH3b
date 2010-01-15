@@ -12,17 +12,18 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 
 
 class KinematicTauCreator
 {
 public:
-    KinematicTauCreator();
-    KinematicTauCreator(const edm::ParameterSet& cfg);
+    KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder);
+    KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg);
     virtual ~KinematicTauCreator();
         
 protected:
-    virtual int create(const reco::Vertex& primvtx_, const std::vector<reco::TrackRef>& inputTracks);
+    virtual int create(const reco::Vertex& primvtx_, const std::vector<reco::TrackRef>& inputTracks) = 0;
     reco::PFTau getPFTau();
     std::vector<math::XYZTLorentzVector> getRefittedChargedHadrons();
     RefCountedKinematicTree getKinematicTree();
@@ -33,4 +34,5 @@ protected:
     RefCountedKinematicTree kinTree_;
     int iterations_;
     float csum_;
+	TransientTrackBuilder transTrackBuilder_;
 };
