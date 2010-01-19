@@ -53,6 +53,12 @@ std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedHadr
     return tmpvec;
 }
 
+std::vector<reco::TrackRef> KinematicTauCreator::getSelectedTracks()
+{
+    return selectedTracks_;
+}
+
+
 RefCountedKinematicTree KinematicTauCreator::getKinematicTree()
 {
     return kinTree_;
