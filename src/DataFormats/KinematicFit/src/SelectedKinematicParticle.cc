@@ -9,7 +9,7 @@ SelectedKinematicParticle::SelectedKinematicParticle() {
     kinmatrix__.ResizeTo(TMatrixDSym(7));
     input_kinmatrix__.ResizeTo(TMatrixDSym(7));
 }
-SelectedKinematicParticle::SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::PFCandidateRef PFCandRef_, const int ambiguity_ = 0, const int status_ = 0) {
+SelectedKinematicParticle::SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef CandRef_, const int ambiguity_ = 0, const int status_ = 0) {
     status__ = status_;
     matched__ = -1;
     iterations__ = iterations_;
@@ -32,9 +32,9 @@ SelectedKinematicParticle::SelectedKinematicParticle(const TVectorT<double> kinp
 	kinmatrix__ = kinmatrix_;
     input_kinmatrix__.ResizeTo(TMatrixDSym(7));
     
-    PFCandRef__ = PFCandRef_;
+    CandRef__ = CandRef_;
 }
-SelectedKinematicParticle::SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const TVectorT<double> input_kinparm_, const TMatrixDSym input_kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::PFCandidateRef PFCandRef_, const int ambiguity_ = 0, const int status_ = 0){
+SelectedKinematicParticle::SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const TVectorT<double> input_kinparm_, const TMatrixDSym input_kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef CandRef_, const int ambiguity_ = 0, const int status_ = 0){
     status__ = status_;
     matched__ = -1;
     iterations__ = iterations_;
@@ -59,9 +59,9 @@ SelectedKinematicParticle::SelectedKinematicParticle(const TVectorT<double> kinp
     input_kinmatrix__.ResizeTo(TMatrixDSym(7));
     input_kinmatrix__ = input_kinmatrix_;
     
-    PFCandRef__ = PFCandRef_;    
+    CandRef__ = CandRef_;    
 }
-SelectedKinematicParticle::SelectedKinematicParticle(const RefCountedKinematicParticle kinparticle_, const std::string name_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::PFCandidateRef PFCandRef_, const int ambiguity_, const int status_){
+SelectedKinematicParticle::SelectedKinematicParticle(const RefCountedKinematicParticle kinparticle_, const std::string name_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef CandRef_, const int ambiguity_, const int status_){
     status__ = status_;
     matched__ = -1;
     iterations__ = iterations_;
@@ -86,7 +86,7 @@ SelectedKinematicParticle::SelectedKinematicParticle(const RefCountedKinematicPa
     input_kinmatrix__.ResizeTo(TMatrixDSym(7));
     input_kinmatrix__ = convertMatrix((kinparticle_->initialState()).kinematicParametersError().matrix());
     
-    PFCandRef__ = PFCandRef_;    
+    CandRef__ = CandRef_;    
     
 }
 int SelectedKinematicParticle::status() const {
@@ -134,11 +134,11 @@ TMatrixDSym SelectedKinematicParticle::matrix() const {
 TMatrixDSym SelectedKinematicParticle::input_matrix() const {
     return input_kinmatrix__;
 }
-reco::PFCandidateRef SelectedKinematicParticle::PFCandRef() const {
-    return PFCandRef__;
+reco::RecoChargedCandidateRef SelectedKinematicParticle::candRef() const {
+    return CandRef__;
 }
-void SelectedKinematicParticle::setPFCandRef(const reco::PFCandidateRef parm){
-	PFCandRef__ = parm;
+void SelectedKinematicParticle::setCandRef(const reco::RecoChargedCandidateRef parm){
+	CandRef__ = parm;
 }
 
 TVectorT<double> SelectedKinematicParticle::convertVector( const AlgebraicVector7 vector ) {
@@ -176,15 +176,15 @@ void SelectedKinematicParticle::setMatched(const int parm) {
 }
 
 //initial tau state consists of used primVtx (including errors) and the pfTau parameters
-void SelectedKinematicParticle::setInitialTauState(const reco::PFTauRef & tauRef, const reco::Vertex & primVtx) {
+void SelectedKinematicParticle::setInitialTauState(const TLorentzVector & tau, const reco::Vertex & primVtx) {
     input_kinparm__.ResizeTo(7);
 	input_kinparm__[0] = primVtx.x();
 	input_kinparm__[1] = primVtx.y();
 	input_kinparm__[2] = primVtx.z();
-	input_kinparm__[3] = tauRef->px();
-	input_kinparm__[4] = tauRef->py();
-	input_kinparm__[5] = tauRef->pz();
-	input_kinparm__[6] = 1.777;
+	input_kinparm__[3] = tau.Px();
+	input_kinparm__[4] = tau.Py();
+	input_kinparm__[5] = tau.Pz();
+	input_kinparm__[6] = tau.M();
 
 	input_kinmatrix__.ResizeTo(TMatrixDSym(7));
 	for (int i = 0; i < 3; i++)	for (int j = 0; j < 3; j++)	input_kinmatrix__[i][j] = primVtx.covariance(i,j);

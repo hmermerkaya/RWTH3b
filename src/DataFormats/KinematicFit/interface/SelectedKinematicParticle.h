@@ -14,14 +14,16 @@
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 #include "RecoVertex/KinematicFitPrimitives/interface/RefCountedKinematicParticle.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 
 
 class SelectedKinematicParticle {
 public:
 	SelectedKinematicParticle();
-	SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::PFCandidateRef trackref_, const int ambiguity_, const int status_);
-	SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const TVectorT<double> input_kinparm_, const TMatrixDSym input_kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::PFCandidateRef trackref_, const int ambiguity_, const int status_);
-    SelectedKinematicParticle(const RefCountedKinematicParticle kinparticle_, const std::string name_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::PFCandidateRef trackref_, const int ambiguity_, const int status_);
+	SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef trackref_, const int ambiguity_, const int status_);
+	SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const TVectorT<double> input_kinparm_, const TMatrixDSym input_kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef trackref_, const int ambiguity_, const int status_);
+    SelectedKinematicParticle(const RefCountedKinematicParticle kinparticle_, const std::string name_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef trackref_, const int ambiguity_, const int status_);
 
     int status() const;
     int matched() const;
@@ -43,14 +45,14 @@ public:
 	TMatrixDSym matrix() const;
 	TMatrixDSym input_matrix() const;
     
-	reco::PFCandidateRef PFCandRef() const;
-	void setPFCandRef(const reco::PFCandidateRef parm);
+	reco::RecoChargedCandidateRef candRef() const;
+	void setCandRef(const reco::RecoChargedCandidateRef parm);
     
     TLorentzVector p4() const;
 	TVector3 vertex() const;
     
 	void setMatched(const int parm);
-	void setInitialTauState(const reco::PFTauRef & tauRef, const reco::Vertex & primVtx);//initial tau state consists of used primVtx (including errors) and the pfTau parameters
+	void setInitialTauState(const TLorentzVector & tau, const reco::Vertex & primVtx);//initial tau state consists of used primVtx (including errors) and the visible tau parameters
 	
 private:
     int status__; //
@@ -73,7 +75,7 @@ private:
 	TMatrixDSym kinmatrix__; //
 	TMatrixDSym input_kinmatrix__; //
     
-    reco::PFCandidateRef PFCandRef__; //
+    reco::RecoChargedCandidateRef CandRef__; //
     
     TVectorT<double> convertVector( const AlgebraicVector7 vector );
     TMatrixDSym convertMatrix( const AlgebraicSymMatrix77 matrix );
