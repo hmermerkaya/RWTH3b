@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id$
+// $Id: KinematicTauProducer.h,v 1.2 2010/01/15 17:15:46 perchall Exp $
 //
 //
 
@@ -31,6 +31,15 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+
+#include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicParticle.h"//own class of tauGroup to store fitted particles in event stream
+#include "DataFormats/KinematicFit/interface/TrackFwd.h"
+#include "DataFormats/KinematicFit/interface/PFTauFwd.h"
+
+
 class KinematicTauProducer : public edm::EDFilter {
 public:
 	typedef std::vector<SelectedKinematicParticleCollection> KinematicCollection;
@@ -42,7 +51,19 @@ private:
 	virtual bool filter(edm::Event&, const edm::EventSetup&);
 	virtual void endJob();
 	
-	bool checkPrimVtx(reco::Vertex &primVtx);	
-
-
+	bool select(KinematicCollection & refitParticles, const reco::Vertex & primVtx, InputTauCollection & PFTauRef, reco::PFCandidateCollection & PFDaughters);
+//	int addRefittedParticles(const int &ambiguityCnt, RefCountedKinematicTree tree, KinematicConstrainedVertexFitter* kcvFitter, KinematicCollection &refitParticles, reco::PFTauRef &tauRef, const reco::Vertex &primVtx);
+//	void correctReferences(KinematicCollection & selected, edm::OrphanHandle<reco::PFCandidateCollection> & orphanPFCands);
+	bool combineHiggs(reco::Vertex & primVtx, SelectedKinematicParticleCollection & selectedHiggs);
+	
+	const edm::ParameterSet& iConfig_;
+	edm::Event * iEvent_;
+	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
+	
+	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
+	int verbosity_;
+	unsigned int cnt_, cntFound_;
+	
+	std::vector<RefCountedKinematicTree> *tauM_, *tauP_;
+	
 };

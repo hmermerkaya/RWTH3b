@@ -4,19 +4,23 @@
 KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder):
 transTrackBuilder_(transTrackBuilder)
 {
-    kcvFitter_ = KinematicConstrainedVertexFitter();
+    kcvFitter_ = new KinematicConstrainedVertexFitter();
+	iterations_ = -1000;
+	csum_ =-1000.;
 }
 
 KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):
 transTrackBuilder_(transTrackBuilder)
 {
-    kcvFitter_ = KinematicConstrainedVertexFitter();
-    kcvFitter_.setParameters(cfg);
+    kcvFitter_ = new KinematicConstrainedVertexFitter();
+    kcvFitter_->setParameters(cfg);
+	iterations_ = -1000;
+	csum_ =-1000.;
 }
 
 KinematicTauCreator::~KinematicTauCreator()
 {
-    
+    delete kcvFitter_;
 }
 
 reco::PFTau KinematicTauCreator::getPFTau()

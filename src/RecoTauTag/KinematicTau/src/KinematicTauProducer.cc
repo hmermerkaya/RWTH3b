@@ -12,6 +12,7 @@ verbosity_( iConfig.getUntrackedParameter("verbosity", 0) )
 	produces<KinematicCollection>("SelectedKinematicParticles");
 	produces<SelectedKinematicParticleCollection>("SelectedKinematicHiggs");//refit higgs from tau pairs
 	produces<reco::PFCandidateCollection>("PFDaughters");
+
 	//SelectedKinematicParticle = 1 refitted particle
 	//vector<SelectedKinematicParticle> = all particles from 1 tau decay (i.e tau->3pi+nu) starting with mother
 	//vector<vector<SelectedKinematicParticle> > = several tau decays or ambiguity
@@ -24,8 +25,8 @@ KinematicTauProducer::~KinematicTauProducer(){
 
 
 // ------------ method called on each new Event  ------------
-bool KinTauCreator::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
-	cnt++;
+bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
+	cnt_++;
 	iEvent_ = &iEvent;
 	
 	std::auto_ptr<KinematicCollection> selected_ = std::auto_ptr<KinematicCollection >(new KinematicCollection);
@@ -36,19 +37,20 @@ bool KinTauCreator::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	reco::PFCandidateCollection & PFDaughters = * PFDaughters_;
 	
 	iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
-	iSetup.get<IdealMagneticFieldRecord>().get("",magneticField_);
 	
 	tauM_ = new std::vector<RefCountedKinematicTree>;
 	tauP_ = new std::vector<RefCountedKinematicTree>;
 	
 	bool filterValue;
-	reco::Vertex primVtx;
-	if(!checkPrimVtx(primVtx)) filterValue = false;
-	else filterValue = select(selected, primVtx, PFTauRef, PFDaughters);
-	
+	edm::Handle<reco::VertexCollection> primVtxs;
+	iEvent_->getByLabel( primVtx_, primVtxs);
+	if(primVtxs->size()<1) return false;
+	const reco::Vertex primVtx = primVtxs->front();
+	filterValue = select(selected, primVtx, PFTauRef, PFDaughters);
+
 	iEvent_->put(PFTauRef_,"usedTauRefs");
 	edm::OrphanHandle<reco::PFCandidateCollection> orphanPFCands = iEvent_->put(PFDaughters_,"PFDaughters");
-	correctReferences(selected, orphanPFCands);//has to be called before put(selected_,"SelectedKinematicParticles")!!!
+//	correctReferences(selected, orphanPFCands);//has to be called before put(selected_,"SelectedKinematicParticles")!!!
 	iEvent_->put(selected_,"SelectedKinematicParticles");
 	
 	std::auto_ptr<int> flagPtr = std::auto_ptr<int>(new int);
@@ -70,19 +72,19 @@ bool KinTauCreator::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	return filterValue;
 }
 // ------------ method called once each job just before starting event loop  ------------
-void KinTauCreator::beginJob(){
-	cnt = 0;
-	cntFound = 0;
+void KinematicTauProducer::beginJob(){
+	cnt_ = 0;
+	cntFound_ = 0;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void KinTauCreator::endJob(){
+void KinematicTauProducer::endJob(){
 	float ratio = 0.0;
-	if(cnt!=0) ratio=(float)cntFound/cnt;
-	std::cout<<"=- KinTauCreator:: asked for >=2 kinTaus per event. efficiency = "<<ratio<<" ("<<cntFound<<"/"<<cnt<<")"<<std::endl;
+	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
+	std::cout<<"=- KinematicTauProducer:: asked for >=1 kinTaus per event. efficiency = "<<ratio<<" ("<<cntFound_<<"/"<<cnt_<<")"<<std::endl;
 }
 
-bool KinTauCreator::select(KinematicCollection & refitParticles, const reco::Vertex & primaryVtx, InputTauCollection & PFTauRef, reco::PFCandidateCollection & PFDaughters){
+bool KinematicTauProducer::select(KinematicCollection & refitParticles, const reco::Vertex & primaryVtx, InputTauCollection & PFTauRef, reco::PFCandidateCollection & PFDaughters){
 	bool fullyDetermined = false;
 	std::vector<bool> ambiguity;
 	
@@ -91,73 +93,42 @@ bool KinTauCreator::select(KinematicCollection & refitParticles, const reco::Ver
 	edm::Handle<InputTauCollection> usedTaus;
 	iEvent_->getByLabel(usedTauCandidatesTag_, usedTaus);
 	if(inputCollection->size() != usedTaus->size()){
-		std::cout<<"KinTauCreator::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<usedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")"<<std::endl;
+		std::cout<<"KinematicTauProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<usedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")"<<std::endl;
 		return false;
 	}
 	unsigned int index = 0;
+	TransientTrackBuilder trkBuilder = *transTrackBuilder_;
+	KinematicTauCreator *kinTauCrtr = new ThreeProngTauCreator(trkBuilder, iConfig_);
+	unsigned int cntValid = 0;
 	for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
-		reco::Vertex primVtx = primaryVtx;//as pv may be modified for one tau the next one should start from original pv
-		std::vector<RefCountedKinematicParticle> *pions = new std::vector<RefCountedKinematicParticle>;//3 particles (3pi)
-		std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>;//1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
-		
 		//		reco::PFTauRef thePFTau(usedTaus, index);//ref auf ref?
 		reco::PFTauRef thePFTau = usedTaus->at(index);
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
-		if(!createStartScenario(input, *pions, *neutrinos, primVtx)) continue;
-		if(neutrinos->size() == 2) ambiguity.push_back(true);
-		else ambiguity.push_back(false);
-		//		if(verbosity_>=2) printf("evt %d KinTauCreator::select: found %d pis and %d nus.\n", iEvent_->id().event(), pions->size(), neutrinos->size());
-		if (pions->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2)){
-			if(verbosity_>=1) printf("evt %d KinTauCreator::select: wrong daughter size. found %d pis and %d nus. Skip this tauCand\n", iEvent_->id().event(), pions->size(), neutrinos->size());
-			continue;
-		}
-		pions->push_back(neutrinos->at(0));
-		int ambiguityCnt = 0;
-		bool atLeastOneSolutionWasUsed = false;
-		if(neutrinos->size()==2) ambiguityCnt++;
-		if(kinematicRefit(ambiguityCnt, *pions, primVtx, refitParticles, thePFTau)) atLeastOneSolutionWasUsed = true;
-		pions->pop_back();//delete first neutrino solution
-		if (neutrinos->size()==2){//if ambiguity
-			if(atLeastOneSolutionWasUsed) ambiguityCnt++;//do not count amb if first fit did not work
-			pions->push_back(neutrinos->at(1));
-			if(kinematicRefit(ambiguityCnt, *pions, primVtx, refitParticles, thePFTau)) atLeastOneSolutionWasUsed = true;
-			pions->pop_back();
-		}
-		if(atLeastOneSolutionWasUsed){
-			PFTauRef.push_back(thePFTau);
-			//save three used PFCandidates for matching issues
-			const reco::PFCandidateRefVector & 	cands = thePFTau->signalPFChargedHadrCands();//cand in signal cone 
-			for (reco::PFCandidateRefVector::const_iterator daughter = cands.begin(); daughter!=cands.end(); ++daughter){
-				for (std::vector<reco::TrackRef>::iterator track = input.begin(); track!=input.end(); ++track){
-					if(daughter->get()->trackRef().isNonnull() && daughter->get()->trackRef() == *track)
-						PFDaughters.push_back(*(daughter->get()));
-				}
-			}
-			if(PFDaughters.size()!=input.size()*PFTauRef.size()){
-				printf("evt %d KinTauCreator::select:ERROR: only %i tau daughter(s) found. Skip event.\n", iEvent_->id().event(), PFDaughters.size());
-				return false;
-			}
-		}
-		
-		delete pions;
-		delete neutrinos;
+		int fitStatus = kinTauCrtr->create(primaryVtx, input);
+		if(fitStatus==1) cntValid++;
+		reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
+		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedHadrons();
+		RefCountedKinematicTree refitTree = kinTauCrtr->getKinematicTree();
+//		int iterations = kinTauCrtr->iterations();
+//		float csum = kinTauCrtr->csum();
 	}
+	if(cntValid>0) cntFound_++;//found at least one refit tau
 	
-	int cntDoubleTaus = 0;
-	for (std::vector<bool>::iterator iter=ambiguity.begin(); iter!=ambiguity.end(); ++iter) {
-		if(*iter) cntDoubleTaus++;
-	}
-	if(refitParticles.size() - cntDoubleTaus >= 2){
-		cntFound++;
-		fullyDetermined = true;
-		if(verbosity_>=2) printf("evt %d KinTauCreator::select: %d kinematic tau(s) reconstructed with %d ambiguities.\n", iEvent_->id().event(), refitParticles.size(), cntDoubleTaus);
-	}else printf("evt %d KinTauCreator::select:Warning: only %d kinematic tau(s) reconstructed with %d ambiguities. Skip Evt.\n", iEvent_->id().event(), refitParticles.size(), cntDoubleTaus);
+//	int cntDoubleTaus = 0;
+//	for (std::vector<bool>::iterator iter=ambiguity.begin(); iter!=ambiguity.end(); ++iter) {
+//		if(*iter) cntDoubleTaus++;
+//	}
+//	if(refitParticles.size() - cntDoubleTaus >= 2){
+//		cntFound_++;
+//		fullyDetermined = true;
+//		if(verbosity_>=2) printf("evt %d KinematicTauProducer::select: %d kinematic tau(s) reconstructed with %d ambiguities.\n", iEvent_->id().event(), refitParticles.size(), cntDoubleTaus);
+//	}else printf("evt %d KinematicTauProducer::select:Warning: only %d kinematic tau(s) reconstructed with %d ambiguities. Skip Evt.\n", iEvent_->id().event(), refitParticles.size(), cntDoubleTaus);
 	
 	return fullyDetermined;
 }
 
-int ThreeProngTauCreator::addRefittedParticles(const int &ambiguityCnt, RefCountedKinematicTree tree, KinematicConstrainedVertexFitter* kcvFitter, KinematicCollection &refitParticles, reco::PFTauRef &tauRef, const reco::Vertex &primVtx){
+/*int ThreeProngTauCreator::addRefittedParticles(const int &ambiguityCnt, RefCountedKinematicTree tree, KinematicConstrainedVertexFitter* kcvFitter, KinematicCollection &refitParticles, reco::PFTauRef &tauRef, const reco::Vertex &primVtx){
 	try{
 		tree->movePointerToTheTop();
 	}catch(VertexException){
@@ -239,24 +210,6 @@ void ThreeProngTauCreator::correctReferences(KinematicCollection & selected, edm
 		}
 	}
 }
-bool ThreeProngTauCreator::checkPrimVtx(reco::Vertex &primVtx){//already checked in other module
-	edm::Handle<reco::VertexCollection> primVtxs;
-	iEvent_->getByLabel( primVtx_, primVtxs);
-	
-	std::vector<const reco::Vertex*> *vtx = new std::vector<const reco::Vertex*>;
-	for(reco::VertexCollection::const_iterator v = primVtxs->begin(); v != primVtxs->end(); ++v){
-		//printf("primVtx: chi2=%f, ndof=%f", v->chi2(), v->ndof());
-		if(v->tracksSize() >= 3 && v->normalizedChi2() < 10.0) vtx->push_back(&*v);
-		if(verbosity_>=1) if(primVtxs->size() > 1) printf("ThreeProngTauCreator::checkPrimVtx: #trks %3d, chi2 %9.6f, ndf %5.3f, (%8.6f, %8.6f, %8.6f)+-(%8.6f, %8.6f, %8.6f)\n", v->tracksSize(), v->chi2(), v->ndof(), v->x(), v->y(), v->z(), v->xError(), v->yError(), v->zError() );
-	}
-	
-	if(vtx->size()<1){
-		printf("ThreeProngTauCreator::checkPrimVtx: No valid primary vertex found. Skip event.\n", iEvent_->id().event());
-		return false;
-	}
-	if(vtx->size()>1)	sort(vtx->begin(), vtx->end(), cmpChi2<const reco::Vertex*>);
-	primVtx = *(vtx->at(0));
-	return true;
-}
+ */
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauProducer);

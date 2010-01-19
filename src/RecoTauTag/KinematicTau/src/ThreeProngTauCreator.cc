@@ -2,6 +2,7 @@
 
 
 int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks){
+	verbosity_ = 0;
 	std::vector<RefCountedKinematicParticle> *pions = new std::vector<RefCountedKinematicParticle>;//3 particles (3pi)
 	std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>;//1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
 	std::vector<reco::TrackRef> input = inputTracks;
@@ -15,6 +16,7 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 	//in this version createStartScenario always rotates up to thetaMax so that there is always only one solution
 	pions->push_back(neutrinos->at(0));
 
+	
 	bool fitWorked = kinematicRefit(*pions, primVtx);
 	delete pions;
 	delete neutrinos;
@@ -159,12 +161,12 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	GlobalPoint vtxGuess = unfitDaughters[3]->currentState().globalPosition();//nu was created at common/corrected vertex of pions
 
 	try{
-		kinTree_ = kcvFitter_.fit(unfitDaughters, combiC, &vtxGuess);
+		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC, &vtxGuess);
 	}catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
 		std::cout<<"VertexException. Skip tauCand."<<std::endl;
 		return false;
 	}
-	
+
 	delete combiC;
 	delete pointing_c;
 	delete primPoint;

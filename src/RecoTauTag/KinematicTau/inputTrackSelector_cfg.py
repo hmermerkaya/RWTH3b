@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("InputTrackSelectorVBFH")
+process = cms.Process("InputTrackSelector")
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 #process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
@@ -29,8 +29,8 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
-process.load("HiggsKinTau.InputTrackSelector.InputTrackSelector_cfi")
-process.InputTrackSelectorVBFH.verbosity = cms.untracked.int32(verbosity)
+process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
+process.InputTrackSelector.verbosity = cms.untracked.int32(verbosity)
 
 #process.p = cms.Path(process.tauSelectorSeq)
-process.p = cms.Path(process.InputTrackSelectorVBFH)
+process.p = cms.Path(process.InputTrackSelector)

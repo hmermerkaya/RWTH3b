@@ -17,8 +17,8 @@
 class ThreeProngTauCreator : public KinematicTauCreator
 {
 public:
-	ThreeProngTauCreator(const TransientTrackBuilder & transTrackBuilder):KinematicTauCreator(transTrackBuilder){}
-    ThreeProngTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):KinematicTauCreator(transTrackBuilder, cfg){}
+	explicit ThreeProngTauCreator(const TransientTrackBuilder & transTrackBuilder):KinematicTauCreator(transTrackBuilder){}
+    explicit ThreeProngTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):KinematicTauCreator(transTrackBuilder, cfg){}
 
 private:
     virtual int create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks);

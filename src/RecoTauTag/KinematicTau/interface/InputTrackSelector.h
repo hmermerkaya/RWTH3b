@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.1 2009/12/21 11:10:11 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.1 2010/01/14 11:03:20 sauerlan Exp $
 //
 //
 
@@ -53,7 +53,6 @@ private:
 	reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
 	
 	edm::Event * iEvent_;
-
 	edm::InputTag inputCollectionTag_, primVtx_;
 	int verbosity_;
 	unsigned int cnt_, cntFound_;
