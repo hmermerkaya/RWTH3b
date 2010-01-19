@@ -72,7 +72,7 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 		cntFound_++;
 		found = true;
 		if(verbosity_>=2) printf("evt %d InputTrackSelector::select: %d tau candidate(s) reconstructed.\n", iEvent_->id().event(), selected.size());
-	}else if(verbosity_>=2) printf("evt %d InputTrackSelector::select:Warning: only %d tau candidate(s) reconstructed. Skip Evt.\n", iEvent_->id().event(), selected.size());
+	}else if(verbosity_>=1) printf("evt %d InputTrackSelector::select:Warning: only %d tau candidate(s) reconstructed. Skip Evt.\n", iEvent_->id().event(), selected.size());
 
 	return found;
 }
