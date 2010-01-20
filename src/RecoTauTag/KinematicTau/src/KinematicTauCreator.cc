@@ -5,8 +5,6 @@ KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrac
 transTrackBuilder_(transTrackBuilder)
 {
     kcvFitter_ = new KinematicConstrainedVertexFitter();
-	iterations_ = -1000;
-	csum_ =-1000.;
 }
 
 KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):
@@ -14,8 +12,6 @@ transTrackBuilder_(transTrackBuilder)
 {
     kcvFitter_ = new KinematicConstrainedVertexFitter();
     kcvFitter_->setParameters(cfg);
-	iterations_ = -1000;
-	csum_ =-1000.;
 }
 
 KinematicTauCreator::~KinematicTauCreator()
@@ -62,14 +58,4 @@ std::vector<reco::TrackRef> KinematicTauCreator::getSelectedTracks()
 RefCountedKinematicTree KinematicTauCreator::getKinematicTree()
 {
     return kinTree_;
-}
-
-int KinematicTauCreator::iterations()
-{
-    return iterations_;
-}
-
-float KinematicTauCreator::csum()
-{
-    return csum_;
 }
