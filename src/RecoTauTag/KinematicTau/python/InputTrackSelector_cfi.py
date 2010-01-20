@@ -20,8 +20,7 @@ pfTauSelector = cms.EDFilter("PFTauSelector",
 )
 
 InputTrackSelector = cms.EDFilter("InputTrackSelector",#creates PFTauRefVector and collection of vector<reco::TrackRefVector> for each tau cand
-	tauCandidates = cms.InputTag(pfTau+"PFTauProducer"),
-	verbosity = cms.untracked.int32(2)
+	tauCandidates = cms.InputTag(pfTau+"PFTauProducer")
 )
 
 tauSelectorSeq = cms.Sequence(

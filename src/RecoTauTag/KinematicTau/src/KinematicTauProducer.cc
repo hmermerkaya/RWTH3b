@@ -4,8 +4,7 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
 iConfig_(iConfig),
 primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
 usedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "usedTauCandidates" ) ),
-inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) ),
-verbosity_( iConfig.getUntrackedParameter("verbosity", 0) )
+inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) )
 {
 	produces<int>("kinTauCreatorFlag");//0=invalid, 1=valid
 	produces<InputTauCollection>("usedTauRefs");//needed to fill in unfit KinematicParticle later on
@@ -110,6 +109,7 @@ bool KinematicTauProducer::select(KinematicCollection & refitParticles, const re
 		reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
 		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedHadrons();
 		RefCountedKinematicTree refitTree = kinTauCrtr->getKinematicTree();
+		std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
 //		int iterations = kinTauCrtr->iterations();
 //		float csum = kinTauCrtr->csum();
 	}

@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.2 2010/01/15 17:15:46 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.3 2010/01/19 09:27:22 perchall Exp $
 //
 //
 
@@ -61,7 +61,6 @@ private:
 	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 	
 	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
-	int verbosity_;
 	unsigned int cnt_, cntFound_;
 	
 	std::vector<RefCountedKinematicTree> *tauM_, *tauP_;

@@ -4,12 +4,19 @@ process = cms.Process("KinTauCreator")
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 #process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
-process.load("HiggsKinTau.FnlAnlzr.MessageLogger_cfi")
+process.load("FWCore.MessageLogger.MessageLogger_cfi")
+process.MessageLogger.categories.append('KinematicTauCreator')
+process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTauProducer','InputTrackSelector')
+process.MessageLogger.cerr = cms.untracked.PSet(
+    threshold = cms.untracked.string('DEBUG'),
+	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+	KinematicTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(-1))
+)
 
 ###############
-#lp parameters#
 numberOfEvents = 10
-verbosity = 2
+
 ###############
 if numberOfEvents == -1:
 	numberOfEvents = 10000
@@ -30,11 +37,8 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 process.load("HiggsKinTau.PrimVtxSelector.PrimVtxSelector_cfi")
-process.PrimVtxSelectorVBFH.verbosity = cms.untracked.int32(verbosity)
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
-process.InputTrackSelector.verbosity = cms.untracked.int32(verbosity)
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
-process.KinematicTauProducer.verbosity = cms.untracked.int32(verbosity)
 
 #process.p = cms.Path(process.tauSelectorSeq)
 process.p = cms.Path(process.PrimVtxSelectorVBFH*process.InputTrackSelector*process.KinematicTauProducer)

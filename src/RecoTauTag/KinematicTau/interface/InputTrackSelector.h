@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.1 2010/01/14 11:03:20 sauerlan Exp $
+// $Id: InputTrackSelector.h,v 1.2 2010/01/19 09:27:22 perchall Exp $
 //
 //
 
@@ -38,6 +38,8 @@
 #include "DataFormats/KinematicFit/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/PFTauFwd.h"
 
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+
 
 class InputTrackSelector : public edm::EDFilter {
 public:
@@ -54,7 +56,6 @@ private:
 	
 	edm::Event * iEvent_;
 	edm::InputTag inputCollectionTag_, primVtx_;
-	int verbosity_;
 	unsigned int cnt_, cntFound_;
 
 };

@@ -1,8 +1,7 @@
 #include "../interface/InputTrackSelector.h"
 
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
-inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
-verbosity_( iConfig.getUntrackedParameter("verbosity", 0) )
+inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) )
 {
 	produces<int>("inputTracksFlag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
@@ -65,14 +64,14 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 			selected.push_back(tauDaughters);
 			
 			PFTauRef.push_back(thePFTau);
-		}else if(verbosity_>=2) printf("evt %d InputTrackSelector::select: only %d tau daughter(s) found. Skip tau candidate.\n", iEvent_->id().event(), tauDaughters.size());
+		}else LogTrace("KinematicTauCreator")<<"InputTrackSelector::select: only "<<tauDaughters.size()<<" tau daughter(s) found. Skip tau candidate.";
 	}
 	
 	if(selected.size()>0){
 		cntFound_++;
 		found = true;
-		if(verbosity_>=2) printf("evt %d InputTrackSelector::select: %d tau candidate(s) reconstructed.\n", iEvent_->id().event(), selected.size());
-	}else if(verbosity_>=1) printf("evt %d InputTrackSelector::select:Warning: only %d tau candidate(s) reconstructed. Skip Evt.\n", iEvent_->id().event(), selected.size());
+		LogTrace("KinematicTauCreator")<<"InputTrackSelector::select: "<<selected.size()<<" tau candidate(s) reconstructed.";
+	}else LogTrace("KinematicTauCreator")<<"InputTrackSelector::select:Warning: only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Evt.";
 
 	return found;
 }
@@ -112,12 +111,7 @@ bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter 
         ((*thePFTauDiscriminatorAgainstMuons)[tau] == 1 || (*thePFTauDiscriminatorAgainstElectrons)[tau] == 1)
         && ((*thePFTauDiscriminatorByIsolation)[tau] == 1 || (*thePFTauDiscriminatorByLeadingTrackPtCut)[tau] == 1)
        ) filter = true;
-	else if(verbosity_>=2) printf("evt %d InputTrackSelector::filterInput:Info: Bad tau discriminator (isolation = %d, minTrackPt = %d, electron veto = %d, muon veto = %d). Skip tauCand.\n", iEvent_->id().event(), (int)(*thePFTauDiscriminatorByIsolation)[tau], (int)(*thePFTauDiscriminatorByLeadingTrackPtCut)[tau], (int)(*thePFTauDiscriminatorAgainstElectrons)[tau], (int)(*thePFTauDiscriminatorAgainstMuons)[tau]);
-	
-//	if(verbosity_>=2)
-//		std::cout<<"PFDiscriminatorByIsolation value: "<<(*thePFTauDiscriminatorByIsolation)[tau] << std::endl
-//		<<"PFTau Electron Discriminant value: "<<(*thePFTauDiscriminatorAgainstElectrons)[tau] << std::endl
-//		<<"Pt of the PFTau "<<(*tau).pt() << std::endl;
+	else LogTrace("KinematicTauCreator")<<"InputTrackSelector::filterInput:Info: Bad tau discriminator (isolation = "<<(int)(*thePFTauDiscriminatorByIsolation)[tau]<<", minTrackPt = "<<(int)(*thePFTauDiscriminatorByLeadingTrackPtCut)[tau]<<", electron veto = "<<(int)(*thePFTauDiscriminatorAgainstElectrons)[tau]<<", muon veto = "<<(int)(*thePFTauDiscriminatorAgainstMuons)[tau]<<"). Skip tauCand.";
 	
 	return filter;
 }
@@ -126,7 +120,7 @@ reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau
 	const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands();//cand in signal cone 
 	//isolationPFChargedHadrCands stores tracks in isol/veto cone
 	for (reco::PFCandidateRefVector::const_iterator iter = cands.begin(); iter!=cands.end(); ++iter) {
-		if(verbosity_>=2) std::cout<<"PFTau daughter pt "<<iter->get()->pt()<<", eta "<<iter->get()->eta()<<", vtx("<<iter->get()->vx()<<","<<iter->get()->vy()<<","<<iter->get()->vz()<<")"<<std::endl;
+		LogTrace("KinematicTauCreator")<<"InputTrackSelector::getPFTauDaughters: PFTau daughter pt "<<iter->get()->pt()<<", eta "<<iter->get()->eta()<<", vtx("<<iter->get()->vx()<<","<<iter->get()->vy()<<","<<iter->get()->vz()<<")";
 		if(iter->get()->trackRef().isNonnull()) trkVct.push_back( (*iter)->trackRef() );
 	}
 	

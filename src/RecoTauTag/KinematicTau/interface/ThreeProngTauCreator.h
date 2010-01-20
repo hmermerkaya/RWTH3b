@@ -13,6 +13,7 @@
 #include "RecoVertex/KinematicFit/interface/CombinedKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
 
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 class ThreeProngTauCreator : public KinematicTauCreator
 {
@@ -36,7 +37,6 @@ private:
 	template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
 	
 	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
-	int verbosity_;
 	unsigned int cnt, cntFound;
 
 	
