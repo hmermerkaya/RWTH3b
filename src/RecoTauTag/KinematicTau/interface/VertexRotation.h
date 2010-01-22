@@ -1,3 +1,22 @@
+// -*- C++ -*-
+//
+// Package:    VertexRotation
+// Class:      VertexRotation
+// 
+/**
+ 
+ Description: tries to rotate vertex link to fit into kinematically allowd bounds of the GJ angle
+ 
+ Implementation:
+ <Notes on implementation>
+ */
+//
+// Original Author:  Lars Perchalla
+//         Created:  Thu Dec  16 11:12:54 CEST 2009
+// $Id: VertexRotation.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
+//
+//
+
 // system include files
 #include <memory>
 #include <fstream>

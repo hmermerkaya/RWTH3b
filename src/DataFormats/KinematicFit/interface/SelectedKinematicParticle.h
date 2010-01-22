@@ -1,5 +1,21 @@
 #ifndef DataFormats_KinematicFit_SelectedKinematicParticle_h
 #define DataFormats_KinematicFit_SelectedKinematicParticle_h
+// -*- C++ -*-
+//
+// Package:    SelectedKinematicParticle
+// Class:      SelectedKinematicParticle
+// 
+/**
+ 
+ Description: saves results from kinematically refit particles
+ 
+ Implementation:
+ <Notes on implementation>
+ */
+//
+// $Id: SelectedKinematicParticle.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
+//
+//
 
 
 #include <memory>

@@ -3,9 +3,9 @@
 // Package:    KinematicTauProducer
 // Class:      KinematicTauProducer
 // 
-/**\class KinematicTauProducer KinematicTauProducer.cc KinHiggs/KinematicTauProducer/src/KinematicTauProducer.cc
+/**\class KinematicTauProducer KinematicTauProducer.cc RecoTauTag/KinematicTau/src/KinematicTauProducer.cc
  
- Description: <one line class summary>
+ Description: test application of KinematicTauCreator
  
  Implementation:
  <Notes on implementation>
@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.3 2010/01/19 09:27:22 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
 //
 //
 
@@ -35,14 +35,16 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
-#include "DataFormats/KinematicFit/interface/SelectedKinematicParticle.h"//own class of tauGroup to store fitted particles in event stream
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"//own class of tauGroup to store fitted particles in event stream
 #include "DataFormats/KinematicFit/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/PFTauFwd.h"
+#include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 
 
 class KinematicTauProducer : public edm::EDFilter {
 public:
-	typedef std::vector<SelectedKinematicParticleCollection> KinematicCollection;
 	explicit KinematicTauProducer(const edm::ParameterSet&);
 	~KinematicTauProducer();
 	
@@ -51,10 +53,10 @@ private:
 	virtual bool filter(edm::Event&, const edm::EventSetup&);
 	virtual void endJob();
 	
-	bool select(KinematicCollection & refitParticles, const reco::Vertex & primVtx, InputTauCollection & PFTauRef, reco::PFCandidateCollection & PFDaughters);
-//	int addRefittedParticles(const int &ambiguityCnt, RefCountedKinematicTree tree, KinematicConstrainedVertexFitter* kcvFitter, KinematicCollection &refitParticles, reco::PFTauRef &tauRef, const reco::Vertex &primVtx);
-//	void correctReferences(KinematicCollection & selected, edm::OrphanHandle<reco::PFCandidateCollection> & orphanPFCands);
-	bool combineHiggs(reco::Vertex & primVtx, SelectedKinematicParticleCollection & selectedHiggs);
+	bool select(SelectedKinematicDecayCollection & refitDecays, const reco::Vertex & primaryVtx, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection);
+	void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
+	int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::Vertex &primVtx);
+	void correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
 	
 	const edm::ParameterSet& iConfig_;
 	edm::Event * iEvent_;
@@ -63,6 +65,8 @@ private:
 	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
 	unsigned int cnt_, cntFound_;
 	
-	std::vector<RefCountedKinematicTree> *tauM_, *tauP_;
-	
+	static std::string intToString(int f){
+		char s[32]; sprintf(s, "%d", f);
+		return std::string(s);
+	}	
 };

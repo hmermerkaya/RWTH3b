@@ -36,9 +36,9 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
-process.load("HiggsKinTau.PrimVtxSelector.PrimVtxSelector_cfi")
+process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 
 #process.p = cms.Path(process.tauSelectorSeq)
-process.p = cms.Path(process.PrimVtxSelectorVBFH*process.InputTrackSelector*process.KinematicTauProducer)
+process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.KinematicTauProducer)

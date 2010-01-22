@@ -62,7 +62,6 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 		reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
 		if(tauDaughters.size()>=3){//move this number into config file?
 			selected.push_back(tauDaughters);
-			
 			PFTauRef.push_back(thePFTau);
 		}else LogTrace("KinematicTauCreator")<<"InputTrackSelector::select: only "<<tauDaughters.size()<<" tau daughter(s) found. Skip tau candidate.";
 	}

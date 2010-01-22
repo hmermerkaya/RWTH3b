@@ -32,6 +32,18 @@ std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::chargedDaughte
     }
     return tmpVec;
 }
+//std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::chargedDaughters()
+//{
+//    std::vector< SelectedKinematicParticle* > tmpVec;
+//    for ( unsigned int i=0; i!=particles_.size(); i++ ) {
+//        if ( std::abs(particles_[i].charge()) == 1 ) {
+//			if(i != 0) tmpVec.push_back(&(particles_[i]));//skip mother
+//        }
+//    }
+//    return tmpVec;
+//}
+
+
 std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::neutralDaughters()
 {
     std::vector< SelectedKinematicParticle* > tmpVec;

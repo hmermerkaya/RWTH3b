@@ -1,7 +1,7 @@
 //
 // Original Author:  Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.6 2010/01/19 14:37:18 sauerlan Exp $
+// $Id: KinematicTauCreator.h,v 1.7 2010/01/20 17:41:06 perchall Exp $
 //
 //
 
@@ -23,11 +23,27 @@ public:
     virtual ~KinematicTauCreator();
 
     virtual int create(const reco::Vertex& primvtx_, const std::vector<reco::TrackRef>& inputTracks) = 0;
-    reco::PFTau getPFTau();//visible tau constructed from refitted tracks
+
+	/**
+	 visible tau constructed from refitted tracks
+	 */
+    reco::PFTau getPFTau();
     std::vector<math::XYZTLorentzVector> getRefittedChargedHadrons();
-    std::vector<reco::TrackRef> getSelectedTracks();//ref to original tracks used by the fit
-    RefCountedKinematicTree getKinematicTree();//for debug issues only
-	KinematicConstrainedVertexFitter * getFitter(){return kcvFitter_;}//for debug issues only
+
+	/**
+	 ref to original tracks used by the fit
+	 */
+    std::vector<reco::TrackRef> getSelectedTracks();
+	
+	/**
+	 for debug issues only
+	 */
+    RefCountedKinematicTree getKinematicTree();
+	
+	/**
+	 for debug issues only
+	 */
+	KinematicConstrainedVertexFitter * getFitter(){return kcvFitter_;}
 	
 protected:
     KinematicConstrainedVertexFitter *kcvFitter_;

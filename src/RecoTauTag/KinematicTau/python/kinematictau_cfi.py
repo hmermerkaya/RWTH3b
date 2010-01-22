@@ -11,7 +11,7 @@ KinematicTauProducer = cms.EDFilter("KinematicTauProducer",#creates reco::Candid
 	maxNbrOfIterations = cms.int32(20),	#number of iterations
 	maxOfInitialValue = cms.double(9999.),
 
-	primVtx = cms.InputTag("PrimVtxSelectorVBFH","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
+	primVtx = cms.InputTag("PrimVtxSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
 	usedTauCandidates = cms.InputTag("InputTrackSelector","InputTauRefs"),
 	inputTracks = cms.InputTag("InputTrackSelector","InputTracks")#selected tracks from PFTaus (daughters of usedTauCandidates)
 )

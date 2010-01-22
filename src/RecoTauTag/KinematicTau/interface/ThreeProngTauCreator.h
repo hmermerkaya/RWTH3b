@@ -1,3 +1,22 @@
+// -*- C++ -*-
+//
+// Package:    ThreeProngTauCreator
+// Class:      ThreeProngTauCreator
+// 
+/**\class ThreeProngTauCreator ThreeProngTauCreator.cc RecoTauTag/KinematicTau/src/ThreeProngTauCreator.cc
+ 
+ Description: creates kinemtic tau from 3prong decay suggestion
+ 
+ Implementation:
+ <Notes on implementation>
+ */
+//
+// Original Author:  Lars Perchalla
+//         Created:  Thu Dec  16 11:12:54 CEST 2009
+// $Id: ThreeProngTauCreator.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
+//
+//
+
 #include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
 
