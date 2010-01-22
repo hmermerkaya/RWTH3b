@@ -57,7 +57,7 @@ bool PrimVtxSelector::checkPrimVtx(reco::VertexCollection & primaryVertex){
 		return false;
 	}
 	if(vtx.size()>1){
-		sort(vtx.begin(), vtx.end(), BasicTools::cmpNormalizedChi2<const reco::Vertex*>);
+		sort(vtx.begin(), vtx.end(), cmpNormalizedChi2<const reco::Vertex*>);
 		if(verbosity_>=1) printf("evt %d PrimVtxSelector::checkPrimVtx: More than one (%i) primary vertex found. Select best chi2ndf of %f.\n", iEvent_->id().event(), vtx.size(), vtx.at(0)->normalizedChi2());
 	}
 	cntFound++;

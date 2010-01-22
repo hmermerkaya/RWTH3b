@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Nov 12 14:10:26 CET 2009
-// $Id$
+// $Id: PrimVtxSelector.h,v 1.1 2010/01/21 09:56:08 perchall Exp $
 //
 //
 
@@ -33,8 +33,6 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"//VertexCollection
 
-#include "../../../LpTools/Common/interface/BasicTools.h"
-
 class PrimVtxSelector : public edm::EDFilter {
    public:
       explicit PrimVtxSelector(const edm::ParameterSet&);
@@ -53,4 +51,9 @@ private:
 	unsigned int verbosity_;
 	
 	unsigned int cnt, cntFound;
+	
+	template <typename T> static bool cmpNormalizedChi2(const T &a, const T &b){
+		return a->normalizedChi2() > b->normalizedChi2();
+	}
+	
 };

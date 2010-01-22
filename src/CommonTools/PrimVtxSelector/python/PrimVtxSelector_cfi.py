@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-PrimVtxSelectorVBFH = cms.EDFilter("PrimVtxSelector",
+PrimVtxSelector = cms.EDFilter("PrimVtxSelector",
 	primVtx = cms.InputTag("offlinePrimaryVertices"),#offlinePrimaryVerticesFromCTFTrack
 	minTracks = cms.untracked.int32(3),
 	maxChi2ndf = cms.untracked.double(10.0),

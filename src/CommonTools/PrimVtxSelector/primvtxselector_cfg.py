@@ -27,6 +27,6 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
-process.load("HiggsKinTau.PrimVtxSelector.PrimVtxSelector_cfi")
+process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 
-process.p = cms.Path(process.PrimVtxSelectorVBFH)
+process.p = cms.Path(process.PrimVtxSelector)
