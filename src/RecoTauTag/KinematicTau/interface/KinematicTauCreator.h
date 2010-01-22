@@ -1,7 +1,23 @@
+// -*- C++ -*-
+//
+// Package:    KinematicTauCreator
+// Class:      KinematicTauCreator
+// 
+/**
+ 
+ Description: pure abstract class. use e.g. ThreeProngTauCreator to implement create()
+ 
+ Implementation:
+ <Notes on implementation>
+ */
+//
+// $Id: KinematicTauCreator.h,v 1.4 2010/01/22 18:46:20 perchall Exp $
+//
+//
 //
 // Original Author:  Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.7 2010/01/20 17:41:06 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.8 2010/01/22 18:45:56 perchall Exp $
 //
 //
 
