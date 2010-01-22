@@ -186,11 +186,6 @@ int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, Sele
 	if(refitTauDecay.size() != 5) printf("KinematicTauProducer::saveSelectedTracks:Saved only %i refitted particles.\n", refitTauDecay.size());
 	else refitDecays.push_back(refitTauDecay);
 
-	printf("KinematicTauProducer::saveSelectedTracks: refitParticles size = %i\n", refitTauDecay.size());
-	for(std::vector<SelectedKinematicParticle>::iterator particle = refitTauDecay.begin(); particle != refitTauDecay.end(); ++particle){
-		printf("particle name: %s, pt: %f\n", particle->name().c_str(), particle->p4().Pt());
-	}
-	
 	return refitTauDecay.size();
 	
 	//	check4VctConservation(refitTau, outs);
@@ -200,30 +195,30 @@ int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, Sele
 void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands){
 	unsigned index = 0;
 	std::vector<reco::RecoChargedCandidateRef> newRefs;
-	printf("orphanCands size = %i\n", orphanCands->size());
-	printf("selected size = %i\n", selected.size());
+//	printf("orphanCands size = %i\n", orphanCands->size());
+//	printf("selected size = %i\n", selected.size());
 	for(reco::RecoChargedCandidateCollection::const_iterator iter = orphanCands->begin(); iter != orphanCands->end(); ++iter, ++index){
 		reco::RecoChargedCandidateRef ref(orphanCands, index);
 		newRefs.push_back(ref);
 	}
 	index = 0;
 	for(SelectedKinematicDecayCollection::iterator decay = selected.begin(); decay != selected.end(); ++decay){
-		printf("decay part size = %i\n", decay->chargedDaughters().size());
+		std::vector< SelectedKinematicParticle* > daughters = decay->chargedDaughters();//needs to be copied!
+//		printf("decay part size = %i\n", daughters.size());
 //		if(decay->front().ambiguity() == 2) index = index-3;//if second solution the last PFRefs are used again. (2nd sol only exists if a first one exists too)
-		for(std::vector<SelectedKinematicParticle* >::iterator particle = decay->chargedDaughters().begin(); particle != decay->chargedDaughters().end(); ++particle){
+		for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
 			if(index >= newRefs.size()){
 				printf("evt %d KinematicTauProducer::correctReferences: Bad selection size! index=%d, refs=%d\n", iEvent_->id().event(), index, newRefs.size());
 				throw 111;
 			}
-			std::cout<<"newRefs index = "<<index<<", pt = ";
-			if (!newRefs[index].isNull()) std::cout<<newRefs[index]->pt()<<std::endl;
-			else std::cout<<" NAN"<<std::endl;
+//			std::cout<<"newRefs index = "<<index<<", pt = ";
+//			if (!newRefs[index].isNull()) std::cout<<newRefs[index]->pt()<<std::endl;
+//			else std::cout<<" NAN"<<std::endl;
 			
-			if(*particle!=NULL) printf("particle name: %s, pt: %f\n", (*particle)->name().c_str(), (*particle)->p4().Pt());
-			else std::cout<<"NO!!!"<<std::endl;
-//			printf("particle name: %s\n", (*particle)->name().c_str());
-//			(*particle)->setCandRef(newRefs[index]);
-			printf("set refs: index = %i\n",index);
+			if(*particle!=NULL){
+				//printf("particle name: %s, pt: %f\n", (*particle)->name().c_str(), (*particle)->p4().Pt());
+				(*particle)->setCandRef(newRefs[index]);
+			}else std::cout<<"Reference not modified!!!(at index="<<index<<")"<<std::endl;
 			index++;
 		}
 	}
