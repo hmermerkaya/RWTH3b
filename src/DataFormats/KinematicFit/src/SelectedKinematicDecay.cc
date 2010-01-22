@@ -18,7 +18,7 @@ std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::daughters()
 {
     std::vector< SelectedKinematicParticle* > tmpVec;
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-        tmpVec.push_back(&(*iter));
+		if(iter != particles_.begin()) tmpVec.push_back(&(*iter));//skip mother
     }
     return tmpVec; 
 }
@@ -27,7 +27,7 @@ std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::chargedDaughte
     std::vector< SelectedKinematicParticle* > tmpVec;
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
         if ( std::abs(iter->charge()) == 1 ) {
-            tmpVec.push_back(&(*iter));
+			if(iter != particles_.begin()) tmpVec.push_back(&(*iter));//skip mother
         }
     }
     return tmpVec;
@@ -37,7 +37,7 @@ std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::neutralDaughte
     std::vector< SelectedKinematicParticle* > tmpVec;
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
         if ( std::abs(iter->charge()) == 0 ) {
-            tmpVec.push_back(&(*iter));
+			if(iter != particles_.begin()) tmpVec.push_back(&(*iter));//skip mother
         }
     }
     return tmpVec;
