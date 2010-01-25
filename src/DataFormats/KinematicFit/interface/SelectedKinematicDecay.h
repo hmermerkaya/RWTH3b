@@ -25,9 +25,9 @@ public:
 	SelectedKinematicDecay(SelectedKinematicParticleCollection particles);
 
     SelectedKinematicParticle* topParticle();
-    std::vector< SelectedKinematicParticle* > daughters();
-    std::vector< SelectedKinematicParticle* > chargedDaughters();
-    std::vector< SelectedKinematicParticle* > neutralDaughters();
+    void daughters(std::vector< SelectedKinematicParticle* > & par);
+    void chargedDaughters(std::vector< SelectedKinematicParticle* > & par);
+    void neutralDaughters(std::vector< SelectedKinematicParticle* > & par);
  	
 private:
     SelectedKinematicParticleCollection particles_;

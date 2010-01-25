@@ -14,23 +14,19 @@ SelectedKinematicParticle* SelectedKinematicDecay::topParticle()
 {
     return &(particles_.front());
 }
-std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::daughters()
+void SelectedKinematicDecay::daughters(std::vector< SelectedKinematicParticle* > & par)
 {
-    std::vector< SelectedKinematicParticle* > tmpVec;
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-		if(iter != particles_.begin()) tmpVec.push_back(&(*iter));//skip mother
+		if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
     }
-    return tmpVec; 
 }
-std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::chargedDaughters()
+void SelectedKinematicDecay::chargedDaughters(std::vector< SelectedKinematicParticle* > & par)
 {
-    std::vector< SelectedKinematicParticle* > tmpVec;
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
         if ( std::abs(iter->charge()) == 1 ) {
-			if(iter != particles_.begin()) tmpVec.push_back(&(*iter));//skip mother
+			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
         }
     }
-    return tmpVec;
 }
 //std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::chargedDaughters()
 //{
@@ -44,13 +40,11 @@ std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::chargedDaughte
 //}
 
 
-std::vector< SelectedKinematicParticle* > SelectedKinematicDecay::neutralDaughters()
+void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicParticle* > & par)
 {
-    std::vector< SelectedKinematicParticle* > tmpVec;
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
         if ( std::abs(iter->charge()) == 0 ) {
-			if(iter != particles_.begin()) tmpVec.push_back(&(*iter));//skip mother
+			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
         }
     }
-    return tmpVec;
 }
