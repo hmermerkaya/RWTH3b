@@ -14,6 +14,12 @@ SelectedKinematicParticle* SelectedKinematicDecay::topParticle()
 {
     return &(particles_.front());
 }
+void SelectedKinematicDecay::particles(std::vector< SelectedKinematicParticle* > & par)
+{
+    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+		par.push_back(&(*iter));
+    }
+}
 void SelectedKinematicDecay::daughters(std::vector< SelectedKinematicParticle* > & par)
 {
     for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
