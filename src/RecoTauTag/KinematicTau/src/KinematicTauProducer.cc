@@ -37,12 +37,11 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	
 	iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
 	
-	bool filterValue;
 	edm::Handle<reco::VertexCollection> primVtxs;
 	iEvent_->getByLabel( primVtx_, primVtxs);
 	if(primVtxs->size()<1) return false;
 	const reco::Vertex primVtx = primVtxs->front();
-	filterValue = select(selected, primVtx, PFTauRefCollection, daughterCollection);
+	bool filterValue = select(selected, primVtx, PFTauRefCollection, daughterCollection);
 
 	iEvent_->put(PFTauRefCollection_,"usedTauRefs");
 	edm::OrphanHandle<reco::RecoChargedCandidateCollection> orphanCands = iEvent_->put(daughterCollection_,"usedTauDaughters");
@@ -84,16 +83,20 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection & refitDecays
 	KinematicTauCreator *kinTauCrtr = new ThreeProngTauCreator(trkBuilder, iConfig_);
 	unsigned int cntValid = 0;
 	for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
-//		reco::PFTauRef tauRef = usedTaus->at(index);
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
 		int fitStatus = kinTauCrtr->create(primaryVtx, input);
-		if(fitStatus==1) cntValid++;
-//		reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
-//		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedHadrons();
-		std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
-		saveSelectedTracks(usedTracks, daughterCollection);
-		saveKinParticles(kinTauCrtr, refitDecays, primaryVtx);
+		if(fitStatus==1){
+			cntValid++;
+			//		reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
+			//		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedHadrons();
+			std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
+			saveSelectedTracks(usedTracks, daughterCollection);
+			saveKinParticles(kinTauCrtr, refitDecays, primaryVtx);
+			//save tau ref
+			reco::PFTauRef tauRef = usedTaus->at(index);
+			PFTauRefCollection.push_back(tauRef);
+		}
 	}
 	if(cntValid>0){
 		fullyDetermined = true;
@@ -203,8 +206,8 @@ void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & 
 	}
 	index = 0;
 	for(SelectedKinematicDecayCollection::iterator decay = selected.begin(); decay != selected.end(); ++decay){
-		std::vector< SelectedKinematicParticle* > daughters = decay->chargedDaughters();//needs to be copied!
-//		printf("decay part size = %i\n", daughters.size());
+		std::vector< SelectedKinematicParticle* > daughters;
+		decay->chargedDaughters(daughters);// = decay->chargedDaughters();//needs to be copied!
 //		if(decay->front().ambiguity() == 2) index = index-3;//if second solution the last PFRefs are used again. (2nd sol only exists if a first one exists too)
 		for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
 			if(index >= newRefs.size()){
@@ -216,7 +219,7 @@ void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & 
 //			else std::cout<<" NAN"<<std::endl;
 			
 			if(*particle!=NULL){
-				//printf("particle name: %s, pt: %f\n", (*particle)->name().c_str(), (*particle)->p4().Pt());
+//				printf("particle name: %s, pt: %f\n", (*particle)->name().c_str(), (*particle)->p4().Pt());
 				(*particle)->setCandRef(newRefs[index]);
 			}else std::cout<<"Reference not modified!!!(at index="<<index<<")"<<std::endl;
 			index++;
