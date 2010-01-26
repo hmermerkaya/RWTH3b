@@ -4,13 +4,14 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
 iConfig_(iConfig),
 primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
 usedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "usedTauCandidates" ) ),
-inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) )
+inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) ),
+minKinTau_( iConfig.getUntrackedParameter<unsigned int>("minKinTau", 1) )//filter returns true if more than minKinTau_ taus were fitted
 {
 	produces<int>("kinTauCreatorFlag");//0=invalid, 1=valid
 	produces<InputTauCollection>("usedTauRefs");//needed to fill in unfit KinematicParticle later on
 	produces<reco::RecoChargedCandidateCollection>("usedTauDaughters");
-	produces<SelectedKinematicDecayCollection>("SelectedKinematicParticles");
-	produces<SelectedKinematicParticleCollection>("SelectedKinematicHiggs");//refit higgs from tau pairs
+	produces<SelectedKinematicDecayCollection>("SelectedKinematicDecays");
+//	produces<SelectedKinematicParticleCollection>("SelectedKinematicHiggs");//refit higgs from tau pairs
 
 	//SelectedKinematicParticle = 1 refitted particle
 	//vector<SelectedKinematicParticle> = all particles from 1 tau decay (i.e tau->3pi+nu) starting with mother
@@ -46,7 +47,7 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	iEvent_->put(PFTauRefCollection_,"usedTauRefs");
 	edm::OrphanHandle<reco::RecoChargedCandidateCollection> orphanCands = iEvent_->put(daughterCollection_,"usedTauDaughters");
 	correctReferences(selected, orphanCands);//has to be called before put(selected_,"SelectedKinematicParticles")!!!
-	iEvent_->put(selected_,"SelectedKinematicParticles");
+	iEvent_->put(selected_,"SelectedKinematicDecays");
 	
 	std::auto_ptr<int> flagPtr = std::auto_ptr<int>(new int);
 	int &flag = *flagPtr;
@@ -63,7 +64,7 @@ void KinematicTauProducer::beginJob(){
 void KinematicTauProducer::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	std::cout<<"=- KinematicTauProducer:: asked for >=1 kinTaus per event. efficiency = "<<ratio<<" ("<<cntFound_<<"/"<<cnt_<<")"<<std::endl;
+	std::cout<<"=- KinematicTauProducer:: asked for >= "<<minKinTau_<<" kinTaus per event. efficiency = "<<ratio<<" ("<<cntFound_<<"/"<<cnt_<<")"<<std::endl;
 }
 
 bool KinematicTauProducer::select(SelectedKinematicDecayCollection & refitDecays, const reco::Vertex & primaryVtx, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection){
@@ -98,7 +99,7 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection & refitDecays
 			PFTauRefCollection.push_back(tauRef);
 		}
 	}
-	if(cntValid>0){
+	if(cntValid >= minKinTau_){
 		fullyDetermined = true;
 		cntFound_++;//found at least one refit tau
 	}

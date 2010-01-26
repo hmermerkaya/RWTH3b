@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.5 2010/01/22 18:45:56 perchall Exp $
 //
 //
 
@@ -63,7 +63,7 @@ private:
 	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 	
 	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
-	unsigned int cnt_, cntFound_;
+	unsigned int minKinTau_, cnt_, cntFound_;
 	
 	static std::string intToString(int f){
 		char s[32]; sprintf(s, "%d", f);

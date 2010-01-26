@@ -13,5 +13,7 @@ KinematicTauProducer = cms.EDFilter("KinematicTauProducer",#creates reco::Candid
 
 	primVtx = cms.InputTag("PrimVtxSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
 	usedTauCandidates = cms.InputTag("InputTrackSelector","InputTauRefs"),
-	inputTracks = cms.InputTag("InputTrackSelector","InputTracks")#selected tracks from PFTaus (daughters of usedTauCandidates)
+	inputTracks = cms.InputTag("InputTrackSelector","InputTracks"),#selected tracks from PFTaus (daughters of usedTauCandidates)
+	
+	minKinTau = cms.untracked.uint32(1)#minimum kin. taus to produce (otherwise filter returns false)
 )
