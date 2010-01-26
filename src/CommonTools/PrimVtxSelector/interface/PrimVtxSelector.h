@@ -5,7 +5,7 @@
 // 
 /**\class PrimVtxSelector PrimVtxSelector.cc HiggsKinTau/PrimVtxSelector/src/PrimVtxSelector.cc
 
- Description: <one line class summary>
+ Description: simple primary vertex selector by minimum of included tracks and goodness of fit. produces one single vertex if possible.
 
  Implementation:
      <Notes on implementation>
@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Nov 12 14:10:26 CET 2009
-// $Id: PrimVtxSelector.h,v 1.1 2010/01/21 09:56:08 perchall Exp $
+// $Id: PrimVtxSelector.h,v 1.2 2010/01/22 14:02:45 perchall Exp $
 //
 //
 
