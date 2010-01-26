@@ -40,10 +40,13 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	
 	edm::Handle<reco::VertexCollection> primVtxs;
 	iEvent_->getByLabel( primVtx_, primVtxs);
-	if(primVtxs->size()<1) return false;
-	const reco::Vertex primVtx = primVtxs->front();
-	bool filterValue = select(selected, primVtx, PFTauRefCollection, daughterCollection);
 
+	bool filterValue = false;
+	if(primVtxs->size()>=1){
+		const reco::Vertex primVtx = primVtxs->front();
+		filterValue = select(selected, primVtx, PFTauRefCollection, daughterCollection);
+	}
+	
 	iEvent_->put(PFTauRefCollection_,"usedTauRefs");
 	edm::OrphanHandle<reco::RecoChargedCandidateCollection> orphanCands = iEvent_->put(daughterCollection_,"usedTauDaughters");
 	correctReferences(selected, orphanCands);//has to be called before put(selected_,"SelectedKinematicParticles")!!!
