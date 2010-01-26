@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.2 2010/01/19 09:27:22 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.3 2010/01/20 15:32:55 perchall Exp $
 //
 //
 
@@ -56,6 +56,6 @@ private:
 	
 	edm::Event * iEvent_;
 	edm::InputTag inputCollectionTag_, primVtx_;
-	unsigned int cnt_, cntFound_;
+	unsigned int minTau_, cnt_, cntFound_;
 
 };

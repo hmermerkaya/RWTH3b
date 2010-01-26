@@ -1,7 +1,8 @@
 #include "../interface/InputTrackSelector.h"
 
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
-inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) )
+inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
+minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more than minTau_ taus were selected
 {
 	produces<int>("inputTracksFlag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
@@ -48,7 +49,7 @@ void InputTrackSelector::beginJob(){
 void InputTrackSelector::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	printf("=- InputTrackSelector:: found at least 1 tau candidate per event. efficiency = %f (%i/%i)\n", ratio, cntFound_, cnt_);
+	printf("=- InputTrackSelector:: found at least %i tau candidate per event. efficiency = %f (%i/%i)\n", minTau_, ratio, cntFound_, cnt_);
 }
 bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollection & PFTauRef){
 	bool found = false;
@@ -66,7 +67,7 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 		}else LogTrace("KinematicTauCreator")<<"InputTrackSelector::select: only "<<tauDaughters.size()<<" tau daughter(s) found. Skip tau candidate.";
 	}
 	
-	if(selected.size()>0){
+	if(selected.size() >= minTau_){
 		cntFound_++;
 		found = true;
 		LogTrace("KinematicTauCreator")<<"InputTrackSelector::select: "<<selected.size()<<" tau candidate(s) reconstructed.";
