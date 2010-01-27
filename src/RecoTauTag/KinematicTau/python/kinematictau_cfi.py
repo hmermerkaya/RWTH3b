@@ -7,13 +7,14 @@ from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 
 KinematicTauProducer = cms.EDFilter("KinematicTauProducer",#creates reco::CandidateRefVector containing refs to selected jets
 	#parameters for KinematicConstrainedVertexFitter
-	maxDistance = cms.double(0.00001),#stopping condition
-	maxNbrOfIterations = cms.int32(20),	#number of iterations
-	maxOfInitialValue = cms.double(9999.),
-
+	fitParameters = cms.PSet(#parameters for KinematicConstrainedVertexFitter
+		maxDistance = cms.double(0.00001),#stopping condition
+		maxNbrOfIterations = cms.int32(20),	#number of iterations
+		maxOfInitialValue = cms.double(9999.)
+	),
 	primVtx = cms.InputTag("PrimVtxSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
-	usedTauCandidates = cms.InputTag("InputTrackSelector","InputTauRefs"),
-	inputTracks = cms.InputTag("InputTrackSelector","InputTracks"),#selected tracks from PFTaus (daughters of usedTauCandidates)
+	selectedTauCandidates = cms.InputTag("InputTrackSelector","InputTauRefs"),
+	inputTracks = cms.InputTag("InputTrackSelector","InputTracks"),#selected tracks from PFTaus (daughters of selectedTauCandidates)
 	
 	minKinTau = cms.untracked.uint32(1)#minimum kin. taus to produce (otherwise filter returns false)
 )

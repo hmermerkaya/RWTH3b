@@ -3,7 +3,7 @@
 // Package:    KinematicTauProducer
 // Class:      KinematicTauProducer
 // 
-/**\class KinematicTauProducer KinematicTauProducer.cc RecoTauTag/KinematicTau/src/KinematicTauProducer.cc
+/**
  
  Description: test application of KinematicTauCreator
  
@@ -11,9 +11,9 @@
  <Notes on implementation>
  */
 //
-// Original Author:  Lars Perchalla
+// Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.5 2010/01/22 18:45:56 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.6 2010/01/26 13:15:07 perchall Exp $
 //
 //
 
@@ -53,16 +53,16 @@ private:
 	virtual bool filter(edm::Event&, const edm::EventSetup&);
 	virtual void endJob();
 	
-	bool select(SelectedKinematicDecayCollection & refitDecays, const reco::Vertex & primaryVtx, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection);
+	bool select(SelectedKinematicDecayCollection & refitDecays, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx);
 	void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
 	int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::Vertex &primVtx);
 	void correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
 	
-	const edm::ParameterSet& iConfig_;
+	const edm::ParameterSet fitParameters_;
 	edm::Event * iEvent_;
 	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 	
-	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
+	edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
 	unsigned int minKinTau_, cnt_, cntFound_;
 	
 	static std::string intToString(int f){

@@ -7,13 +7,15 @@
 // 
 /**
  
- Description: saves SelectedKinematicParticle of one tau decay
+ Description: stores SelectedKinematicParticle of one tau decay
  
  Implementation:
  <Notes on implementation>
  */
 //
 //
+// Original Author:  Lars Perchalla, Philip Sauerland
+
 
 #include "DataFormats/KinematicFit/interface/SelectedKinematicParticle.h"
 

@@ -11,13 +11,13 @@
  <Notes on implementation>
  */
 //
-// $Id: KinematicTauCreator.h,v 1.4 2010/01/22 18:46:20 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.9 2010/01/22 20:20:04 perchall Exp $
 //
 //
 //
-// Original Author:  Philip Sauerland
+// Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.8 2010/01/22 18:45:56 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.9 2010/01/22 20:20:04 perchall Exp $
 //
 //
 

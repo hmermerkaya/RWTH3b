@@ -2,7 +2,8 @@
 
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
-minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more than minTau_ taus were selected
+minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
+minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more/equal than minTau_ taus were selected
 {
 	produces<int>("inputTracksFlag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
@@ -49,7 +50,7 @@ void InputTrackSelector::beginJob(){
 void InputTrackSelector::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	printf("=- InputTrackSelector:: found at least %i tau candidate per event. efficiency = %f (%i/%i)\n", minTau_, ratio, cntFound_, cnt_);
+	printf("=- InputTrackSelector:: found at least %i tau candidate (with at least %i tracks) per event. efficiency = %f (%i/%i)\n", minTau_, minTracks_, ratio, cntFound_, cnt_);
 }
 bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollection & PFTauRef){
 	bool found = false;
@@ -61,7 +62,7 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 		if(!filterInput(thePFTau)) continue;//move into external module?
 		
 		reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
-		if(tauDaughters.size()>=3){//move this number into config file?
+		if(tauDaughters.size()>=minTracks_){
 			selected.push_back(tauDaughters);
 			PFTauRef.push_back(thePFTau);
 		}else LogTrace("KinematicTauCreator")<<"InputTrackSelector::select: only "<<tauDaughters.size()<<" tau daughter(s) found. Skip tau candidate.";
@@ -99,14 +100,6 @@ bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter 
 //	fixedConeHighEffPFTauDiscriminationByTrackIsolation
 //	fixedConeHighEffPFTauDiscriminationByTrackIsolationUsingLeadingPion
 	
-	//	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminator!TaNC;
-	//	iEvent_->getByLabel("fixedConeHighEffPFTauDiscriminationBy!TaNCfrQuarterPercent",thePFTauDiscriminator!TaNC);
-
-//	if( (int)(*thePFTauDiscriminatorByIsolation)[tau]
-//	   *(int)(*thePFTauDiscriminatorByLeadingTrackPtCut)[tau]
-//	   *(int)(*thePFTauDiscriminatorAgainstElectrons)[tau]
-//	   *(int)(*thePFTauDiscriminatorAgainstMuons)[tau]
-//	   != 0) filter = true;
     if (
         ((*thePFTauDiscriminatorAgainstMuons)[tau] == 1 || (*thePFTauDiscriminatorAgainstElectrons)[tau] == 1)
         && ((*thePFTauDiscriminatorByIsolation)[tau] == 1 || (*thePFTauDiscriminatorByLeadingTrackPtCut)[tau] == 1)

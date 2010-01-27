@@ -3,17 +3,17 @@
 // Package:    InputTrackSelector
 // Class:      InputTrackSelector
 // 
-/**\class InputTrackSelector InputTrackSelector.cc HiggsKinTau/InputTrackSelector/src/InputTrackSelector.cc
+/**
  
- Description: creates collection of vector<reco::CandidateRef> for each tau cand
+ Description: creates collection of reco::TrackRefVector for each tau candidate
  
  Implementation:
  <Notes on implementation>
  */
 //
-// Original Author:  Lars Perchalla
+// Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.3 2010/01/20 15:32:55 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.4 2010/01/26 13:31:39 perchall Exp $
 //
 //
 
@@ -56,6 +56,6 @@ private:
 	
 	edm::Event * iEvent_;
 	edm::InputTag inputCollectionTag_, primVtx_;
-	unsigned int minTau_, cnt_, cntFound_;
+	unsigned int minTracks_, minTau_, cnt_, cntFound_;
 
 };

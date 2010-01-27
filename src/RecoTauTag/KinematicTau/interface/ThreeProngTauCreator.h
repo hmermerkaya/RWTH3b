@@ -3,7 +3,7 @@
 // Package:    ThreeProngTauCreator
 // Class:      ThreeProngTauCreator
 // 
-/**\class ThreeProngTauCreator ThreeProngTauCreator.cc RecoTauTag/KinematicTau/src/ThreeProngTauCreator.cc
+/**
  
  Description: creates kinemtic tau from 3prong decay suggestion
  
@@ -11,9 +11,9 @@
  <Notes on implementation>
  */
 //
-// Original Author:  Lars Perchalla
+// Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
+// $Id: ThreeProngTauCreator.h,v 1.5 2010/01/22 18:45:56 perchall Exp $
 //
 //
 
@@ -49,23 +49,14 @@ private:
 	bool sumCharge(std::vector<reco::TrackRef> &input);
 	std::vector<reco::TransientTrack> convToTransTrck(std::vector<reco::TrackRef> &input);
 	bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
-	GlobalVector calcPVSVDir(reco::Vertex &primVtx, TransientVertex & transVtx);
 	std::pair<double,double> getTauMomentumMagnitudes(double ma1,double pa1,double M,double theta);
-	RefCountedKinematicParticle virtualKinematicParticle(GlobalPoint vtxGuess, GlobalVector impulsGuess);	
 	RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx);
+	RefCountedKinematicParticle virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess);	
 	template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
 	
-	edm::InputTag primVtx_, usedTauCandidatesTag_, inputCollectionTag_;
+	edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
 	unsigned int cnt, cntFound;
 
-	
-	int factorial(int num){
-		if(num > 1)	return num*factorial(num-1);
-		return 1;
-	}
-	int nOverM(const int& n, const int& m){
-		return factorial(n)/(factorial(m)*factorial(n-m));
-	}
 	template <typename T> double getInvariantMass(const T& tracks, const double mass = 0.140){//if second argument empty default pion is supposed
 		double SumPx = 0;
 		double SumPy = 0;

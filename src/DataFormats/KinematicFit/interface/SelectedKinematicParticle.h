@@ -7,15 +7,17 @@
 // 
 /**
  
- Description: saves results from kinematically refit particles
+ Description: stores results from kinematically refitted particles
  
  Implementation:
  <Notes on implementation>
  */
 //
-// $Id: SelectedKinematicParticle.h,v 1.4 2010/01/20 15:32:55 perchall Exp $
+// $Id: SelectedKinematicParticle.h,v 1.4 2010/01/22 18:46:20 perchall Exp $
 //
 //
+// Original Author:  Lars Perchalla, Philip Sauerland
+
 
 
 #include <memory>
