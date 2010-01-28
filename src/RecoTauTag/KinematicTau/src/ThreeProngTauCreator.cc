@@ -7,6 +7,7 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 	std::vector<reco::TrackRef> input = inputTracks;
 	reco::Vertex primVtx = primaryVertex;
 	
+//	printf("primVtx start, (%f, %f, %f)\n", primVtx.position().x(), primVtx.position().y(), primVtx.position().z());
 	if(!createStartScenario(input, *pions, *neutrinos, primVtx)) return 0;
 	if (pions->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2)){
 		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<pions->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
@@ -15,7 +16,9 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 	//in this version createStartScenario always rotates up to thetaMax so that there is always only one solution
 	pions->push_back(neutrinos->at(0));
 	
+//	printf("primVtx rotated, (%f, %f, %f)\n", primVtx.position().x(), primVtx.position().y(), primVtx.position().z());
 	bool fitWorked = kinematicRefit(*pions, primVtx);
+
 	delete pions;
 	delete neutrinos;
 	
@@ -52,7 +55,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	}
 	double massA1 = getInvariantMass(selectedTracks_, 0.140);
 	TLorentzVector lorentzA1 = getSumTLorentzVec(selectedTracks_, massA1);
-	VertexRotation vtxC(lorentzA1);
+	VertexRotation vtxC(lorentzA1, 0);
 	double thetaMax = vtxC.calcThetaMax();
 	if(lorentzA1.M() > 2.0 || lorentzA1.M() < 3*.140){//soft upper value due to neutrino resolution
 		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad a1 mass = "<<lorentzA1.M()<<". Skip tauCand.";
@@ -64,22 +67,25 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	vtxC.tryCorrection(primVtx, secVtx, theta0, tauFlghtDir);//can modify all 4 values; rotation is forced to reach thetaMax
 	//	vtxC.dumpEvt(primVtx, secVtx, thetaMax);
 	
-	VirtualKinematicParticleFactory factory;
+//	VirtualKinematicParticleFactory factory;
+//	for(unsigned int i = 0; i!=transTrkVect.size();i++){//apply vertex mod
+//		RefCountedKinematicParticle tmp = kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma);
+//		//modify vertex
+//		AlgebraicVector7 newPar, oldPar = tmp->currentState().kinematicParameters().vector();
+//		newPar(0) = secVtx.position().x();
+//		newPar(1) = secVtx.position().y();
+//		newPar(2) = secVtx.position().z();
+//		newPar(3) = oldPar(3);
+//		newPar(4) = oldPar(4);
+//		newPar(5) = oldPar(5);
+//		newPar(6) = oldPar(6);
+//		KinematicParameters newParm(newPar);
+//		KinematicState newkineState(newParm, tmp->currentState().kinematicParametersError(), tmp->currentState().particleCharge(), transTrackBuilder_.field());
+//		float chi2 = tmp->chiSquared(), ndof = tmp->degreesOfFreedom();
+//		pions.push_back(factory.particle(newkineState, chi2, ndof, 0,0));
+//	}
 	for(unsigned int i = 0; i!=transTrkVect.size();i++){//apply vertex mod
-		RefCountedKinematicParticle tmp = kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma);
-		//modify vertex
-		AlgebraicVector7 newPar, oldPar = tmp->currentState().kinematicParameters().vector();
-		newPar(0) = secVtx.position().x();
-		newPar(1) = secVtx.position().y();
-		newPar(2) = secVtx.position().z();
-		newPar(3) = oldPar(3);
-		newPar(4) = oldPar(4);
-		newPar(5) = oldPar(5);
-		newPar(6) = oldPar(6);
-		KinematicParameters newParm(newPar);
-		KinematicState newkineState(newParm, tmp->currentState().kinematicParametersError(), tmp->currentState().particleCharge(), transTrackBuilder_.field());
-		float chi2 = tmp->chiSquared(), ndof = tmp->degreesOfFreedom();
-		pions.push_back(factory.particle(newkineState, chi2, ndof, 0,0));		
+		pions.push_back(kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma));
 	}
 	
 	if(theta0>TMath::Pi()/2){
@@ -111,6 +117,8 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		return false;
 	}
 	
+//	printf("test muon mass %f\n", neutrinos.front()->currentState().mass());
+	
 	return true;
 }
 bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex &primVtx){
@@ -130,7 +138,8 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 
 	GlobalPoint vtxGuess = unfitDaughters[3]->currentState().globalPosition();//nu was created at common/corrected vertex of pions
 	try{
-		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC, &vtxGuess);
+//		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC, &vtxGuess);
+		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC);
 	}catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
 		std::cout<<"VertexException. Skip tauCand."<<std::endl;
 		return false;
@@ -292,19 +301,20 @@ RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauG
 RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess){
 	VirtualKinematicParticleFactory factory;
 	//(x,y,z,p_x,p_y,p_z,m)
-	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//start-pT aus MET nehmen?
+//	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//start-pT aus MET nehmen?
+	const KinematicParameters parameters(AlgebraicVector7(0,0,0,impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//start-pT aus MET nehmen?
 	ROOT::Math::SVector<double,28> svector28;
 	for(unsigned int i=1; i!=22; i++) svector28(i-1) = pow(10.,-12.);
 	for(unsigned int i=22; i!=28; i++) svector28(i-1) = pow(10.,-12.);//correlation between mass and momentum/vertex
 	for(unsigned int n=1; n!=7; n++) svector28(n*(n+1)/2 - 1) = pow(10.,2.);//diagonals, huge error method
 	svector28(27) = pow(10.,-12.);//mass error
-	//insert 3prong vertex errors
-	svector28[0]  = vtxGuess.positionError().cxx();
-	svector28[1]  = vtxGuess.positionError().cyx();
-	svector28[2]  = vtxGuess.positionError().czx();
-	svector28[7]  = vtxGuess.positionError().cyy();
-	svector28[8]  = vtxGuess.positionError().czy();
-	svector28[13] = vtxGuess.positionError().czz();
+//insert 3prong vertex errors
+//	svector28[0]  = vtxGuess.positionError().cxx();
+//	svector28[1]  = vtxGuess.positionError().cyx();
+//	svector28[2]  = vtxGuess.positionError().czx();
+//	svector28[7]  = vtxGuess.positionError().cyy();
+//	svector28[8]  = vtxGuess.positionError().czy();
+//	svector28[13] = vtxGuess.positionError().czz();
 	
 	ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> > matrix(svector28);
 	

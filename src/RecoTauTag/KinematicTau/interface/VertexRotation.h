@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.2 2010/01/22 18:45:56 perchall Exp $
+// $Id: VertexRotation.h,v 1.3 2010/01/27 14:28:53 perchall Exp $
 //
 //
 
@@ -80,8 +80,10 @@ public:
 		if(movement_ <= 1 || forceRotation){//correction is smaller than 1sigma or rotation is forced not regarding the errors
 			//allocate the full correction on both vertices according to their errors projected in correction direction
 			//no need of quadratic addition?!?
-			npv = pv + (projectedErrorP/(projectedErrorP+projectedErrorS))*correction;
-			nsv = sv - (projectedErrorS/(projectedErrorP+projectedErrorS))*correction;
+//			npv = pv + (projectedErrorP/(projectedErrorP+projectedErrorS))*correction;
+//			nsv = sv - (projectedErrorS/(projectedErrorP+projectedErrorS))*correction;
+			npv = pv + correction;
+			nsv = sv;
 		}else{
 			//allocate only that part of the correction on both vertices that fits into their errors
 			//no need of quadratic addition?!?
