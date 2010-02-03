@@ -36,8 +36,9 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad track size = "<<input.size();
 		return false;
 	}
-	if (input.size()>3)	if(!choose3bestTracks(input, primVtx)) return false;
-	else if(!sumCharge(input)){
+	if (input.size()>3){
+		if(!choose3bestTracks(input, primVtx)) return false;
+	}else if(!sumCharge(input)){
 		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad charge sum.";
 		return false;
 	}
