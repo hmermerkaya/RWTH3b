@@ -96,7 +96,7 @@ bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter 
 //	fixedConeHighEffPFTauDiscriminationByIsolationUsingLeadingPion
 //	fixedConeHighEffPFTauDiscriminationByLeadingPionPtCut
 //	fixedConeHighEffPFTauDiscriminationByLeadingTrackFinding
-//	fixedConeHighEffPFTauDiscriminationByLeadingTrackPtCut
+//	fixedConeHighEffPFTauDiscriminationByLeadingTrackPtCut //MinPtLeadingTrack = cms.double(5.0)
 //	fixedConeHighEffPFTauDiscriminationByTrackIsolation
 //	fixedConeHighEffPFTauDiscriminationByTrackIsolationUsingLeadingPion
 	

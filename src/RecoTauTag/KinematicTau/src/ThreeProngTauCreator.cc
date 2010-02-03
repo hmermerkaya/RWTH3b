@@ -138,7 +138,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 
 	GlobalPoint vtxGuess = unfitDaughters[3]->currentState().globalPosition();//nu was created at common/corrected vertex of pions
 	try{
-//		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC, &vtxGuess);
+//		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC, &vtxGuess);//experimental
 		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC);
 	}catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
 		std::cout<<"VertexException. Skip tauCand."<<std::endl;
@@ -293,7 +293,7 @@ RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauG
 	GlobalVector nuImpGuess(1,1,1);
 	
 	TLorentzVector nuGuess = tauGuess-a1;
-	LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::unknownNu: nuGuess (px,py,pz,m) "<<nuGuess.Px()<<","<<nuGuess.Py()<<","<<nuGuess.Pz()<<","<<nuGuess.M();
+	LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::unknownNu: nuGuess (vx, vy, vz, px,py,pz,m) "<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<","<<nuGuess.Px()<<","<<nuGuess.Py()<<","<<nuGuess.Pz()<<","<<nuGuess.M();
 	if(tauGuess.P()==0)  nuGuess.SetXYZM(1,1,1,0);
 	nuImpGuess = GlobalVector(nuGuess.X(),nuGuess.Y(),nuGuess.Z());
 	return virtualKinematicParticle(secVtx, nuImpGuess);

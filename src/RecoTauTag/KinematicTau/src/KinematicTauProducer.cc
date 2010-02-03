@@ -176,6 +176,8 @@ int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, Sele
 			name = std::string("pion");
 		}else{
 			name = std::string("neutrino");
+//			printf("vtxGuess nu  prefit (%f,%f,%f)\n", (*iter)->initialState().globalPosition().x(), (*iter)->initialState().globalPosition().y(), (*iter)->initialState().globalPosition().z());
+//			printf("vtxGuess nu postfit (%f,%f,%f)\n", (*iter)->currentState().globalPosition().x(), (*iter)->currentState().globalPosition().y(), (*iter)->currentState().globalPosition().z());
 		}
 		refitTauDecay.push_back( SelectedKinematicParticle(*iter, name, iterations, maxiterations, csum, mincsum, emptyCandRef, ambiguityCnt, status) );
 	}

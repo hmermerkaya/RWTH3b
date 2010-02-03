@@ -15,13 +15,13 @@ process.MessageLogger.cerr = cms.untracked.PSet(
 )
 
 ###############
-numberOfEvents = 10
+numberOfEvents = 20
 
 ###############
 if numberOfEvents == -1:
 	numberOfEvents = 10000
-inPath = '/disk1/perchalla/data/CMSSW_3_1_2/KinTau/tau3piFromVBFH/'
-jobName = 'AODSIMHLT_tau3piFromVBFH_145GeV'
+inPath = '/disk1/perchalla/data/CMSSW_3_1_1/KinTau/tau3piFromZ/'
+jobName = 'AODSIMHLT_tau3piFromZ_10000evts'
 
 #print 'file://'+inPath+jobName+'.root';
 
