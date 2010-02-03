@@ -5,6 +5,11 @@ KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrac
 transTrackBuilder_(transTrackBuilder)
 {
     kcvFitter_ = new KinematicConstrainedVertexFitter();
+    edm::ParameterSet defaultConfig;
+    defaultConfig.addParameter("maxDistance", .001);
+    defaultConfig.addParameter("maxNbrOfIterations", 20);
+    defaultConfig.addParameter("maxOfInitialValue", 9999.);
+    kcvFitter_->setParameters(defaultConfig);
 }
 
 KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):
