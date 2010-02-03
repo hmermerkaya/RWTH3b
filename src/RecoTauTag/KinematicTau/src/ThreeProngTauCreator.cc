@@ -245,7 +245,7 @@ bool ThreeProngTauCreator::checkSecVtx(std::vector<reco::TransientTrack> &trkVct
 		bool useAdaptive = false;
 		if(useAdaptive){
 			AdaptiveVertexFitter avf;//more robust?
-			avf.setWeightThreshold(0.1);//weight per track. lasse (fast) alle fits zu, sonst exception
+			avf.setWeightThreshold(0.1);//weight per track. allow almost every fit, else --> exception
 			try{
 				transVtx = avf.vertex(trkVct);//AdaptiveVertexFitter
 			}catch(...){
@@ -302,8 +302,8 @@ RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauG
 RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess){
 	VirtualKinematicParticleFactory factory;
 	//(x,y,z,p_x,p_y,p_z,m)
-	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//start-pT aus MET nehmen?
-//	const KinematicParameters parameters(AlgebraicVector7(0,0,0,impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//start-pT aus MET nehmen?
+	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
+//	const KinematicParameters parameters(AlgebraicVector7(0,0,0,impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
 	ROOT::Math::SVector<double,28> svector28;
 	for(unsigned int i=1; i!=22; i++) svector28(i-1) = pow(10.,-12.);
 	for(unsigned int i=22; i!=28; i++) svector28(i-1) = pow(10.,-12.);//correlation between mass and momentum/vertex
