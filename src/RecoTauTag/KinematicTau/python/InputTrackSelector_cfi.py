@@ -22,7 +22,10 @@ pfTauSelector = cms.EDFilter("PFTauSelector",
 InputTrackSelector = cms.EDFilter("InputTrackSelector",#creates PFTauRefVector and collection of vector<reco::TrackRefVector> for each tau cand
 	tauCandidates = cms.InputTag(pfTau+"PFTauProducer"),
 	minTracks = cms.uint32(3),#only tau candidates with more/equal than minTracks are selected
-	minTau = cms.untracked.uint32(1)#minimum taus to select (otherwise filter returns false)
+	minTau = cms.untracked.uint32(1),#minimum taus to select (otherwise filter returns false)
+    primVtx = cms.InputTag("offlinePrimaryVertices"),#offlinePrimaryVerticesFromCTFTrack
+	minVtxTracks = cms.untracked.int32(3),
+	maxChi2ndf = cms.untracked.double(10.0),
 )
 
 tauSelectorSeq = cms.Sequence(

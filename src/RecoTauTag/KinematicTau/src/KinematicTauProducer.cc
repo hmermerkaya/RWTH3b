@@ -60,7 +60,7 @@ void KinematicTauProducer::beginJob(){
 void KinematicTauProducer::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	std::cout<<"=- KinematicTauProducer:: asked for >= "<<minKinTau_<<" kinTaus per event. efficiency = "<<ratio<<" ("<<cntFound_<<"/"<<cnt_<<")"<<std::endl;
+    printf("--> [KinematicTauProducer] asks for >= %i kinTaus per event. Selection efficiency: %d/%d = %.2f%%\n", minKinTau_, cntFound_, cnt_, ratio*100.0);
 }
 
 bool KinematicTauProducer::select(SelectedKinematicDecayCollection & refitDecays, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx){

@@ -7,6 +7,7 @@
 <use name=RecoVertex/KinematicFit>
 <use name=DataFormats/RecoCandidate>
 <use name=CommonTools/RecoAlgos>
+<use name=RecoVertex/PrimaryVertexProducer>
 <flags EDM_PLUGIN=1>
 <export>
    <lib name=RecoTauTagKinematicTau>
