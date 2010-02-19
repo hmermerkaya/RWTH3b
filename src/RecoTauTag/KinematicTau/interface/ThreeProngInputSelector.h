@@ -34,6 +34,9 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/TrackFwd.h"
 
+#include "DataFormats/TauReco/interface/PFTau.h"
+#include "DataFormats/KinematicFit/interface/PFTauFwd.h"
+
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 
@@ -66,13 +69,13 @@ private:
     template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
     std::vector<std::vector<reco::TrackRef> > choose3Prongs(std::vector<reco::TrackRef> &input);
     bool createNewPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<reco::TrackRef> & tautracks);
-    bool select(InputTrackCollection & selected, reco::VertexCollection & primaryVertex);
+    bool select(InputTrackCollection & selected, InputTauCollection & taurefs, reco::VertexCollection & primaryVertex);
     bool checkPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<TransientVertex> & newvertices);
     bool choose3bestTracks(InputTrackCollection & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx);
 	
 	edm::Event * iEvent_;
     edm::ParameterSet iConfig_;
-	edm::InputTag inputCollectionTag_, primVtx_;
+	edm::InputTag inputCollectionTag_, primVtx_, selectedTauCandidatesTag_;
 	unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
     double maxChi2ndf_;    
 

@@ -3,6 +3,7 @@
 ThreeProngInputSelector::ThreeProngInputSelector(const edm::ParameterSet& iConfig):
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
 primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
+selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCandidates" ) ),
 minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),//filter returns true if more/equal than minTau_ taus were selected
 minVtxTracks_(iConfig.getUntrackedParameter("minVtxTracks", int(3))),
 maxChi2ndf_(iConfig.getUntrackedParameter("maxChi2ndf", double(10.0)))
@@ -10,6 +11,7 @@ maxChi2ndf_(iConfig.getUntrackedParameter("maxChi2ndf", double(10.0)))
     iConfig_ = iConfig;
 	produces<int>("threeProngFlag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
+    produces<InputTauCollection>("InputTauRefs");//needed to fill in unfit KinematicParticle later on
     produces<reco::VertexCollection>("primVtx");//has to be vector. save one of length one
 }
 
@@ -28,12 +30,15 @@ bool ThreeProngInputSelector::filter(edm::Event& iEvent, const edm::EventSetup& 
 
 	std::auto_ptr<InputTrackCollection> selected_ = std::auto_ptr<InputTrackCollection >(new InputTrackCollection);
 	InputTrackCollection & selected = * selected_;
+    std::auto_ptr<InputTauCollection> PFTauRef_ = std::auto_ptr<InputTauCollection>(new InputTauCollection);
+	InputTauCollection & PFTauRefs = * PFTauRef_;
     std::auto_ptr<reco::VertexCollection> primaryVertex_ = std::auto_ptr<reco::VertexCollection>(new reco::VertexCollection);
 	reco::VertexCollection & primaryVertex = * primaryVertex_;
         
-	bool filterValue = select(selected, primaryVertex);
+	bool filterValue = select(selected, PFTauRefs, primaryVertex);
     
 	iEvent_->put(selected_,"InputTracks");
+    iEvent_->put(PFTauRef_,"InputTauRefs");
 	iEvent_->put(primaryVertex_,"primVtx");
 
 	std::auto_ptr<int> flagPtr = std::auto_ptr<int>(new int);
@@ -184,7 +189,7 @@ bool ThreeProngInputSelector::createNewPrimVtx(reco::VertexCollection & primaryV
     std::vector<TransientVertex> newvertices = PVPA.vertices(convToTransTrck(vtxtracks), vertexBeamSpot);
     return checkPrimVtx(primaryVertex, newvertices);
 }
-bool ThreeProngInputSelector::select(InputTrackCollection & selected, reco::VertexCollection & primaryVertex){
+bool ThreeProngInputSelector::select(InputTrackCollection & selected, InputTauCollection & taurefs, reco::VertexCollection & primaryVertex){
     std::vector<std::vector<std::vector<reco::TrackRef> > > threeProngCombis;
     std::vector<reco::TrackRef> tautracks;
     
@@ -195,6 +200,16 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, reco::Vert
         LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::select: no InputTrackCollection found!";
         return false;
     }
+    edm::Handle<InputTauCollection> inputTauCollection;
+	iEvent_->getByLabel(selectedTauCandidatesTag_, inputTauCollection);
+    taurefs = *inputTauCollection;
+    
+    if(!inputTauCollection.isValid()){
+        LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::select: no InputTauCollection found!";
+        return false;
+    }
+    
+    
     for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks) {
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
@@ -222,8 +237,14 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, reco::Vert
     bool newvtxsuccess = createNewPrimVtx(primaryVertex, tautracks);
     if(newvtxsuccess) {
         std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator candidates;
+        InputTauCollection::iterator pfiter = taurefs.begin();
         for (candidates = threeProngCombis.begin(); candidates != threeProngCombis.end(); ++candidates) {
-            choose3bestTracks(selected, *candidates, primaryVertex.front());
+            bool success = choose3bestTracks(selected, *candidates, primaryVertex.front());
+            if (!success) {
+                pfiter = taurefs.erase(pfiter);
+            } else {
+                ++pfiter;
+            }
         }
         if (selected.size() >= minTau_) {
             LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: "<<selected.size()<<" tau candidate(s) reconstructed.";
@@ -262,7 +283,7 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		std::vector<reco::TransientTrack> trks = convToTransTrck(*iter);
 		if(!checkSecVtx(trks, tmpVtx)){
 			iter = combis.erase(iter);
-			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to bad vertex. "<<combis.size()<<" combis left.";
+			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks: Erased combi due to bad vertex. "<<combis.size()<<" combis left.";
 			continue;
 		}
         double massA1 = getInvariantMass(*iter, 0.140);
@@ -275,7 +296,7 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		if(vtxC.isValid()) movements.push_back(std::make_pair(index,vtxC.movement()));
 		else{
 			iter = combis.erase(iter);
-			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to bad vertex correction. "<<combis.size()<<" combis left.";
+			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks: Erased combi due to bad vertex correction. "<<combis.size()<<" combis left.";
 			continue;
 		}
 		
@@ -285,7 +306,7 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		++iter;//only moved if nothing was deleted
 	}
 	if (combis.size()<1){
-		if (combis.size()>=1) printf("ThreeProngTauCreator::choose3bestTracks:No combi survived.\n");
+		LogTrace("ThreeProngTauCreator::choose3bestTracks: No combi survived.");
 		return false;
 	}
 	
