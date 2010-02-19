@@ -7,10 +7,11 @@ from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 from RecoVertex.PrimaryVertexProducer.OfflinePrimaryVertices_cfi import *
 
 ThreeProngInputSelector = cms.EDFilter("ThreeProngInputSelector",#creates PFTauRefVector and collection of vector<reco::TrackRefVector> of size 3 for each tau cand and recreates the primary vertex 
-	tauCandidates = cms.InputTag("InputTracks"),
+	tauCandidates = cms.InputTag("InputTrackSelector","InputTracks"),
     primVtx = cms.InputTag("offlinePrimaryVertices"),#offlinePrimaryVerticesFromCTFTrack
 	minVtxTracks = cms.untracked.int32(3),
 	maxChi2ndf = cms.untracked.double(10.0),
+    minTau = cms.untracked.uint32(1),#minimum taus to select (otherwise filter returns false)
 )
 
 #add OfflinePrimaryVertices's config to ThreeProngInputSelector

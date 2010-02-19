@@ -73,11 +73,10 @@ private:
 	edm::Event * iEvent_;
     edm::ParameterSet iConfig_;
 	edm::InputTag inputCollectionTag_, primVtx_;
-	unsigned int cnt_, cntFound_;
-    
+	unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
+    double maxChi2ndf_;    
+
     edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
-	unsigned int minVtxTracks_;
-	double maxChi2ndf_;    
 
     
     template <typename T> double getInvariantMass(const T& tracks, const double mass = 0.140){//if second argument empty default pion is supposed

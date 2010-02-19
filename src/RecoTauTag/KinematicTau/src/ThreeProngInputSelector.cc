@@ -3,6 +3,7 @@
 ThreeProngInputSelector::ThreeProngInputSelector(const edm::ParameterSet& iConfig):
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
 primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
+minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),//filter returns true if more/equal than minTau_ taus were selected
 minVtxTracks_(iConfig.getUntrackedParameter("minVtxTracks", int(3))),
 maxChi2ndf_(iConfig.getUntrackedParameter("maxChi2ndf", double(10.0)))
 {
@@ -29,9 +30,9 @@ bool ThreeProngInputSelector::filter(edm::Event& iEvent, const edm::EventSetup& 
 	InputTrackCollection & selected = * selected_;
     std::auto_ptr<reco::VertexCollection> primaryVertex_ = std::auto_ptr<reco::VertexCollection>(new reco::VertexCollection);
 	reco::VertexCollection & primaryVertex = * primaryVertex_;
-    
+        
 	bool filterValue = select(selected, primaryVertex);
-
+    
 	iEvent_->put(selected_,"InputTracks");
 	iEvent_->put(primaryVertex_,"primVtx");
 
@@ -54,7 +55,7 @@ void ThreeProngInputSelector::beginJob(){
 void ThreeProngInputSelector::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	printf("--> [ThreeProngInputSelector] found at least one 3-prong per event. Efficiency: %d/%d = %.2f%%\n", cntFound_, cnt_, ratio*100.0);
+	printf("--> [ThreeProngInputSelector] found at least %i 3-prongs per event. Efficiency: %d/%d = %.2f%%\n", minTau_, cntFound_, cnt_, ratio*100.0);
 }
 bool ThreeProngInputSelector::sumCharge(std::vector<reco::TrackRef> &input){
 	int sum = abs(input.at(0)->charge() + input.at(1)->charge() + input.at(2)->charge());
@@ -141,7 +142,8 @@ std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector::choose3Prongs
 			iter = combis.erase(iter);
 			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3Prongs: erased combi due to wrong mass. "<<combis.size()<<" combis left.";
 			continue;
-		}        
+		}
+        ++iter;
     }
     
     return combis;
@@ -151,8 +153,18 @@ bool ThreeProngInputSelector::createNewPrimVtx(reco::VertexCollection & primaryV
 	iEvent_->getByLabel( primVtx_, primVtxs);
 
     if(!primVtxs.isValid()){
-        LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::createNewPrimVtx: no PrimaryVertexCollection found!";
+        LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::createNewPrimVtx: No PrimaryVertexCollection found!";
         return false;
+    }
+    
+    edm::InputTag beamSpotLabel = iConfig_.getParameter<edm::InputTag>("beamSpotLabel");
+    reco::BeamSpot vertexBeamSpot;
+    edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
+    iEvent_->getByLabel(beamSpotLabel,recoBeamSpotHandle);
+    if (recoBeamSpotHandle.isValid()){
+        vertexBeamSpot = *recoBeamSpotHandle;
+    }else{
+        edm::LogError("ThreeProngInputSelector") << "ThreeProngTauCreator::createNewPrimVtx: No beam spot available from EventSetup";
     }
     
     PrimaryVertexProducerAlgorithm PVPA(iConfig_);
@@ -169,7 +181,7 @@ bool ThreeProngInputSelector::createNewPrimVtx(reco::VertexCollection & primaryV
             if(!exclude) vtxtracks.push_back((*tracks).castTo<reco::TrackRef>());
         }
     }
-    std::vector<TransientVertex> newvertices = PVPA.vertices(convToTransTrck(vtxtracks));
+    std::vector<TransientVertex> newvertices = PVPA.vertices(convToTransTrck(vtxtracks), vertexBeamSpot);
     return checkPrimVtx(primaryVertex, newvertices);
 }
 bool ThreeProngInputSelector::select(InputTrackCollection & selected, reco::VertexCollection & primaryVertex){
@@ -183,17 +195,15 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, reco::Vert
         LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::select: no InputTrackCollection found!";
         return false;
     }
-    
     for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks) {
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
         threeProngCombis.push_back(choose3Prongs(input));
 	}
-    
     std::vector<std::vector<std::vector<reco::TrackRef> > >::const_iterator candidates;
     std::vector<std::vector<reco::TrackRef> > ::const_iterator triplets;
     std::vector<reco::TrackRef>::const_iterator tracks, trackrefs;
-    
+        
     for(candidates = threeProngCombis.begin(); candidates != threeProngCombis.end(); ++candidates){
         for(triplets = candidates->begin(); triplets != candidates->end(); ++triplets){
             for(tracks = triplets->begin(); tracks != triplets->end(); ++tracks){
@@ -208,18 +218,24 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, reco::Vert
             }
         }
     }
-    
+        
     bool newvtxsuccess = createNewPrimVtx(primaryVertex, tautracks);
     if(newvtxsuccess) {
         std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator candidates;
         for (candidates = threeProngCombis.begin(); candidates != threeProngCombis.end(); ++candidates) {
             choose3bestTracks(selected, *candidates, primaryVertex.front());
         }
-        if (selected.size() > 0) return true;
-    } else {
-        return false;
+        if (selected.size() >= minTau_) {
+            LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: "<<selected.size()<<" tau candidate(s) reconstructed.";
+            cntFound_++;
+            return true;
+        } else {
+            LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: Warning! Only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Event.";
+            return false;
+        }
     }
-    return true;
+    LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: Unable to calculate a new primary vertex. No tau candidates reconstructed.";
+    return false;
 }
 bool ThreeProngInputSelector::checkPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<TransientVertex> & newvertices){
     std::vector<reco::Vertex> vtx;
@@ -234,7 +250,6 @@ bool ThreeProngInputSelector::checkPrimVtx(reco::VertexCollection & primaryVerte
 	if(vtx.size()>1){
 		sort(vtx.begin(), vtx.end(), cmpNormalizedChi2<reco::Vertex>);
 	}
-	cntFound_++;
 	primaryVertex.push_back(vtx.front());
 	return true;
 }
