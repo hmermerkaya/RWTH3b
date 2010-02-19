@@ -38,7 +38,7 @@ void PrimVtxSelector::beginJob(){
 void PrimVtxSelector::endJob() {
 	float ratio = 0.0;
 	if(cnt!=0) ratio=(float)cntFound/cnt;
-	printf("=- PrimVtxSelector:: asks for vertex with >= %i tracks and chi2ndf <= %f. efficiency = %6.3f (%i/%i)\n",minTracks_, maxChi2ndf_, ratio, cntFound, cnt);
+	printf("--> [PrimVtxSelector] asks for vertex with >= %i tracks and chi2ndf <= %f. Efficiency: %d/%d = %.2f%%\n", minTracks_, maxChi2ndf_, cntFound, cnt, ratio*100.0);
 }
 
 bool PrimVtxSelector::checkPrimVtx(reco::VertexCollection & primaryVertex){
