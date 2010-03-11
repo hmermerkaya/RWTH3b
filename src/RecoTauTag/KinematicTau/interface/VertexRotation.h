@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.3 2010/01/27 14:28:53 perchall Exp $
+// $Id: VertexRotation.h,v 1.4 2010/01/28 15:52:27 perchall Exp $
 //
 //
 
@@ -143,9 +143,13 @@ public:
 	}
 	double calcThetaMax(){
 		double ma1 = a1_.M(), pa1 = a1_.P(), Mtau = 1.777;
-		double thetaMax = asin((-pow(ma1,2.) + pow(Mtau,2.))/(2.*Mtau*pa1));// can be negative
+		double argument = (-pow(ma1,2.) + pow(Mtau,2.))/(2.*Mtau*pa1);// can be negative
+		//catch nan
+		if(fabs(argument) >  1.0) printf("VertexRotation::calcThetaMax: Warning! arcsin(%f) = %f. (pa1 %f, ma1 %f)\n", argument, asin(argument), pa1, ma1);
+		if(argument >  1.0) argument =  1.0;
+		if(argument < -1.0) argument = -1.0;
 		
-		return thetaMax;
+		return asin(argument);
 	}
 	
 	/**
