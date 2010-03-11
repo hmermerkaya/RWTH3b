@@ -38,9 +38,16 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	}
 	if (input.size()>3){
 		if(!choose3bestTracks(input, primVtx)) return false;
-	}else if(!sumCharge(input)){
-		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad charge sum.";
-		return false;
+	}else{
+		if(!sumCharge(input)){
+			LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad charge sum.";
+			return false;
+		}
+		double massA1 = getInvariantMass(input, 0.140);
+		if(massA1 > 2.0 || massA1 < 3*0.140){//soft upper value
+			LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad a1 mass.";
+			return false;
+		}
 	}
 	
 	selectedTracks_ = input;
