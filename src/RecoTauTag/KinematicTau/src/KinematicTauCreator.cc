@@ -10,6 +10,7 @@ transTrackBuilder_(transTrackBuilder)
 	defaultConfig.addParameter("maxNbrOfIterations", 20);
 	defaultConfig.addParameter("maxOfInitialValue", 9999.);
 	kcvFitter_->setParameters(defaultConfig);
+	modifiedPV_ = reco::Vertex();
 }
 
 KinematicTauCreator::KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):
@@ -17,6 +18,7 @@ transTrackBuilder_(transTrackBuilder)
 {
     kcvFitter_ = new KinematicConstrainedVertexFitter();
     kcvFitter_->setParameters(cfg);
+	modifiedPV_ = reco::Vertex();
 }
 
 KinematicTauCreator::~KinematicTauCreator()
@@ -63,4 +65,9 @@ std::vector<reco::TrackRef> KinematicTauCreator::getSelectedTracks()
 RefCountedKinematicTree KinematicTauCreator::getKinematicTree()
 {
     return kinTree_;
+}
+
+reco::Vertex KinematicTauCreator::getModifiedPrimaryVertex()
+{
+	return modifiedPV_;
 }

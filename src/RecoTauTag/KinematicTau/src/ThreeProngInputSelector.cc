@@ -265,7 +265,7 @@ bool ThreeProngInputSelector::checkPrimVtx(reco::VertexCollection & primaryVerte
         if(v.tracksSize() >= minVtxTracks_ && v.normalizedChi2() <= maxChi2ndf_) vtx.push_back(v);
     }
 	if(vtx.size()<1){
-		printf("evt %d ThreeProngInputSelector::checkPrimVtx: No valid primary vertex found. Skip event.\n", iEvent_->id().event());
+		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkPrimVtx: No valid primary vertex found. Skip event "<<iEvent_->id().event()<<".";
 		return false;
 	}
 	if(vtx.size()>1){

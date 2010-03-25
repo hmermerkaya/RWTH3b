@@ -93,7 +93,7 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection & refitDecays
 			//fitting debug only:
 			std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
 			saveSelectedTracks(usedTracks, daughterCollection);
-			saveKinParticles(kinTauCrtr, refitDecays, primaryVtx);
+			saveKinParticles(kinTauCrtr, refitDecays);
 			//save tau ref
 			reco::PFTauRef tauRef = usedTaus->at(index);
 			PFTauRefCollection.push_back(tauRef);
@@ -133,7 +133,7 @@ void KinematicTauProducer::saveSelectedTracks(const std::vector<reco::TrackRef> 
 		daughterCollection.push_back(tmpCand);
 	}
 }
-int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::Vertex &primVtx){
+int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays){
 	RefCountedKinematicTree tree = kinTauCrtr->getKinematicTree();
 	KinematicConstrainedVertexFitter *kcvFitter = kinTauCrtr->getFitter();
 	try{
@@ -168,7 +168,7 @@ int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, Sele
 		p4tmp.SetVectM(TVector3((*selTrk)->px(), (*selTrk)->py(), (*selTrk)->pz()), 0.1395702);
 		initialTauMomentum += p4tmp;
 	}
-	refitTauDecay.back().setInitialTauState(initialTauMomentum, primVtx);//initial tau state consists of initial primVtx (including errors) and the prefit tau parameters
+	refitTauDecay.back().setInitialTauState(initialTauMomentum, kinTauCrtr->getModifiedPrimaryVertex());//initial tau state consists of rotated primVtx (including initial errors) and the prefit tau parameters
 	
 	std::vector<RefCountedKinematicParticle> daughters = tree->daughterParticles();
 	for (std::vector<RefCountedKinematicParticle>::iterator iter=daughters.begin(); iter!=daughters.end(); ++iter) {
@@ -208,7 +208,7 @@ void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & 
 			}
 			if(*particle!=NULL){
 				(*particle)->setCandRef(newRefs[index]);
-			}else std::cout<<"Reference not modified!!!(at index="<<index<<")"<<std::endl;
+			}else std::cout<<"KinematicTauProducer::correctReferences: Reference not modified!!!(at index="<<index<<")"<<std::endl;
 			index++;
 		}
 	}

@@ -74,25 +74,23 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	TVector3 tauFlghtDir;
 	vtxC.tryCorrection(primVtx, secVtx, theta0, tauFlghtDir);//can modify all 4 values; rotation is forced to reach thetaMax
 	//	vtxC.dumpEvt(primVtx, secVtx, thetaMax);
+	if(vtxC.movement() > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
 	
 //	VirtualKinematicParticleFactory factory;
-//	for(unsigned int i = 0; i!=transTrkVect.size();i++){//apply vertex mod
+//	for(unsigned int i = 0; i!=transTrkVect.size();i++){//enlarge vtx errors
 //		RefCountedKinematicParticle tmp = kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma);
 //		//modify vertex
-//		AlgebraicVector7 newPar, oldPar = tmp->currentState().kinematicParameters().vector();
-//		newPar(0) = secVtx.position().x();
-//		newPar(1) = secVtx.position().y();
-//		newPar(2) = secVtx.position().z();
-//		newPar(3) = oldPar(3);
-//		newPar(4) = oldPar(4);
-//		newPar(5) = oldPar(5);
-//		newPar(6) = oldPar(6);
-//		KinematicParameters newParm(newPar);
-//		KinematicState newkineState(newParm, tmp->currentState().kinematicParametersError(), tmp->currentState().particleCharge(), transTrackBuilder_.field());
+//		AlgebraicSymMatrix77 newPar = tmp->currentState().kinematicParametersError().matrix();
+//		for (int i = 0; i < 3; i++) {//modify only vertex errors
+//			for (int j = 0; j < 3; j++) {
+//				if(i==j) newPar(i,j) = 100*newPar(i,j);//scale errors by factor of sqrt(100)
+//			}
+//		}
+//		KinematicState newkineState(tmp->currentState().kinematicParameters().vector(), newPar, tmp->currentState().particleCharge(), transTrackBuilder_.field());
 //		float chi2 = tmp->chiSquared(), ndof = tmp->degreesOfFreedom();
 //		pions.push_back(factory.particle(newkineState, chi2, ndof, 0,0));
 //	}
-	for(unsigned int i = 0; i!=transTrkVect.size();i++){//apply vertex mod
+	for(unsigned int i = 0; i!=transTrkVect.size();i++){
 		pions.push_back(kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma));
 	}
 	
@@ -159,7 +157,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	
 	if(kinTree_->isValid()) return true;
 	else{
-		printf("ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.\n");
+		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
 		return false;
 	}
 }

@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.4 2010/01/28 15:52:27 perchall Exp $
+// $Id: VertexRotation.h,v 1.5 2010/03/11 17:37:06 perchall Exp $
 //
 //
 
@@ -119,9 +119,12 @@ public:
 		return success_;
 	}
 
+	/**
+	 returns fake vertex at modified position
+	 */
 	reco::Vertex newPrimVertex(TVector3 & newPoint, reco::Vertex & oldVtx){
 		const math::XYZPoint point(newPoint.X(), newPoint.Y(), newPoint.Z());
-		reco::Vertex vtx(point, oldVtx.error(), oldVtx.chi2(), oldVtx.ndof(), oldVtx.tracksSize());
+		reco::Vertex vtx(point, oldVtx.error());
 		return vtx;
 	}
 	TransientVertex newSecVertex(TVector3 & newPoint, TransientVertex & oldVtx){
@@ -211,6 +214,7 @@ private:
 	void clear(){
 		valid_ = false;
 		success_ = false;
+		movement_ = 0.0;
 	}
 
 	double vtxDistanceSignificance(const TVector3 & pv, const TMatrixDSym & pvE, const TVector3 & sv, const TMatrixDSym & svE, TVector3 * correction = 0){
