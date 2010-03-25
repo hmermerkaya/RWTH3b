@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.5 2010/03/11 17:37:06 perchall Exp $
+// $Id: VertexRotation.h,v 1.6 2010/03/25 16:39:36 perchall Exp $
 //
 //
 
@@ -225,8 +225,8 @@ private:
 		if(correction==0) corr = sv - pv;
 		else corr = *correction;
 		double error = projectedError(corr, matrix);
-		double significance = 0.;
-		if(error!=0) significance = corr.Mag()/error;
+		double significance = -1.;
+		if(error!=0.) significance = corr.Mag()/error;
 		
 		return significance;
 	}
@@ -237,8 +237,10 @@ private:
 		TVectorD dist;
 		dist.ResizeTo(3);
 		for(unsigned int i=0; i!=3; i++) dist[i]= unit(i);
+		double similarity = error.Similarity(dist);
+		if(similarity<0.) similarity = 0.;//catch NaN
 		
-		return sqrt(error.Similarity(dist));
+		return sqrt(similarity);
 	}
 	
 	
