@@ -275,7 +275,7 @@ bool ThreeProngInputSelector::checkPrimVtx(reco::VertexCollection & primaryVerte
 	return true;
 }
 bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx){
-	std::vector<std::pair<int,float> > chi2s;
+//	std::vector<std::pair<int,float> > chi2s;
 	std::vector<std::pair<int,double> > movements;
 	unsigned index=0;
 	for (std::vector<std::vector<reco::TrackRef> >::iterator iter=combis.begin(); iter!=combis.end();) {
@@ -292,15 +292,9 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		double theta0;
 		TVector3 tauFlghtDir;
 		reco::Vertex pvTemp = pVtx;//do not modify original pv here
-		vtxC.tryCorrection(pvTemp, tmpVtx, theta0, tauFlghtDir, false);//do not force rotation, only rotate within errors
-		if(vtxC.isValid()) movements.push_back(std::make_pair(index,vtxC.movement()));
-		else{
-			iter = combis.erase(iter);
-			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks: Erased combi due to bad vertex correction. "<<combis.size()<<" combis left.";
-			continue;
-		}
-		
-		chi2s.push_back(std::make_pair(index,tmpVtx.normalisedChiSquared()));
+		double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
+		movements.push_back(std::make_pair(index, significance));
+//		chi2s.push_back(std::make_pair(index,tmpVtx.normalisedChiSquared()));
 		
 		++index;
 		++iter;//only moved if nothing was deleted

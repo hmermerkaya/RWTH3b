@@ -72,9 +72,9 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	
 	double theta0;
 	TVector3 tauFlghtDir;
-	vtxC.tryCorrection(primVtx, secVtx, theta0, tauFlghtDir);//can modify all 4 values; rotation is forced to reach thetaMax
+	double significance = vtxC.rotatePV(primVtx, secVtx, theta0, tauFlghtDir);//rotation is forced to reach thetaMax
 	//	vtxC.dumpEvt(primVtx, secVtx, thetaMax);
-	if(vtxC.movement() > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
+	if(significance > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
 	
 //	VirtualKinematicParticleFactory factory;
 //	for(unsigned int i = 0; i!=transTrkVect.size();i++){//enlarge vtx errors
@@ -169,7 +169,7 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 		std::cout<<"ThreeProngTauCreator::choose3bestTracks:Bad combis. Skip it."<<std::endl;
 		return false;
 	}
-	std::vector<std::pair<int,float> > chi2s;
+//	std::vector<std::pair<int,float> > chi2s;
 	std::vector<std::pair<int,double> > movements;
 	unsigned index=0;
 	for (std::vector<std::vector<reco::TrackRef> >::iterator iter=combis.begin(); iter!=combis.end();) {
@@ -196,15 +196,9 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 		double theta0;
 		TVector3 tauFlghtDir;
 		reco::Vertex pvTemp = pVtx;//do not modify original pv here
-		vtxC.tryCorrection(pvTemp, tmpVtx, theta0, tauFlghtDir, false);//do not force rotation, only rotate within errors
-		if(vtxC.isValid()) movements.push_back(std::make_pair(index,vtxC.movement()));
-		else{
-			iter = combis.erase(iter);
-			LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to bad vertex correction. "<<combis.size()<<" combis left.";
-			continue;
-		}
-		
-		chi2s.push_back(std::make_pair(index,tmpVtx.normalisedChiSquared()));
+		double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
+		movements.push_back(std::make_pair(index,significance));//significance of vertex modification
+//		chi2s.push_back(std::make_pair(index,tmpVtx.normalisedChiSquared()));
 		
 		++index;
 		++iter;//only moved if nothing was deleted

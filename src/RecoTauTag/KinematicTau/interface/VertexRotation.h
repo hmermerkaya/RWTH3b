@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.6 2010/03/25 16:39:36 perchall Exp $
+// $Id: VertexRotation.h,v 1.7 2010/03/25 17:24:07 perchall Exp $
 //
 //
 
@@ -41,7 +41,9 @@ public:
 	~VertexRotation(){
 	};
 
-
+	/**
+	 rotates both primary and secondary vertex
+	 */
 	bool tryCorrection(reco::Vertex & pVtx, TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir, bool forceRotation = true){
 		valid_ = false, success_ = false;
 		TVector3 pv(pVtx.x(), pVtx.y(), pVtx.z());
@@ -118,7 +120,38 @@ public:
 		
 		return success_;
 	}
-
+	/**
+	 rotates primary vertex around secondary one and returns the vertex significance of the modification (PV-PVrot [sigma])
+	 */
+	double rotatePV(reco::Vertex & pVtx, const TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir){
+		double significance = 0.0;
+		
+		TVector3 pv(pVtx.x(), pVtx.y(), pVtx.z());
+		TVector3 sv(sVtx.position().x(), sVtx.position().y(), sVtx.position().z());
+		
+		TVector3 ps = sv - pv;
+		theta = unsignedAngle(ps, a1_.Vect());
+		double thetaMax = fabs(calcThetaMax());//can only be negative for too heavy a1
+		
+		TVector3 norm = ps.Cross(a1_.Vect());//norm vect of surface in which theta is defined
+		if(norm.Mag() == 0.0) return significance;
+		TRotation rot;
+		rot.Rotate(theta - thetaMax, norm);//rotate right if theta > thetaMax, if not rotate left
+		TVector3 psRot = rot * ps;
+		TVector3 pvRot = sv - psRot;//new primary vertex position
+		//now project the errors into direction of correction		
+		TMatrixDSym matrixP(3);
+		matrixP.ResizeTo(TMatrixDSym(3));
+		for(int i=0; i!=3; i++)	for(int j=0; j!=3; j++) matrixP(i,j) = pVtx.covariance(i,j);//diagonals are squares of sigmas
+		significance = vtxDistanceSignificance(pv, matrixP, pvRot, matrixP);//modification in units of sigma
+//		if(verbosity_>=2) std::cout<<"significance [sigma] = "<<significance<<std::endl;
+		tauFlghtDir = psRot;
+		theta = unsignedAngle(tauFlghtDir, a1_.Vect());
+		pVtx = newPrimVertex(pvRot, pVtx);
+		
+		return significance;
+	}
+	
 	/**
 	 returns fake vertex at modified position
 	 */
