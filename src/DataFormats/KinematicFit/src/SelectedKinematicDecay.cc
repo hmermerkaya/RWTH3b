@@ -8,6 +8,12 @@ SelectedKinematicDecay::SelectedKinematicDecay() {
 SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles)
 {
     particles_ = particles;
+	signalPFChargedHadrCands_ = -1;
+}
+SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands)
+{
+    particles_ = particles;
+	signalPFChargedHadrCands_ = signalPFChargedHadrCands;
 }
 
 SelectedKinematicParticle* SelectedKinematicDecay::topParticle()
@@ -41,4 +47,7 @@ void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicPart
 			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
         }
     }
+}
+int SelectedKinematicDecay::signalPFChargedHadrCands(){
+	return signalPFChargedHadrCands_;
 }

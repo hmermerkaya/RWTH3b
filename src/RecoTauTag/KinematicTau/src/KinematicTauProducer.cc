@@ -3,7 +3,7 @@
 KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
 fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
 primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
-selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCandidates" ) ),//currently not in use
+selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCandidates" ) ),//only used to save number of tracks in signal cone of PFTau candidate
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) ),
 minKinTau_( iConfig.getUntrackedParameter<unsigned int>( "minKinTau", 1 ) )//filter returns true if more than minKinTau_ taus were fitted
 {
@@ -92,10 +92,10 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection & refitDecays
 
 			//fitting debug only:
 			std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
-			saveSelectedTracks(usedTracks, daughterCollection);
-			saveKinParticles(kinTauCrtr, refitDecays);
-			//save tau ref
 			reco::PFTauRef tauRef = usedTaus->at(index);
+			saveSelectedTracks(usedTracks, daughterCollection);
+			saveKinParticles(kinTauCrtr, refitDecays, tauRef);
+			//save tau ref
 			PFTauRefCollection.push_back(tauRef);
 		}
 	}
@@ -133,7 +133,7 @@ void KinematicTauProducer::saveSelectedTracks(const std::vector<reco::TrackRef> 
 		daughterCollection.push_back(tmpCand);
 	}
 }
-int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays){
+int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::PFTauRef & tauRef){
 	RefCountedKinematicTree tree = kinTauCrtr->getKinematicTree();
 	KinematicConstrainedVertexFitter *kcvFitter = kinTauCrtr->getFitter();
 	try{
@@ -183,7 +183,7 @@ int KinematicTauProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, Sele
 	}
 	
 	if(refitTauDecay.size() != 5) printf("KinematicTauProducer::saveSelectedTracks:Saved only %i refitted particles.\n", refitTauDecay.size());
-	else refitDecays.push_back(refitTauDecay);
+	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size()) );
 
 	return refitTauDecay.size();
 }
