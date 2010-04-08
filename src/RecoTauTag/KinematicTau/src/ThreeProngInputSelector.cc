@@ -86,7 +86,7 @@ bool ThreeProngInputSelector::checkSecVtx(std::vector<reco::TransientTrack> &trk
 			try{
 				transVtx = avf.vertex(trkVct);//AdaptiveVertexFitter
 			}catch(...){
-				printf("ThreeProngTauCreator::checkSecVtx: Secondary vertex fit failed. Skip it.\n");
+				printf("ThreeProngInputSelector::checkSecVtx: Secondary vertex fit failed. Skip it.\n");
 				return false;
 			}
 		}else{
@@ -94,17 +94,17 @@ bool ThreeProngInputSelector::checkSecVtx(std::vector<reco::TransientTrack> &trk
 			try{
 				transVtx = kvf.vertex(trkVct);//KalmanVertexFitter
 			}catch(...){
-				printf("ThreeProngTauCreator::checkSecVtx: Secondary vertex fit failed. Skip it.\n");
+				printf("ThreeProngInputSelector::checkSecVtx: Secondary vertex fit failed. Skip it.\n");
 				return false;
 			}
 		}
-		if(!transVtx.isValid()) printf("ThreeProngTauCreator::checkSecVtx: Secondary vertex not valid.\n");
+		if(!transVtx.isValid()) printf("ThreeProngInputSelector::checkSecVtx: Secondary vertex not valid.\n");
 		if(!useAdaptive){
 			if(!transVtx.hasRefittedTracks()){
-				LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::checkSecVtx: Secondary has 0 refitted tracks.";
+				LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkSecVtx: Secondary has 0 refitted tracks.";
 				return false;
 			}else if(transVtx.refittedTracks().size()!=trkVct.size()){
-				LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::checkSecVtx: Secondary has only "<<transVtx.refittedTracks().size()<<" refitted of "<<trkVct.size()<<" initial tracks.";
+				LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkSecVtx: Secondary has only "<<transVtx.refittedTracks().size()<<" refitted of "<<trkVct.size()<<" initial tracks.";
 				return false;
 			}
 		}
@@ -139,13 +139,13 @@ std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector::choose3Prongs
 	for (std::vector<std::vector<reco::TrackRef> >::iterator iter=combis.begin(); iter!=combis.end();) {
 		if(!sumCharge(*iter)){
 			iter = combis.erase(iter);
-			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3Prongs: erased combi due to wrong charge sum. "<<combis.size()<<" combis left.";
+			LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3Prongs: erased combi due to wrong charge sum. "<<combis.size()<<" combis left.";
 			continue;
 		}
 		double massA1 = getInvariantMass(*iter, 0.140);
 		if(massA1 > 2.0 || massA1 < 3*0.140){//soft upper value
 			iter = combis.erase(iter);
-			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3Prongs: erased combi due to wrong mass. "<<combis.size()<<" combis left.";
+			LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3Prongs: erased combi due to wrong mass. "<<combis.size()<<" combis left.";
 			continue;
 		}
         ++iter;
@@ -158,7 +158,7 @@ bool ThreeProngInputSelector::createNewPrimVtx(reco::VertexCollection & primaryV
 	iEvent_->getByLabel( primVtx_, primVtxs);
 
     if(!primVtxs.isValid()){
-        LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::createNewPrimVtx: No PrimaryVertexCollection found!";
+        LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::createNewPrimVtx: No PrimaryVertexCollection found!";
         return false;
     }
     
@@ -169,7 +169,7 @@ bool ThreeProngInputSelector::createNewPrimVtx(reco::VertexCollection & primaryV
     if (recoBeamSpotHandle.isValid()){
         vertexBeamSpot = *recoBeamSpotHandle;
     }else{
-        edm::LogError("ThreeProngInputSelector") << "ThreeProngTauCreator::createNewPrimVtx: No beam spot available from EventSetup";
+        edm::LogError("ThreeProngInputSelector") << "ThreeProngInputSelector::createNewPrimVtx: No beam spot available from EventSetup";
     }
     
     PrimaryVertexProducerAlgorithm PVPA(iConfig_);
@@ -197,7 +197,7 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, InputTauCo
 	iEvent_->getByLabel(inputCollectionTag_, inputCollection);
     
     if(!inputCollection.isValid()){
-        LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::select: no InputTrackCollection found!";
+        LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: no InputTrackCollection found!";
         return false;
     }
     edm::Handle<InputTauCollection> inputTauCollection;
@@ -205,7 +205,7 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, InputTauCo
     taurefs = *inputTauCollection;
     
     if(!inputTauCollection.isValid()){
-        LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::select: no InputTauCollection found!";
+        LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: no InputTauCollection found!";
         return false;
     }
     
@@ -283,7 +283,7 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		std::vector<reco::TransientTrack> trks = convToTransTrck(*iter);
 		if(!checkSecVtx(trks, tmpVtx)){
 			iter = combis.erase(iter);
-			LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks: Erased combi due to bad vertex. "<<combis.size()<<" combis left.";
+			LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks: Erased combi due to bad vertex. "<<combis.size()<<" combis left.";
 			continue;
 		}
         double massA1 = getInvariantMass(*iter, 0.140);
@@ -300,7 +300,7 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		++iter;//only moved if nothing was deleted
 	}
 	if (combis.size()<1){
-		LogTrace("ThreeProngTauCreator::choose3bestTracks: No combi survived.");
+		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks: No combi survived.");
 		return false;
 	}
 	
@@ -308,12 +308,12 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
     
 	if (combis.size()>1){//chose the pair with smallest vertex rotation needed!!!
 		//		sort(chi2s.begin(), chi2s.end(), pairSecond<int, float>);
-		//		LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take best common vtx (chi2/ndf = "<<chi2s.at(0).second<<"), second best is (chi2/ndf = "<<chi2s.at(1).second<<").";
+		//		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take best common vtx (chi2/ndf = "<<chi2s.at(0).second<<"), second best is (chi2/ndf = "<<chi2s.at(1).second<<").";
 		//		unsigned int i = chi2s.front().first;
 		//		input.assign( combis.at(i).begin(), combis.at(i).end() );
 		
 		sort(movements.begin(), movements.end(), pairSecond<int, double>);
-		LogTrace("ThreeProngInputSelector")<<"ThreeProngTauCreator::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take one with smallest vtx correction movement ("<<movements.front().second<<" [sigma]), second best is ("<<movements.at(1).second<<" [sigma]).";
+		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take one with smallest vtx correction movement ("<<movements.front().second<<" [sigma]), second best is ("<<movements.at(1).second<<" [sigma]).";
 		unsigned int i = movements.front().first;
         for (std::vector<reco::TrackRef>::const_iterator iter = combis.at(i).begin(); iter != combis.at(i).end(); ++iter) {
             tmpvec.push_back(*iter);
