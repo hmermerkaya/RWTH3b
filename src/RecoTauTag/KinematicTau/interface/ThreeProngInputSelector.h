@@ -72,6 +72,10 @@ private:
     bool select(InputTrackCollection & selected, InputTauCollection & taurefs, reco::VertexCollection & primaryVertex);
     bool checkPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<TransientVertex> & newvertices);
     bool choose3bestTracks(InputTrackCollection & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx);
+	bool removeDuplicateTriplets(const std::vector<reco::TrackRef> & duplicateTracks, 
+								 std::vector<std::vector<std::vector<reco::TrackRef> > > & threeProngCombis, 
+								 std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator & candidates, 
+								 std::vector<std::vector<reco::TrackRef> > ::iterator & triplets);		
 	
 	edm::Event * iEvent_;
     edm::ParameterSet iConfig_;

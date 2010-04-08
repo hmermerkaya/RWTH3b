@@ -98,7 +98,7 @@ bool ThreeProngInputSelector::checkSecVtx(std::vector<reco::TransientTrack> &trk
 				return false;
 			}
 		}
-		if(!transVtx.isValid()) printf("ThreeProngInputSelector::checkSecVtx: Secondary vertex not valid.\n");
+		if(!transVtx.isValid()) LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkSecVtx: Secondary vertex not valid.";
 		if(!useAdaptive){
 			if(!transVtx.hasRefittedTracks()){
 				LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkSecVtx: Secondary has 0 refitted tracks.";
@@ -193,6 +193,8 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, InputTauCo
     std::vector<std::vector<std::vector<reco::TrackRef> > > threeProngCombis;
     std::vector<reco::TrackRef> tautracks;
     
+	//load input collection from InputTrackSelector
+	//each tau candidate stores its signal cone tracks
     edm::Handle<InputTrackCollection> inputCollection;
 	iEvent_->getByLabel(inputCollectionTag_, inputCollection);
     
@@ -208,19 +210,28 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, InputTauCo
         LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: no InputTauCollection found!";
         return false;
     }
+	if(inputCollection->size() != inputTauCollection->size()){
+        LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<inputTauCollection->size()<<")";
+		return false;
+	}
+	
     
     
     for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks) {
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
-        threeProngCombis.push_back(choose3Prongs(input));
+        threeProngCombis.push_back(choose3Prongs(input));//make combinations of exact 3 tracks, choose3Prongs can return an empty vector which will be deleted later on (together with its tauRef)
 	}
-    std::vector<std::vector<std::vector<reco::TrackRef> > >::const_iterator candidates;
-    std::vector<std::vector<reco::TrackRef> > ::const_iterator triplets;
+
+	//save all signal cone tracks of all candidates ONCE into tautracks without duplicates
+	//keep duplicates in duplicateTracks and delete combi if all three tracks are also in ONE other combi (of another candidate)
+	std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator candidates, passedCandidates;
+    std::vector<std::vector<reco::TrackRef> > ::iterator triplets, passedTriplets;
     std::vector<reco::TrackRef>::const_iterator tracks, trackrefs;
-        
     for(candidates = threeProngCombis.begin(); candidates != threeProngCombis.end(); ++candidates){
-        for(triplets = candidates->begin(); triplets != candidates->end(); ++triplets){
+        for(triplets = candidates->begin(); triplets != candidates->end();){
+			bool erasedTriplet = false;
+			std::vector<reco::TrackRef> duplicateTracks;
             for(tracks = triplets->begin(); tracks != triplets->end(); ++tracks){
                 bool exists = false;
                 for(trackrefs = tautracks.begin(); trackrefs != tautracks.end(); ++trackrefs){
@@ -230,13 +241,15 @@ bool ThreeProngInputSelector::select(InputTrackCollection & selected, InputTauCo
                     }
                 }
                 if(!exists) tautracks.push_back(*tracks);
+				else duplicateTracks.push_back(*tracks);
             }
+			if(duplicateTracks.size()==3) erasedTriplet = removeDuplicateTriplets(duplicateTracks, threeProngCombis, candidates, triplets);
+			if(!erasedTriplet) ++triplets;
         }
     }
         
     bool newvtxsuccess = createNewPrimVtx(primaryVertex, tautracks);
     if(newvtxsuccess) {
-        std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator candidates;
         InputTauCollection::iterator pfiter = taurefs.begin();
         for (candidates = threeProngCombis.begin(); candidates != threeProngCombis.end(); ++candidates) {
             bool success = choose3bestTracks(selected, *candidates, primaryVertex.front());
@@ -329,9 +342,46 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
     
 	return true;
 }
+bool ThreeProngInputSelector::removeDuplicateTriplets(const std::vector<reco::TrackRef> & duplicateTracks, 
+													  std::vector<std::vector<std::vector<reco::TrackRef> > > & threeProngCombis, 
+													  std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator & candidates, 
+													  std::vector<std::vector<reco::TrackRef> > ::iterator & triplets){
+	//check on all already tested combis if all three tracks of this duplicate triplet belong to one COMMON other triplet
+	//so that the whole triplet is equal
+	//do not delete triplet if tracks belong to different other combis!
 
-
-
+	//printf("found 3 duplicates in one triplet\n");
+	std::vector<std::vector<std::vector<reco::TrackRef> > >::const_iterator passedCandidates;
+    std::vector<std::vector<reco::TrackRef> > ::const_iterator passedTriplets;
+    std::vector<reco::TrackRef>::const_iterator tracks, duplicate;	
+	for(passedCandidates = threeProngCombis.begin(); passedCandidates != threeProngCombis.end(); ++passedCandidates){
+		for(passedTriplets = passedCandidates->begin(); passedTriplets != passedCandidates->end(); ++passedTriplets){
+			if(passedTriplets==triplets){//test only already passed triplets
+				//printf("no triplet copy found!\n");
+				return false;
+			}
+			unsigned int cntDuplicate = 0;
+			for(tracks = passedTriplets->begin(); tracks != passedTriplets->end(); ++tracks){
+				for(duplicate = duplicateTracks.begin(); duplicate != duplicateTracks.end(); ++duplicate){
+					if(*tracks == *duplicate){
+						cntDuplicate++;
+					}
+				}
+			}
+			if(cntDuplicate==3){//All 3 tracks are repeated in one COMMON other triplet. Therefore delete this triplet.
+				LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::removeDuplicateTriplets: Delete duplicate triplet!";
+				triplets = candidates->erase(triplets);
+				return true;
+			}
+		}
+		if(passedCandidates==candidates){//test only already passed candidates
+			//printf("current candidate reached\n");
+			return false;
+		}
+	}
+	printf("ThreeProngInputSelector::removeDuplicateTriplets: One should never see this.\n");
+	return false;
+}
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ThreeProngInputSelector);
