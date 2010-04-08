@@ -300,7 +300,7 @@ bool ThreeProngInputSelector::choose3bestTracks(InputTrackCollection & selected,
 		++iter;//only moved if nothing was deleted
 	}
 	if (combis.size()<1){
-		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks: No combi survived.");
+		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks: No combi survived.";
 		return false;
 	}
 	
