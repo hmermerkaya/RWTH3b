@@ -7,7 +7,7 @@ selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCand
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) ),
 minKinTau_( iConfig.getUntrackedParameter<unsigned int>( "minKinTau", 1 ) )//filter returns true if more than minKinTau_ taus were fitted
 {
-	produces<int>("kinTauCreatorFlag");//0=invalid, 1=valid
+	produces<int>("flag");//0=invalid, 1=valid
 	produces<InputTauCollection>("selectedTauRefs");//currently not in use
 	produces<reco::RecoChargedCandidateCollection>("selectedTauDaughters");//for matching issues
 	produces<SelectedKinematicDecayCollection>("SelectedKinematicDecays");
@@ -49,7 +49,7 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	int &flag = *flagPtr;
 	if(filterValue) flag = 1;
 	else flag = 0;
-	iEvent_->put(flagPtr,"kinTauCreatorFlag");
+	iEvent_->put(flagPtr,"flag");
 	
 	return filterValue;
 }

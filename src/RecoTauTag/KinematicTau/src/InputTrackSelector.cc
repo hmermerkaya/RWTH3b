@@ -5,7 +5,7 @@ inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
 minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
 minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more/equal than minTau_ taus were selected
 {
-	produces<int>("inputTracksFlag");//0=invalid, 1=valid
+	produces<int>("flag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
 	produces<InputTauCollection>("InputTauRefs");//needed to fill in unfit KinematicParticle later on
 }
@@ -35,7 +35,7 @@ bool InputTrackSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
 	int &flag = *flagPtr;
 	if(filterValue) flag = 1;
 	else flag = 0;
-	iEvent_->put(flagPtr,"inputTracksFlag");
+	iEvent_->put(flagPtr,"flag");
 	
 	return filterValue;
 }

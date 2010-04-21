@@ -9,7 +9,7 @@ minVtxTracks_(iConfig.getUntrackedParameter("minVtxTracks", int(3))),
 maxChi2ndf_(iConfig.getUntrackedParameter("maxChi2ndf", double(10.0)))
 {
     iConfig_ = iConfig;
-	produces<int>("threeProngFlag");//0=invalid, 1=valid
+	produces<int>("flag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
     produces<InputTauCollection>("InputTauRefs");//needed to fill in unfit KinematicParticle later on
     produces<reco::VertexCollection>("primVtx");//has to be vector. save one of length one
@@ -45,7 +45,7 @@ bool ThreeProngInputSelector::filter(edm::Event& iEvent, const edm::EventSetup& 
 	int &flag = *flagPtr;
 	if(filterValue) flag = 1;
 	else flag = 0;
-	iEvent_->put(flagPtr,"threeProngFlag");
+	iEvent_->put(flagPtr,"flag");
 	
 	return filterValue;
 }

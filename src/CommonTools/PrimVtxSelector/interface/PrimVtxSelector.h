@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Nov 12 14:10:26 CET 2009
-// $Id: PrimVtxSelector.h,v 1.3 2010/01/26 14:06:37 perchall Exp $
+// $Id: PrimVtxSelector.h,v 1.4 2010/01/27 14:29:07 perchall Exp $
 //
 //
 
@@ -32,6 +32,8 @@
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"//VertexCollection
+
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 class PrimVtxSelector : public edm::EDFilter {
    public:

@@ -6,6 +6,7 @@ minTracks_(iConfig.getUntrackedParameter("minTracks", int(3))),
 maxChi2ndf_(iConfig.getUntrackedParameter("maxChi2ndf", double(10.0))),
 verbosity_(iConfig.getUntrackedParameter("verbosity", int(2)))
 {
+	produces<int>("flag");//0=invalid, 1=valid
 	produces<reco::VertexCollection>("primVtx");//has to be vector. save one of length one
 }
 
@@ -24,6 +25,11 @@ bool PrimVtxSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	
 	iEvent_->put(primaryVertex_,"primVtx");
 
+	std::auto_ptr<int> flagPtr = std::auto_ptr<int>(new int);
+	int &flag = *flagPtr;
+	if(foundGoodVtx) flag = 1;
+	else flag = 0;
+	iEvent_->put(flagPtr,"flag");
 
 	return foundGoodVtx;
 }
@@ -53,7 +59,7 @@ bool PrimVtxSelector::checkPrimVtx(reco::VertexCollection & primaryVertex){
 	}
 	
 	if(vtx.size()<1){
-		printf("evt %d PrimVtxSelector::checkPrimVtx: No valid primary vertex found. Skip event.\n", iEvent_->id().event());
+		LogTrace("PrimVtxSelector")<<"PrimVtxSelector::checkPrimVtx: No valid primary vertex found. Skip event "<<iEvent_->id().event()<<".";
 		return false;
 	}
 	if(vtx.size()>1){
