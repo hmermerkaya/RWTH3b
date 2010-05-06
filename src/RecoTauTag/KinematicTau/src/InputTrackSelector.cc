@@ -1,7 +1,7 @@
 #include "RecoTauTag/KinematicTau/interface/InputTrackSelector.h"
 
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
-inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauCandidates" ) ),
+tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "fixedConeHighEff") ),
 minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
 minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more/equal than minTau_ taus were selected
 {
@@ -56,7 +56,7 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 	bool found = false;
 	
 	edm::Handle<reco::PFTauCollection> inputCollection;
-	iEvent_->getByLabel(inputCollectionTag_, inputCollection);
+	iEvent_->getByLabel(tauType_+"PFTauProducer", inputCollection);
 	for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
 		reco::PFTauRef thePFTau(inputCollection, iPFTau);
 		if(!filterInput(thePFTau)) continue;//move into external module?
@@ -80,13 +80,13 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter module?
 	bool filter = false;
 	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorByIsolation;
-	iEvent_->getByLabel("fixedConeHighEffPFTauDiscriminationByTrackIsolation",thePFTauDiscriminatorByIsolation); 
+	iEvent_->getByLabel(tauType_+"PFTauDiscriminationByTrackIsolation",thePFTauDiscriminatorByIsolation); 
 	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorByLeadingTrackPtCut; 
-	iEvent_->getByLabel("fixedConeHighEffPFTauDiscriminationByLeadingTrackPtCut",thePFTauDiscriminatorByLeadingTrackPtCut); 
+	iEvent_->getByLabel(tauType_+"PFTauDiscriminationByLeadingTrackPtCut",thePFTauDiscriminatorByLeadingTrackPtCut); 
 	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorAgainstElectrons; 
-	iEvent_->getByLabel("fixedConeHighEffPFTauDiscriminationAgainstElectron",thePFTauDiscriminatorAgainstElectrons); 
+	iEvent_->getByLabel(tauType_+"PFTauDiscriminationAgainstElectron",thePFTauDiscriminatorAgainstElectrons); 
 	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorAgainstMuons; 
-	iEvent_->getByLabel("fixedConeHighEffPFTauDiscriminationAgainstMuon",thePFTauDiscriminatorAgainstMuons); 
+	iEvent_->getByLabel(tauType_+"PFTauDiscriminationAgainstMuon",thePFTauDiscriminatorAgainstMuons);
 	
 //edmDumpEventContent /disk1/perchalla/data/CMSSW_3_1_2/KinTau/tau3piFromVBFH/AODSIMHLT_tau3piFromVBFH_145GeV.root | grep PFTau	
 //	fixedConeHighEffPFTauDiscriminationAgainstElectron

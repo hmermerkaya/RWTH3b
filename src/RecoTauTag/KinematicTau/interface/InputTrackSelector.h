@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.4 2010/01/26 13:31:39 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.5 2010/01/27 14:28:53 perchall Exp $
 //
 //
 
@@ -55,7 +55,8 @@ private:
 	reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
 	
 	edm::Event * iEvent_;
-	edm::InputTag inputCollectionTag_, primVtx_;
+	std::string tauType_;
+	edm::InputTag primVtx_;
 	unsigned int minTracks_, minTau_, cnt_, cntFound_;
 
 };
