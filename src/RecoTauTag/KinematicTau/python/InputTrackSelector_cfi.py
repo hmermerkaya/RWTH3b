@@ -19,7 +19,6 @@ pfTauSelector = cms.EDFilter("PFTauSelector",
    )
 )
 
-#need to choose discriminator according to PFTau automatically
 InputTrackSelector = cms.EDFilter("InputTrackSelector",#creates PFTauRefVector and collection of vector<reco::TrackRefVector> for each tau cand
 	tauType = cms.untracked.string(pfTau),	#default is fixedConeHighEff
 	minTracks = cms.uint32(3),	#only tau candidates with more/equal than minTracks are selected
