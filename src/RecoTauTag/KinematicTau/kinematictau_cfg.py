@@ -8,7 +8,7 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.categories.append('KinematicTauCreator')
 process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTauProducer','InputTrackSelector')
 process.MessageLogger.cerr = cms.untracked.PSet(
-    threshold = cms.untracked.string('DEBUG'),
+    threshold = cms.untracked.string('INFO'),
 	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
 	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),
 	KinematicTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(-1))

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 //
-// Package:    KinematicTauProducer
-// Class:      KinematicTauProducer
+// Package:    KinematicTauAdvancedProducer
+// Class:      KinematicTauAdvancedProducer
 // 
 /**
  
@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.9 2010/04/06 15:06:48 perchall Exp $
+// $Id: KinematicTauAdvancedProducer.h,v 1.9 2010/04/06 15:06:48 perchall Exp $
 //
 //
 
@@ -35,33 +35,38 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"//own class of tauGroup to store fitted particles in event stream
 #include "DataFormats/KinematicFit/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/PFTauFwd.h"
-#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 
 
-class KinematicTauProducer : public edm::EDFilter {
+class KinematicTauAdvancedProducer : public edm::EDFilter {
 public:
-	explicit KinematicTauProducer(const edm::ParameterSet&);
-	~KinematicTauProducer();
+	explicit KinematicTauAdvancedProducer(const edm::ParameterSet&);
+	~KinematicTauAdvancedProducer();
 	
 private:
 	virtual void beginJob();
 	virtual bool filter(edm::Event&, const edm::EventSetup&);
 	virtual void endJob();
 	
-	bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
-	bool dicriminatorByKinematicFit(const KinematicTauCreator *kinTauCrtr);
-	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr);
-	void discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & dicrimValues);
+	bool select(SelectedKinematicDecayCollection & refitDecays, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx);
+	void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
+	int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::PFTauRef & tauRef);
+	void correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
 	
 	const edm::ParameterSet fitParameters_;
 	edm::Event * iEvent_;
 	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 	
 	edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
+	unsigned int minKinTau_, cnt_, cntFound_;
 	
+	static std::string intToString(int f){
+		char s[32]; sprintf(s, "%d", f);
+		return std::string(s);
+	}	
 };
