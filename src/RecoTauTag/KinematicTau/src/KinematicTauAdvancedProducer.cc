@@ -88,7 +88,7 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
 			
 			//for PFTau issues:
 			//		reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
-			//		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedHadrons();
+			//		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedDaughters();
 
 			//fitting debug only:
 			std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
