@@ -39,6 +39,8 @@ process.maxEvents = cms.untracked.PSet(
 process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
+#make some optiona tests
+process.load("RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi")
 
 #process.p = cms.Path(process.tauSelectorSeq)
-process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.KinematicTauProducer)
+process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*cms.ignore(process.KinematicTauProducer)*process.KinematicTauAnalyzer)
