@@ -25,14 +25,16 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	edm::Handle<reco::VertexCollection> primVtxs;
 	iEvent_->getByLabel( primVtx_, primVtxs);
 
+	//make copy of initial tau collection with unmodified 4vects
+	edm::Handle<InputTauCollection> usedTaus;
+	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
+	selected.insert(selected.begin(), usedTaus->product()->begin(), usedTaus->product()->end());
+
 	std::map<int, std::vector<bool> > discrimValues;
 	if(primVtxs->size()>=1){
 		iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
 		const reco::Vertex primVtx = primVtxs->front();
 
-		edm::Handle<InputTauCollection> usedTaus;
-		iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
-		selected.insert(selected.begin(), usedTaus->product()->begin(), usedTaus->product()->end());//make copy with unmodified 4vects
 		filterValue = select(selected, discrimValues, primVtx);
 	}
 	
@@ -48,7 +50,7 @@ void KinematicTauProducer::endJob(){
 }
 
 bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx){
-	bool fullyDetermined = false;
+	bool success = false;
 	discrimValues.clear();
 	
 	edm::Handle<InputTrackCollection> inputCollection;
@@ -70,21 +72,20 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		//save std::map<int, std::vector<bool> >, stores association between position in tauCollection and one bool for every discriminator
 		reco::PFTauRef tauRef = usedTaus->at(index);
 		discrimValues.insert(std::make_pair(tauRef.index(), std::vector<bool>()));
-		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFit(kinTauCrtr));
+		discrimValues.find(tauRef.index())->second.push_back(fitStatus);
 		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr));
 		
 		if(fitStatus==1){
 			reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
 			selected.at(tauRef.index()).setP4(refitPFTau.p4());//modify tau in selected list
+			success = true;
+			//also set rotated vertex?
 		}
 	}
 	
 	delete kinTauCrtr;
 	
-	return fullyDetermined;
-}
-bool KinematicTauProducer::dicriminatorByKinematicFit(const KinematicTauCreator *kinTauCrtr){
-	return true;
+	return success;//at least one tau was fitted
 }
 bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr){
 	return false;
