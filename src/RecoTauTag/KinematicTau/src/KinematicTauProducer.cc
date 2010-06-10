@@ -73,13 +73,15 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		reco::PFTauRef tauRef = usedTaus->at(index);
 		discrimValues.insert(std::make_pair(tauRef.index(), std::vector<bool>()));
 		discrimValues.find(tauRef.index())->second.push_back(fitStatus);
-		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr));
+		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr, fitStatus));
 		
 		if(fitStatus==1){
-			reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
-			selected.at(tauRef.index()).setP4(refitPFTau.p4());//modify tau in selected list
 			success = true;
-			//also set rotated vertex?
+			//modify tau in selected list
+			//std::cout<<"modify tau parameters at "<<tauRef.index()<<std::endl;
+			reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
+			selected.at(tauRef.index()).setP4(refitPFTau.p4());
+			selected.at(tauRef.index()).setVertex(refitPFTau.vertex());//this is the rotated primary vertex
 		}
 	}
 	
@@ -87,8 +89,21 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	
 	return success;//at least one tau was fitted
 }
-bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr){
-	return false;
+bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus){
+	if(!fitStatus) return false;
+	bool value = false;
+	reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
+	std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCrtr->getRefittedChargedDaughters();
+	std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCrtr->getRefittedNeutralDaughters();
+/*	
+	vertex abstand (rot. prim. vertex und refit. sec. vertex) > 1mm (?)
+	dR(a1, nu) < 0.1 (?)
+	a1 masse >= 1 GeV (?)
+	track size in signal cone
+	tau masse, chi2 probability, normalisiertes chi2, csum
+	dRSum(pions)
+*/	
+	return value;
 }
 void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & discrimValues){
 	std::auto_ptr<reco::PFTauDiscriminator> discrKinFit = std::auto_ptr<reco::PFTauDiscriminator>(new reco::PFTauDiscriminator(reco::PFTauRefProd(collection)));
