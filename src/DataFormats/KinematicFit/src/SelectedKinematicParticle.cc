@@ -175,7 +175,7 @@ void SelectedKinematicParticle::setMatched(const int parm) {
     matched__ = parm;
 }
 
-//initial tau state consists of used primVtx (including errors) and the pfTau parameters
+//initial tau state consists of primVtx (including errors) and the pfTau parameters
 void SelectedKinematicParticle::setInitialTauState(const TLorentzVector & tau, const reco::Vertex & primVtx) {
     input_kinparm__.ResizeTo(7);
 	input_kinparm__[0] = primVtx.x();

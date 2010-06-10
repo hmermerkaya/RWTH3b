@@ -13,7 +13,7 @@
  <Notes on implementation>
  */
 //
-// $Id: SelectedKinematicParticle.h,v 1.4 2010/01/22 18:46:20 perchall Exp $
+// $Id: SelectedKinematicParticle.h,v 1.5 2010/01/27 14:29:01 perchall Exp $
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
@@ -70,7 +70,7 @@ public:
 	TVector3 vertex() const;
     
 	void setMatched(const int parm);
-	void setInitialTauState(const TLorentzVector & tau, const reco::Vertex & primVtx);//initial tau state consists of used primVtx (including errors) and the visible tau parameters
+	void setInitialTauState(const TLorentzVector & tau, const reco::Vertex & primVtx);//initial tau state consists of primVtx (including errors) and the visible tau parameters
 	
 private:
     int status__; //
