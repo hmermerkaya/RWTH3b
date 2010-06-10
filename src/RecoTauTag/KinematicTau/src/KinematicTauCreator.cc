@@ -26,7 +26,7 @@ KinematicTauCreator::~KinematicTauCreator()
     delete kcvFitter_;
 }
 
-reco::PFTau KinematicTauCreator::getPFTau()
+reco::PFTau KinematicTauCreator::getPFTau() const
 {
     math::XYZTLorentzVector ptau;
     for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
@@ -38,10 +38,23 @@ reco::PFTau KinematicTauCreator::getPFTau()
         }
     }
     
-    return reco::PFTau(int((kinTree_->topParticle()->currentState()).particleCharge()), ptau, (math::XYZPoint)((kinTree_->topParticle()->currentState()).globalPosition()));
+    return reco::PFTau(int((kinTree_->topParticle()->currentState()).particleCharge()), ptau, modifiedPV_.position());
 }
 
-std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedHadrons()
+reco::PFTau KinematicTauCreator::getKinematicTau() const
+{
+    math::XYZTLorentzVector ptau;
+    for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
+		ptau += math::XYZTLorentzVector((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x(),
+										(kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y(),
+										(kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z(),
+										sqrt((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().mag2()+(kinTree_->daughterParticles().at(i))->currentState().mass()*(kinTree_->daughterParticles().at(i))->currentState().mass()));
+	}
+    
+    return reco::PFTau(int((kinTree_->topParticle()->currentState()).particleCharge()), ptau, modifiedPV_.position());
+}
+
+std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedDaughters() const
 {
     std::vector<math::XYZTLorentzVector> tmpvec;
     for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
@@ -56,18 +69,33 @@ std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedHadr
     return tmpvec;
 }
 
-std::vector<reco::TrackRef> KinematicTauCreator::getSelectedTracks()
+std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedNeutralDaughters() const
+{
+    std::vector<math::XYZTLorentzVector> tmpvec;
+    for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
+        if (std::abs(int((kinTree_->daughterParticles().at(i))->currentState().particleCharge())) == 0) {
+            tmpvec.push_back(math::XYZTLorentzVector((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x(),
+													 (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y(),
+													 (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z(),
+													 sqrt((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().mag2()+(kinTree_->daughterParticles().at(i))->currentState().mass()*(kinTree_->daughterParticles().at(i))->currentState().mass())));
+        }
+    }
+    
+    return tmpvec;
+}
+
+std::vector<reco::TrackRef> KinematicTauCreator::getSelectedTracks() const
 {
     return selectedTracks_;
 }
 
 
-RefCountedKinematicTree KinematicTauCreator::getKinematicTree()
+RefCountedKinematicTree KinematicTauCreator::getKinematicTree() const
 {
     return kinTree_;
 }
 
-reco::Vertex KinematicTauCreator::getModifiedPrimaryVertex()
+reco::Vertex KinematicTauCreator::getModifiedPrimaryVertex() const
 {
 	return modifiedPV_;
 }

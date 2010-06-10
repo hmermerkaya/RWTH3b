@@ -11,13 +11,13 @@
  <Notes on implementation>
  */
 //
-// $Id: KinematicTauCreator.h,v 1.10 2010/01/27 14:28:53 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.11 2010/03/25 16:39:36 perchall Exp $
 //
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.10 2010/01/27 14:28:53 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.11 2010/03/25 16:39:36 perchall Exp $
 //
 //
 
@@ -41,31 +41,36 @@ public:
     virtual int create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks) = 0;
 
 	/**
-	 visible tau constructed from refitted tracks
+	 visible tau constructed from refitted tracks excluding neutrals (the stored primary vertex might be rotated)
 	 */
-    reco::PFTau getPFTau();
-    std::vector<math::XYZTLorentzVector> getRefittedChargedHadrons();
+    reco::PFTau getPFTau() const;
+	/**
+	 the full tau constructed from refitted tracks including neutrals (the stored primary vertex might be rotated)
+	 */
+	reco::PFTau getKinematicTau() const;
+    std::vector<math::XYZTLorentzVector> getRefittedChargedDaughters() const;
+    std::vector<math::XYZTLorentzVector> getRefittedNeutralDaughters() const;
 
 	/**
 	 ref to original tracks used by the fit
 	 */
-    std::vector<reco::TrackRef> getSelectedTracks();
+    std::vector<reco::TrackRef> getSelectedTracks() const;
 	
 	/**
 	 for debug issues only
 	 */
-    RefCountedKinematicTree getKinematicTree();
+    RefCountedKinematicTree getKinematicTree() const;
 	
 	/**
 	 for debug issues only
 	 */
-	KinematicConstrainedVertexFitter * getFitter(){return kcvFitter_;}
+	KinematicConstrainedVertexFitter * getFitter() const {return kcvFitter_;}
 	
 	/**
 	 If the primary vertex was modified by call of create() this function returns a fake vertex at the modified position. 
 	 Otherwise an invalid reco::Vertex is returned.
 	 */
-	reco::Vertex getModifiedPrimaryVertex();
+	reco::Vertex getModifiedPrimaryVertex() const;
 	
 protected:
 	/**
