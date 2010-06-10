@@ -102,7 +102,7 @@ void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauColle
 		}
 		discrKinFit->setValue(iter->first, iter->second.at(0));
 		discrKinFitQual->setValue(iter->first, iter->second.at(1));
-		std::cout<<"tau at "<<iter->first<<": "<<(*discrKinFit)[tauRef]<<", "<<(*discrKinFitQual)[tauRef]<<std::endl;
+		//std::cout<<"tau at "<<iter->first<<": "<<(*discrKinFit)[tauRef]<<", "<<(*discrKinFitQual)[tauRef]<<std::endl;
 	}
 	
 	iEvent_->put(discrKinFit, "PFRecoTauDiscriminationByKinematicFit");
