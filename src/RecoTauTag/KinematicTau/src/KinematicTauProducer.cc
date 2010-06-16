@@ -73,7 +73,7 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		reco::PFTauRef tauRef = usedTaus->at(index);
 		discrimValues.insert(std::make_pair(tauRef.index(), std::vector<bool>()));
 		discrimValues.find(tauRef.index())->second.push_back(fitStatus);
-		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr, fitStatus));
+		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr, fitStatus, tauRef));
 		
 		if(fitStatus==1){
 			success = true;
@@ -89,17 +89,20 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	
 	return success;//at least one tau was fitted
 }
-bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus){
+bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef){
 	if(!fitStatus) return false;
-	bool value = false;
+	bool value = true;
 	reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
 	std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCrtr->getRefittedChargedDaughters();
 	std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCrtr->getRefittedNeutralDaughters();
+    
+    if ( tauRef->signalPFChargedHadrCands().size() > 5 ) return false;
+    
+    
 /*	
 	vertex abstand (rot. prim. vertex und refit. sec. vertex) > 1mm (?)
 	dR(a1, nu) < 0.1 (?)
 	a1 masse >= 1 GeV (?)
-	track size in signal cone
 	tau masse, chi2 probability, normalisiertes chi2, csum
 	dRSum(pions)
 */	
