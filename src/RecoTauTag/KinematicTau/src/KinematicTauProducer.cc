@@ -98,9 +98,15 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauC
     
     if ( tauRef->signalPFChargedHadrCands().size() > 5 ) return false;
     
+    GlobalPoint secVtx = kinTauCrtr->getKinematicTree()->currentDecayVertex()->position();
+    GlobalPoint primVtx = GlobalPoint(refitPFTau.vertex().x(), refitPFTau.vertex().y(), refitPFTau.vertex().z());
+    VertexDistance3D vtxdist;
+    
+    if ( vtxdist.distance(VertexState(primVtx, GlobalError()), VertexState(secVtx, GlobalError())).value() < 0.1 ) return false;
+    
+    
     
 /*	
-	vertex abstand (rot. prim. vertex und refit. sec. vertex) > 1mm (?)
 	dR(a1, nu) < 0.1 (?)
 	a1 masse >= 1 GeV (?)
 	tau masse, chi2 probability, normalisiertes chi2, csum

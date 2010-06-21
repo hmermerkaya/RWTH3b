@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.11 2010/06/10 12:38:21 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.12 2010/06/10 15:46:31 perchall Exp $
 //
 //
 
@@ -42,6 +42,8 @@
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 
+#include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
+
 
 class KinematicTauProducer : public edm::EDFilter {
 public:
@@ -57,7 +59,7 @@ private:
 	 do the kinematic fit and in case of success modify the taus parameters
 	 */
 	bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
-	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus);
+	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef);
 	/**
 	 fill the new PFTau dicriminators from fit result
 	 */
