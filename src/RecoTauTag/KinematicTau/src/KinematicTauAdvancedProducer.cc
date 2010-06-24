@@ -161,14 +161,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	
 	SelectedKinematicParticleCollection refitTauDecay;
 	refitTauDecay.push_back( SelectedKinematicParticle(tree->currentParticle(), name, iterations, maxiterations, csum, mincsum, emptyCandRef, ambiguityCnt, status) );
-	std::vector<reco::TrackRef> selTrks = kinTauCrtr->getSelectedTracks();
-	TLorentzVector initialTauMomentum;
-	for(std::vector<reco::TrackRef>::const_iterator selTrk = selTrks.begin(); selTrk != selTrks.end(); ++selTrk ){
-		TLorentzVector p4tmp;
-		p4tmp.SetVectM(TVector3((*selTrk)->px(), (*selTrk)->py(), (*selTrk)->pz()), 0.1395702);
-		initialTauMomentum += p4tmp;
-	}
-	refitTauDecay.back().setInitialTauState(initialTauMomentum, kinTauCrtr->getModifiedPrimaryVertex());//initial tau state consists of rotated primVtx (including initial errors) and the prefit tau parameters
+	refitTauDecay.back().setInitialState(TLorentzVector(tauRef->px(), tauRef->py(), tauRef->pz(), tauRef->energy()), kinTauCrtr->getModifiedPrimaryVertex());//initial tau state consists of rotated primVtx (including initial errors) and the pftau parameters
 	
 	std::vector<RefCountedKinematicParticle> daughters = tree->daughterParticles();
 	for (std::vector<RefCountedKinematicParticle>::iterator iter=daughters.begin(); iter!=daughters.end(); ++iter) {
