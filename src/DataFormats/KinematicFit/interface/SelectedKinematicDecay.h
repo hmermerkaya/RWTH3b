@@ -25,7 +25,7 @@ class SelectedKinematicDecay {
 public:
 	SelectedKinematicDecay();
 	SelectedKinematicDecay(SelectedKinematicParticleCollection particles);
-	SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands);
+	SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands);
 
     SelectedKinematicParticle* topParticle();
     void particles(std::vector< SelectedKinematicParticle* > & par);
@@ -33,6 +33,7 @@ public:
     void chargedDaughters(std::vector< SelectedKinematicParticle* > & par);
     void neutralDaughters(std::vector< SelectedKinematicParticle* > & par);
 	int signalPFChargedHadrCands();
+	int signalPFNeutrHadrCands();
  	
 private:
     SelectedKinematicParticleCollection particles_;
@@ -40,6 +41,7 @@ private:
 	 size of tracks in signal cone of PFTau candidate
 	 */
 	int signalPFChargedHadrCands_;
+	int signalPFNeutrHadrCands_;
 };
 
 typedef std::vector<SelectedKinematicDecay> SelectedKinematicDecayCollection;

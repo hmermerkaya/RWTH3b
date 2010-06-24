@@ -9,6 +9,7 @@ SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollecti
 {
     particles_ = particles;
 	signalPFChargedHadrCands_ = -1;
+	signalPFNeutrHadrCands_ = -1;
 }
 SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands)
 {

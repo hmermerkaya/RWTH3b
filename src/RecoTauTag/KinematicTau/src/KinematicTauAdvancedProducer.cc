@@ -176,7 +176,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	}
 	
 	if(refitTauDecay.size() != 5) printf("KinematicTauAdvancedProducer::saveSelectedTracks:Saved only %i refitted particles.\n", refitTauDecay.size());
-	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size()) );
+	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size()) );
 
 	return refitTauDecay.size();
 }
