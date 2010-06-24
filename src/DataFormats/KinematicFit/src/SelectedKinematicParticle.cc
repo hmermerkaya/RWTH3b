@@ -175,16 +175,15 @@ void SelectedKinematicParticle::setMatched(const int parm) {
     matched__ = parm;
 }
 
-//initial tau state consists of primVtx (including errors) and the pfTau parameters
-void SelectedKinematicParticle::setInitialTauState(const TLorentzVector & tau, const reco::Vertex & primVtx) {
+void SelectedKinematicParticle::setInitialState(const TLorentzVector & momentum, const reco::Vertex & primVtx) {
     input_kinparm__.ResizeTo(7);
 	input_kinparm__[0] = primVtx.x();
 	input_kinparm__[1] = primVtx.y();
 	input_kinparm__[2] = primVtx.z();
-	input_kinparm__[3] = tau.Px();
-	input_kinparm__[4] = tau.Py();
-	input_kinparm__[5] = tau.Pz();
-	input_kinparm__[6] = tau.M();
+	input_kinparm__[3] = momentum.Px();
+	input_kinparm__[4] = momentum.Py();
+	input_kinparm__[5] = momentum.Pz();
+	input_kinparm__[6] = momentum.M();
 
 	input_kinmatrix__.ResizeTo(TMatrixDSym(7));
 	for (int i = 0; i < 3; i++)	for (int j = 0; j < 3; j++)	input_kinmatrix__[i][j] = primVtx.covariance(i,j);
