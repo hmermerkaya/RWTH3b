@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Jun 10 10:45:54 CEST 2010
-// $Id$
+// $Id: KinematicTauAnalyzer.cc,v 1.1 2010/06/10 12:38:50 perchall Exp $
 //
 //
 
@@ -76,7 +76,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	unsigned int index = 0;
 	for (reco::PFTauCollection::const_iterator tau = tauCollection->begin(); tau != tauCollection->end(); ++tau, index++) {
 		reco::PFTauRef tauRef(tauCollection, index);
-		std::cout<< "tau at " <<index<<": (p,pt,et) ("<<tauRef->p()<<","<<tauRef->pt()<<","<<tauRef->et()<<")";
+		std::cout<< "tau at " <<index<<": (p,pt,et, vertex) ("<<tauRef->p()<<","<<tauRef->pt()<<","<<tauRef->et()<<", ("<<tauRef->vx()<<","<<tauRef->vy()<<","<<tauRef->vz()<<"))";
 		for (std::vector<edm::Handle<reco::PFTauDiscriminator> >::const_iterator discr = tauDiscriminators.begin(); discr!=tauDiscriminators.end(); ++discr) {
 			std::cout<<", "<<discr->provenance()->productInstanceName()<<" "<<(**discr)[tauRef];
 		}
