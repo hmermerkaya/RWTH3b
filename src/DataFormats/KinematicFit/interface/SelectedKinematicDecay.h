@@ -27,13 +27,17 @@ public:
 	SelectedKinematicDecay(SelectedKinematicParticleCollection particles);
 	SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands);
 
-    SelectedKinematicParticle* topParticle();
-    void particles(std::vector< SelectedKinematicParticle* > & par);
-    void daughters(std::vector< SelectedKinematicParticle* > & par);
-    void chargedDaughters(std::vector< SelectedKinematicParticle* > & par);
-    void neutralDaughters(std::vector< SelectedKinematicParticle* > & par);
+    const SelectedKinematicParticle* topParticle() const;
+    void particles(std::vector< SelectedKinematicParticle const * > & par) const;
+    void daughters(std::vector< SelectedKinematicParticle const * > & par) const;
+    void chargedDaughters(std::vector< SelectedKinematicParticle const * > & par) const;
+    void neutralDaughters(std::vector< SelectedKinematicParticle const * > & par) const;
 	int signalPFChargedHadrCands();
 	int signalPFNeutrHadrCands();
+	/**
+	 DO NOT USE after reading from event stream!
+	 */
+	void modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par);
  	
 private:
     SelectedKinematicParticleCollection particles_;

@@ -192,7 +192,7 @@ void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayColle
 	index = 0;
 	for(SelectedKinematicDecayCollection::iterator decay = selected.begin(); decay != selected.end(); ++decay){
 		std::vector< SelectedKinematicParticle* > daughters;
-		decay->chargedDaughters(daughters);
+		decay->modifiableChargedDaughters(daughters);
 //		if(decay->front().ambiguity() == 2) index = index-3;//if second solution the last PFRefs are used again. (2nd sol only exists if a first one exists too)
 		for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
 			if(index >= newRefs.size()){

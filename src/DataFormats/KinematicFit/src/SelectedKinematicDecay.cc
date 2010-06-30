@@ -18,33 +18,33 @@ SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollecti
 	signalPFNeutrHadrCands_   = signalPFNeutrHadrCands;
 }
 
-SelectedKinematicParticle* SelectedKinematicDecay::topParticle()
+const SelectedKinematicParticle* SelectedKinematicDecay::topParticle() const
 {
     return &(particles_.front());
 }
-void SelectedKinematicDecay::particles(std::vector< SelectedKinematicParticle* > & par)
+void SelectedKinematicDecay::particles(std::vector< SelectedKinematicParticle const * > & par) const
 {
-    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
 		par.push_back(&(*iter));
     }
 }
-void SelectedKinematicDecay::daughters(std::vector< SelectedKinematicParticle* > & par)
+void SelectedKinematicDecay::daughters(std::vector< SelectedKinematicParticle const * > & par) const
 {
-    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
 		if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
     }
 }
-void SelectedKinematicDecay::chargedDaughters(std::vector< SelectedKinematicParticle* > & par)
+void SelectedKinematicDecay::chargedDaughters(std::vector< SelectedKinematicParticle const * > & par) const
 {
-    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
         if ( std::abs(iter->charge()) == 1 ) {
 			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
         }
     }
 }
-void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicParticle* > & par)
+void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicParticle const * > & par) const
 {
-    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
         if ( std::abs(iter->charge()) == 0 ) {
 			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
         }
@@ -55,4 +55,12 @@ int SelectedKinematicDecay::signalPFChargedHadrCands(){
 }
 int SelectedKinematicDecay::signalPFNeutrHadrCands(){
 	return signalPFNeutrHadrCands_;
+}
+void SelectedKinematicDecay::modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par)
+{
+    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+        if ( std::abs(iter->charge()) == 1 ) {
+			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
+        }
+    }
 }
