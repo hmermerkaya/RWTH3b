@@ -2,6 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("KinTauCreator")
 
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.globaltag = 'MC_3XY_V18::All'
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 #process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -39,7 +41,7 @@ process.maxEvents = cms.untracked.PSet(
 process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
-#make some optiona tests
+#make some basic tests
 process.load("RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi")
 
 #process.p = cms.Path(process.tauSelectorSeq)
