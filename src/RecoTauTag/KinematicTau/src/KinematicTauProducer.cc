@@ -73,7 +73,7 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		reco::PFTauRef tauRef = usedTaus->at(index);
 		discrimValues.insert(std::make_pair(tauRef.index(), std::vector<bool>()));
 		discrimValues.find(tauRef.index())->second.push_back(fitStatus);
-		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr, fitStatus, tauRef));
+		discrimValues.find(tauRef.index())->second.push_back(dicriminatorByKinematicFitQuality(kinTauCrtr, fitStatus, tauRef, primaryVtx));
 		
 		if(fitStatus==1){
 			success = true;
@@ -89,30 +89,54 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	
 	return success;//at least one tau was fitted
 }
-bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef){
+bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx){
+	//combine a discriminator of important quality cuts
+	
+	//test if fit could create the final decay tree
 	if(!fitStatus) return false;
-	bool value = true;
 	reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
 	std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCrtr->getRefittedChargedDaughters();
 	std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCrtr->getRefittedNeutralDaughters();
     
-    if ( tauRef->signalPFChargedHadrCands().size() > 5 ) return false;
-    
-    GlobalPoint secVtx = kinTauCrtr->getKinematicTree()->currentDecayVertex()->position();
-    GlobalPoint primVtx = GlobalPoint(refitPFTau.vertex().x(), refitPFTau.vertex().y(), refitPFTau.vertex().z());
+	//vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
+	reco::Vertex modifiedPV = kinTauCrtr->getModifiedPrimaryVertex();
+    VertexState secVtx(kinTauCrtr->getKinematicTree()->currentDecayVertex()->position(), kinTauCrtr->getKinematicTree()->currentDecayVertex()->error());
     VertexDistance3D vtxdist;
+    if ( vtxdist.distance(modifiedPV, secVtx).value() < 0.1 ) return false;
+	
+	//vertex significance between modified and initial primary vertex
+	if ( vtxdist.distance(modifiedPV, primaryVtx).significance() > 3.0 ) return false;
+	
+	//WARNING!!!
+	//from now one we assume a tau decay into three pions and neutrino
+	//other channels need their one discriminators
+	//!!!
+	if(chargedDaughters.size()!=3 || neutralDaughters.size()!=1){
+		printf("KinematicTauProducer::dicriminatorByKinematicFitQuality:WARNING!!! KinematicTauProducer assumes a tau decay into three pions and neutrino but recieved %i charged and %i neutral daughters!\n", chargedDaughters.size(), neutralDaughters.size());
+		return false;
+	}
+	
+	//tracks in signal cone of initial pftau candidate
+    if ( tauRef->signalPFChargedHadrCands().size() > 5 ) return false;
+
+    //dR between fitted a1 and neutrino
+	math::XYZTLorentzVector sum;//assume a1=sum(3pi)
+	for(std::vector<math::XYZTLorentzVector>::const_iterator daughter = chargedDaughters.begin(); daughter!=chargedDaughters.end(); ++daughter){
+		sum += *daughter;
+	}
+	TLorentzVector a1;
+	a1.SetXYZM(sum.px(), sum.py(), sum.pz(), sum.M());
+	TLorentzVector nu;
+	nu.SetXYZM(neutralDaughters.front().px(), neutralDaughters.front().py(), neutralDaughters.front().pz(), neutralDaughters.front().M());
+	if( a1.DeltaR(nu) > .09)  return false;
     
-    if ( vtxdist.distance(VertexState(primVtx, GlobalError()), VertexState(secVtx, GlobalError())).value() < 0.1 ) return false;
-    
-    
-    
-/*	
-	dR(a1, nu) < 0.1 (?)
-	a1 masse >= 1 GeV (?)
-	tau masse, chi2 probability, normalisiertes chi2, csum
-	dRSum(pions)
-*/	
-	return value;
+	//maximal allowed value of GJ angle
+	if( thetaGJMax(a1.M(), a1.P()) > .02) return false;
+
+	//a1 mass
+	if( a1.M() < 0.6 || a1.M() > 1.8 ) return false;
+	
+	return true;
 }
 void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & discrimValues){
 	std::auto_ptr<reco::PFTauDiscriminator> discrKinFit = std::auto_ptr<reco::PFTauDiscriminator>(new reco::PFTauDiscriminator(reco::PFTauRefProd(collection)));
@@ -132,6 +156,16 @@ void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauColle
 	iEvent_->put(discrKinFit, "PFRecoTauDiscriminationByKinematicFit");
 	iEvent_->put(discrKinFitQual, "PFRecoTauDiscriminationByKinematicFitQuality");
 	
+}
+
+double KinematicTauProducer::thetaGJMax(double ma1, double pa1, double Mtau){
+	double argument = (-pow(ma1,2.) + pow(Mtau,2.))/(2.*Mtau*pa1);// can be negative
+	//catch nan
+	if(fabs(argument) >  1.0) printf("KinematicTauProducer::thetaGJMax: Warning! arcsin(%f) = %f. (pa1 %f, ma1 %f)\n", argument, asin(argument), pa1, ma1);
+	if(argument >  1.0) argument =  1.0;
+	if(argument < -1.0) argument = -1.0;
+	
+	return asin(argument);
 }
 
 //define this as a plug-in

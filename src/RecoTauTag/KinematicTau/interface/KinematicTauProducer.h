@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.12 2010/06/10 15:46:31 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.13 2010/06/21 09:05:02 sauerlan Exp $
 //
 //
 
@@ -59,11 +59,12 @@ private:
 	 do the kinematic fit and in case of success modify the taus parameters
 	 */
 	bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
-	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef);
+	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
 	/**
 	 fill the new PFTau dicriminators from fit result
 	 */
 	void discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & dicrimValues);
+	double thetaGJMax(double ma1, double pa1, double Mtau = 1.777);
 	
 	const edm::ParameterSet fitParameters_;
 	edm::Event * iEvent_;
