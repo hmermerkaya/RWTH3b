@@ -11,13 +11,13 @@
  <Notes on implementation>
  */
 //
-// $Id: KinematicTauCreator.h,v 1.11 2010/03/25 16:39:36 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.12 2010/06/10 15:43:30 perchall Exp $
 //
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.11 2010/03/25 16:39:36 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.12 2010/06/10 15:43:30 perchall Exp $
 //
 //
 
@@ -67,7 +67,7 @@ public:
 	KinematicConstrainedVertexFitter * getFitter() const {return kcvFitter_;}
 	
 	/**
-	 If the primary vertex was modified by call of create() this function returns a fake vertex at the modified position. 
+	 If the primary vertex was modified by call of create() this function returns a fake vertex at the modified position with the initial errors. 
 	 Otherwise an invalid reco::Vertex is returned.
 	 */
 	reco::Vertex getModifiedPrimaryVertex() const;
@@ -81,7 +81,7 @@ protected:
     std::vector<reco::TrackRef> selectedTracks_;
 	TransientTrackBuilder transTrackBuilder_;
 	/**
-	 fake vertex. the primary vertex can be rotated within its errors around the secondary vertex.
+	 fake vertex. the primary vertex can be rotated within its errors around the secondary vertex. errors are copied from original vertex as they have not been modified.
 	 */
 	reco::Vertex modifiedPV_;
 };

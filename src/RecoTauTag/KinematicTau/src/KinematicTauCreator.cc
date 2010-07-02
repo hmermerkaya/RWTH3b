@@ -97,5 +97,8 @@ RefCountedKinematicTree KinematicTauCreator::getKinematicTree() const
 
 reco::Vertex KinematicTauCreator::getModifiedPrimaryVertex() const
 {
+	if(!modifiedPV_.isValid()){
+		printf("KinematicTauCreator::getModifiedPrimaryVertex: WARNING! Invalid vertex requested. The function create() has not yet stored a valid vertex.\n");
+	}
 	return modifiedPV_;
 }
