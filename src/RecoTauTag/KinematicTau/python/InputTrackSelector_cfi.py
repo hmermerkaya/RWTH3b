@@ -20,7 +20,8 @@ pfTauSelector = cms.EDFilter("PFTauSelector",
 InputTrackSelector = cms.EDFilter("InputTrackSelector",#creates PFTauRefVector and collection of vector<reco::TrackRefVector> for each tau cand
 	tauType = cms.untracked.string(pfTau),	#default is fixedConeHighEff
 	minTracks = cms.uint32(3),	#only tau candidates with more/equal than minTracks are selected
-	minTau = cms.untracked.uint32(1)	#minimum taus to select (otherwise filter returns false)
+	minTau = cms.untracked.uint32(1),	#minimum taus to select (otherwise filter returns false)
+	filterTaus = cms.untracked.bool(True) #decide whether to pre-filter the pftaus, default is true
 )
 
 tauSelectorSeq = cms.Sequence(

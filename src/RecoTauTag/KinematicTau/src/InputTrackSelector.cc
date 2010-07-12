@@ -3,7 +3,8 @@
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
 tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "fixedConeHighEff") ),
 minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
-minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more/equal than minTau_ taus were selected
+minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),//filter returns true if more/equal than minTau_ taus were selected
+filterTaus_( iConfig.getUntrackedParameter<bool>("filterTaus", true) )//decide whether to pre-filter the pftaus, default is true
 {
 	produces<int>("flag");//0=invalid, 1=valid
 	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
@@ -59,7 +60,9 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 	iEvent_->getByLabel(tauType_+"PFTauProducer", inputCollection);
 	for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
 		reco::PFTauRef thePFTau(inputCollection, iPFTau);
-		if(!filterInput(thePFTau)) continue;//move into external module?
+		if(filterTaus_){
+			if(!filterInput(thePFTau)) continue;//move into external module?
+		}
 
 		LogTrace("InputTrackSelector")<<"InputTrackSelector::select: tau "<<iPFTau;
 		reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);

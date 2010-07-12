@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.5 2010/01/27 14:28:53 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.6 2010/05/06 10:23:19 perchall Exp $
 //
 //
 
@@ -58,5 +58,6 @@ private:
 	std::string tauType_;
 	edm::InputTag primVtx_;
 	unsigned int minTracks_, minTau_, cnt_, cntFound_;
+	bool filterTaus_;
 
 };
