@@ -10,12 +10,14 @@ SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollecti
     particles_ = particles;
 	signalPFChargedHadrCands_ = -1;
 	signalPFNeutrHadrCands_ = -1;
+	discriminators_.clear();
 }
-SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands)
+SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands, const std::map<std::string, bool> & discriminators)
 {
     particles_ = particles;
 	signalPFChargedHadrCands_ = signalPFChargedHadrCands;
 	signalPFNeutrHadrCands_   = signalPFNeutrHadrCands;
+	discriminators_ = discriminators;
 }
 
 const SelectedKinematicParticle* SelectedKinematicDecay::topParticle() const
@@ -55,6 +57,10 @@ int SelectedKinematicDecay::signalPFChargedHadrCands(){
 }
 int SelectedKinematicDecay::signalPFNeutrHadrCands(){
 	return signalPFNeutrHadrCands_;
+}
+std::map<std::string, bool> SelectedKinematicDecay::discriminators() const
+{
+	return discriminators_;
 }
 void SelectedKinematicDecay::modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par)
 {

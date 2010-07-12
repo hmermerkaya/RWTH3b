@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauAdvancedProducer.h,v 1.9 2010/04/06 15:06:48 perchall Exp $
+// $Id: KinematicTauAdvancedProducer.h,v 1.1 2010/06/09 15:49:22 perchall Exp $
 //
 //
 
@@ -41,6 +41,7 @@
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
+#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 
 
 class KinematicTauAdvancedProducer : public edm::EDFilter {
@@ -57,12 +58,14 @@ private:
 	void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
 	int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::PFTauRef & tauRef);
 	void correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
+	void storePFTauDiscriminators(const reco::PFTauRef & tauRef, std::map<std::string, bool> & tauDiscriminators);
 	
 	const edm::ParameterSet fitParameters_;
 	edm::Event * iEvent_;
 	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 	
 	edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
+	std::vector<std::string> discriminators_;
 	unsigned int minKinTau_, cnt_, cntFound_;
 	
 	static std::string intToString(int f){

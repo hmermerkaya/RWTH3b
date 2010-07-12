@@ -10,4 +10,6 @@
   <class name="std::vector<edm::RefVector<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > >"/>
   <class name="edm::Wrapper<std::vector<edm::RefVector<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > > >"/>
   <class name="edm::Wrapper<edm::RefVector<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> > >"/>
+  <class name="std::map<std::string, bool>"/>
+  <class name="edm::Wrapper<std::map<std::string, bool> >"/>
 </lcgdict>

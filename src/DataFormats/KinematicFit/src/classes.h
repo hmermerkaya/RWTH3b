@@ -21,5 +21,8 @@ namespace {
         SelectedKinematicDecay d1;
         std::vector< SelectedKinematicDecay > vd1;
         edm::Wrapper< std::vector< SelectedKinematicDecay > > wvd1;
+		
+		std::map<std::string, bool> map1;
+		edm::Wrapper<std::map<std::string, bool> > wmap1;
 	};
 }

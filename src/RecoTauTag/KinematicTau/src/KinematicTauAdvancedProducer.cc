@@ -5,6 +5,7 @@ fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
 primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
 selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCandidates" ) ),//only used to save number of tracks in signal cone of PFTau candidate
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) ),
+discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") ),//store the pftau discriminators
 minKinTau_( iConfig.getUntrackedParameter<unsigned int>( "minKinTau", 1 ) )//filter returns true if more than minKinTau_ taus were fitted
 {
 	produces<int>("flag");//0=invalid, 1=valid
@@ -175,8 +176,11 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 		refitTauDecay.push_back( SelectedKinematicParticle(*iter, name, iterations, maxiterations, csum, mincsum, emptyCandRef, ambiguityCnt, status) );
 	}
 	
+	std::map<std::string, bool> tauDiscriminators;
+	storePFTauDiscriminators(tauRef, tauDiscriminators);
+	
 	if(refitTauDecay.size() != 5) printf("KinematicTauAdvancedProducer::saveSelectedTracks:Saved only %i refitted particles.\n", refitTauDecay.size());
-	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size()) );
+	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(), tauDiscriminators) );
 
 	return refitTauDecay.size();
 }
@@ -207,5 +211,24 @@ void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayColle
 	}
 }
 
+void KinematicTauAdvancedProducer::storePFTauDiscriminators(const reco::PFTauRef & tauRef, std::map<std::string, bool> & tauDiscriminators){
+	//store pftau discriminators for each SelectedKinematicDecay
+	if(tauDiscriminators.size()!=0){
+		printf("KinematicTauAdvancedProducer::storePFTauDiscriminators:Warning! Please provide a clean map and not of size %i.\n", tauDiscriminators.size());
+		tauDiscriminators.clear();
+	}
+	
+	for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr) {
+		//std::cout<< "Discriminator name: " <<*discr<<std::endl;
+		edm::Handle<reco::PFTauDiscriminator> tmpHandle;
+		iEvent_->getByLabel(*discr, tmpHandle);
+		
+		if(tauDiscriminators.find(*discr)!=tauDiscriminators.end()){
+			printf("KinematicTauAdvancedProducer::storePFTauDiscriminators:Warning! Duplicate found in list of discriminators (%s). Please correct this in your cfi.\n", discr->c_str());
+			continue;
+		}
+		tauDiscriminators.insert( std::make_pair( *discr, (*tmpHandle)[tauRef] ) );
+	}
+}
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauAdvancedProducer);
