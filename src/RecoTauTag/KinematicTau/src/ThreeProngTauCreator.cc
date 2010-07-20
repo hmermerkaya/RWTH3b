@@ -138,7 +138,8 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(tauMass, unfitDaughters.size());
 	constraintVector.push_back(tauMass_c);
 	GlobalPoint linP(primVtx.x(), primVtx.y(), primVtx.z());
-	MultiTrackKinematicConstraint *pointing_c = new MultiTrackPointingKinematicConstraint(linP);
+//	MultiTrackKinematicConstraint *pointing_c = new MultiTrackPointingKinematicConstraint(linP);
+	MultiTrackKinematicConstraint *pointing_c = new MultiTrackVertexLinkKinematicConstraint(linP);
 	constraintVector.push_back(pointing_c);
 	MultiTrackKinematicConstraint *combiC = new CombinedKinematicConstraint(constraintVector);
 

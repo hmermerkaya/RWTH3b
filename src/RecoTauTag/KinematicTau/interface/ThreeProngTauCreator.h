@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.6 2010/01/27 14:28:53 perchall Exp $
+// $Id: ThreeProngTauCreator.h,v 1.7 2010/03/25 16:39:36 perchall Exp $
 //
 //
 
@@ -30,7 +30,8 @@
 #include "RecoVertex/KinematicFit/interface/MultiTrackMassKinematicConstraint.h"
 //own KinematicFit classes
 #include "RecoVertex/KinematicFit/interface/CombinedKinematicConstraint.h"
-#include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
+//#include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
+#include "RecoVertex/KinematicFit/interface/MultiTrackVertexLinkKinematicConstraint.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
