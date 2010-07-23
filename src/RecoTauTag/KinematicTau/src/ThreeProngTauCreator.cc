@@ -309,13 +309,22 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(Trans
 	for(unsigned int i=22; i!=28; i++) svector28(i-1) = pow(10.,-12.);//correlation between mass and momentum/vertex
 	for(unsigned int n=1; n!=7; n++) svector28(n*(n+1)/2 - 1) = pow(10.,2.);//diagonals, huge error method
 	svector28(27) = pow(10.,-12.);//mass error
-//insert 3prong vertex errors
-//	svector28[0]  = vtxGuess.positionError().cxx();
-//	svector28[1]  = vtxGuess.positionError().cyx();
-//	svector28[2]  = vtxGuess.positionError().czx();
-//	svector28[7]  = vtxGuess.positionError().cyy();
-//	svector28[8]  = vtxGuess.positionError().czy();
-//	svector28[13] = vtxGuess.positionError().czz();
+    
+    if (std::abs(impulsGuess.x()) >= 5.0) {
+        svector28[ 9] = pow(impulsGuess.x(), 2); //assume an error of 100% of the neutrino momentum component
+    } else {
+        svector28[ 9] = pow(5.0, 2); //for momenta smaller than 1 GeV set the error to a static value
+    }
+    if (std::abs(impulsGuess.y()) >= 5.0) {
+        svector28[14] = pow(impulsGuess.y(), 2); //assume an error of 100% of the neutrino momentum component
+    } else {
+        svector28[14] = pow(5.0, 2); //for momenta smaller than 1 GeV set the error to a static value
+    }
+    if (std::abs(impulsGuess.z()) >= 5.0) {
+        svector28[20] = pow(impulsGuess.z(), 2); //assume an error of 100% of the neutrino momentum component
+    } else {
+        svector28[20] = pow(5.0, 2); //for momenta smaller than 1 GeV set the error to a static value
+    }
 	
 	ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> > matrix(svector28);
 	
