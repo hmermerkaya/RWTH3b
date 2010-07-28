@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Nov 12 14:10:26 CET 2009
-// $Id: PrimVtxSelector.h,v 1.4 2010/01/27 14:29:07 perchall Exp $
+// $Id: PrimVtxSelector.h,v 1.5 2010/04/21 14:23:35 perchall Exp $
 //
 //
 
@@ -50,7 +50,6 @@ private:
 	edm::InputTag primVtx_;	
 	unsigned int minTracks_;
 	double maxChi2ndf_;
-	unsigned int verbosity_;
 	
 	unsigned int cnt, cntFound;
 	
