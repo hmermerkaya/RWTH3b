@@ -2,8 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("KinTauCreator")
 
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
-process.GlobalTag.globaltag = 'MC_3XY_V18::All'
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")#https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions#Global_Tags_for_Monte_Carlo_Prod
+process.GlobalTag.globaltag = 'START36_V9::All'
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 #process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -12,20 +12,14 @@ process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTauProducer
 process.MessageLogger.cerr = cms.untracked.PSet(
     threshold = cms.untracked.string('INFO'),
 	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
-	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
 	KinematicTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(-1))
 )
 
-###############
-numberOfEvents = 20
+numberOfEvents = -1
 
-###############
-if numberOfEvents == -1:
-	numberOfEvents = 10000
 inPath = '/disk1/perchalla/data/CMSSW_3_1_1/KinTau/tau3piFromZ/'
 jobName = 'AODSIMHLT_tau3piFromZ_10000evts'
-
-#print 'file://'+inPath+jobName+'.root';
 
 process.source = cms.Source("PoolSource",
 	fileNames = cms.untracked.vstring(
@@ -40,9 +34,10 @@ process.maxEvents = cms.untracked.PSet(
 
 process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
+process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cfi")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 #make some basic tests
 process.load("RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi")
 
 #process.p = cms.Path(process.tauSelectorSeq)
-process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*cms.ignore(process.KinematicTauProducer)*process.KinematicTauAnalyzer)
+process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*cms.ignore(process.KinematicTauProducer)*process.KinematicTauAnalyzer)
