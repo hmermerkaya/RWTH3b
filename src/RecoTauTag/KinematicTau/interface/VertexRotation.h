@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.7 2010/03/25 17:24:07 perchall Exp $
+// $Id: VertexRotation.h,v 1.8 2010/03/26 11:23:38 perchall Exp $
 //
 //
 
@@ -60,7 +60,7 @@ public:
 		TVector3 psRot = rot * ps;
 		double test = fabs(unsignedAngle(psRot, a1_.Vect()) - thetaMax);
 		if(test > pow(10., -6.)){
-			printf("VertexRotation::ERROR! Rotation failed! %f\n", test);
+            edm::LogError("VertexRotation")<<"ERROR! Rotation failed! "<<test;
 			valid_ = false;
 			return false;
 		}
@@ -74,7 +74,7 @@ public:
 		matrixS.ResizeTo(TMatrixDSym(3));
 		for(int i=0; i!=3; i++)	for(int j=0; j!=3; j++) matrixS(i,j) = sVtx.positionError().matrix()(i+1,j+1);//diagonals are squares of sigmas
 		movement_ = vtxDistanceSignificance(pv, matrixP, sv, matrixS, &correction);//correction in units of sigma
-		if(verbosity_>=2) std::cout<<"movement [sigma] = "<<movement_<<std::endl;
+		if(verbosity_>=2) LogTrace("VertexRotation")<<"movement [sigma] = "<<movement_;
 		TVector3 npv, nsv;
 		double projectedErrorP = projectedError(correction, matrixP);
 		double projectedErrorS = projectedError(correction, matrixS);
@@ -95,22 +95,18 @@ public:
 		tauFlghtDir = nsv - npv;
 		theta = unsignedAngle(tauFlghtDir, a1_.Vect());
 		if(movement_ <= 1){
-			if(verbosity_>=1) printf("VertexRotation:: correction found. reached thetaMax (%f) up to %f rad.\n", thetaMax, thetaMax-theta);
+			if(verbosity_>=1) LogTrace("VertexRotation")<<"Correction found. reached thetaMax ("<<thetaMax<<") up to "<<thetaMax-theta<<" rad.";
 			success_ = true;
 		}else{
-			if(verbosity_>=1) printf("VertexRotation:: correction not found as %f < %f. Only reached thetaMax (%f) up to %f rad.\n", sqrt(pow(projectedErrorP,2.0)+pow(projectedErrorS,2.0)), correction.Mag(), thetaMax, thetaMax-theta);
+			if(verbosity_>=1) LogTrace("VertexRotation")<<"Correction not found as "<<sqrt(pow(projectedErrorP,2.0)+pow(projectedErrorS,2.0))<<" < "<<correction.Mag()<<". Only reached thetaMax ("<<thetaMax<<") up to "<<thetaMax-theta<<" rad.";
 			success_ = false;
 		}
 		
 		if(verbosity_>=1){
 			TVector3 pvE(pVtx.xError(), pVtx.yError(), pVtx.zError());
 			TVector3 svE(sqrt(sVtx.positionError().cxx()), sqrt(sVtx.positionError().cyy()), sqrt(sVtx.positionError().czz()));
-			printf("VertexRotation:: Moved pv from (%f,%f,%f)pm(%f, %f, %f) to (%f, %f, %f)\n",
-				   pv.X(), pv.Y(), pv.Z(), pvE.X(), pvE.Y(), pvE.Z(), npv.X(), npv.Y(), npv.Z()
-				   );
-			printf("VertexRotation:: Moved sv from (%f,%f,%f)pm(%f, %f, %f) to (%f, %f, %f)\n",
-				   sv.X(), sv.Y(), sv.Z(), svE.X(), svE.Y(), svE.Z(), nsv.X(), nsv.Y(), nsv.Z()
-				   );
+			LogTrace("VertexRotation")<<"Moved pv from ("<<pv.X()<<","<<pv.Y()<<","<<pv.Z()<<")pm("<<pvE.X()<<", "<<pvE.Y()<<", "<<pvE.Z()<<") to ("<<npv.X()<<", "<<npv.Y()<<", "<<npv.Z()<<")";
+			LogTrace("VertexRotation")<<"Moved sv from ("<<sv.X()<<","<<sv.Y()<<","<<sv.Z()<<")pm("<<svE.X()<<", "<<svE.Y()<<", "<<svE.Z()<<") to ("<<nsv.X()<<", "<<nsv.Y()<<", "<<nsv.Z()<<")";
 		}
 		
 		pVtx = newPrimVertex(npv, pVtx);
@@ -144,7 +140,7 @@ public:
 		matrixP.ResizeTo(TMatrixDSym(3));
 		for(int i=0; i!=3; i++)	for(int j=0; j!=3; j++) matrixP(i,j) = pVtx.covariance(i,j);//diagonals are squares of sigmas
 		significance = vtxDistanceSignificance(pv, matrixP, pvRot, matrixP);//modification in units of sigma
-//		if(verbosity_>=2) std::cout<<"significance [sigma] = "<<significance<<std::endl;
+//		if(verbosity_>=2) LogTrace("VertexRotation")<<"significance [sigma] = "<<significance;
 		tauFlghtDir = psRot;
 		theta = unsignedAngle(tauFlghtDir, a1_.Vect());
 		pVtx = newPrimVertex(pvRot, pVtx);
@@ -181,7 +177,7 @@ public:
 		double ma1 = a1_.M(), pa1 = a1_.P(), Mtau = 1.777;
 		double argument = (-pow(ma1,2.) + pow(Mtau,2.))/(2.*Mtau*pa1);// can be negative
 		//catch nan
-		if(fabs(argument) >  1.0) printf("VertexRotation::calcThetaMax: Warning! arcsin(%f) = %f. (pa1 %f, ma1 %f)\n", argument, asin(argument), pa1, ma1);
+		if(fabs(argument) >  1.0) LogTrace("VertexRotation")<<"calcThetaMax: Warning! arcsin("<<argument<<") = "<<asin(argument)<<". (pa1 "<<pa1<<", ma1 "<<ma1<<")";
 		if(argument >  1.0) argument =  1.0;
 		if(argument < -1.0) argument = -1.0;
 		

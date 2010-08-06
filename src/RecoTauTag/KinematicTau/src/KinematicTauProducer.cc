@@ -58,7 +58,7 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	edm::Handle<InputTauCollection> usedTaus;
 	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
 	if(inputCollection->size() != usedTaus->size()){
-		std::cout<<"KinematicTauProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")"<<std::endl;
+		edm::LogError("KinematicTauProducer")<<"KinematicTauProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")";
 		return false;
 	}
 	unsigned int index = 0;
@@ -78,7 +78,6 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		if(fitStatus==1){
 			success = true;
 			//modify tau in selected list
-			//std::cout<<"modify tau parameters at "<<tauRef.index()<<std::endl;
 			reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
 			selected.at(tauRef.index()).setP4(refitPFTau.p4());
 			selected.at(tauRef.index()).setVertex(refitPFTau.vertex());//this is the rotated primary vertex
@@ -112,7 +111,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauC
 	//other channels need their one discriminators
 	//!!!
 	if(chargedDaughters.size()!=3 || neutralDaughters.size()!=1){
-		printf("KinematicTauProducer::dicriminatorByKinematicFitQuality:WARNING!!! KinematicTauProducer assumes a tau decay into three pions and neutrino but recieved %i charged and %i neutral daughters!\n", chargedDaughters.size(), neutralDaughters.size());
+		edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality:WARNING!!! KinematicTauProducer assumes a tau decay into three pions and neutrino but recieved "<<chargedDaughters.size()<<" charged and "<<neutralDaughters.size()<<" neutral daughters!";
 		return false;
 	}
 	
@@ -145,12 +144,11 @@ void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauColle
 	for(std::map<int, std::vector<bool> >::const_iterator iter = discrimValues.begin(); iter != discrimValues.end(); ++iter){
 		reco::PFTauRef tauRef(collection, iter->first);
 		if(iter->second.size() < 2){
-			printf("KinematicTauProducer::discriminate: ERROR! Bad discriminator size. This tau will be skipped.");
+			edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::discriminate: ERROR! Bad discriminator size. This tau will be skipped.";
 			continue;
 		}
 		discrKinFit->setValue(iter->first, iter->second.at(0));
 		discrKinFitQual->setValue(iter->first, iter->second.at(1));
-		//std::cout<<"tau at "<<iter->first<<": "<<(*discrKinFit)[tauRef]<<", "<<(*discrKinFitQual)[tauRef]<<std::endl;
 	}
 	
 	iEvent_->put(discrKinFit, "PFRecoTauDiscriminationByKinematicFit");
@@ -161,7 +159,7 @@ void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauColle
 double KinematicTauProducer::thetaGJMax(double ma1, double pa1, double Mtau){
 	double argument = (-pow(ma1,2.) + pow(Mtau,2.))/(2.*Mtau*pa1);// can be negative
 	//catch nan
-	if(fabs(argument) >  1.0) printf("KinematicTauProducer::thetaGJMax: Warning! arcsin(%f) = %f. (pa1 %f, ma1 %f)\n", argument, asin(argument), pa1, ma1);
+	if(fabs(argument) >  1.0) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::thetaGJMax: Warning! arcsin("<<argument<<") = "<<asin(argument)<<". (pa1 "<<pa1<<", ma1 "<<ma1<<")";
 	if(argument >  1.0) argument =  1.0;
 	if(argument < -1.0) argument = -1.0;
 	

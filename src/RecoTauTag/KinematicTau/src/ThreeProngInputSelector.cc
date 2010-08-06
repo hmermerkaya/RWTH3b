@@ -60,7 +60,7 @@ void ThreeProngInputSelector::beginJob(){
 void ThreeProngInputSelector::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	printf("--> [ThreeProngInputSelector] found at least %i 3-prongs per event. Efficiency: %d/%d = %.2f%%\n", minTau_, cntFound_, cnt_, ratio*100.0);
+    edm::LogVerbatim("ThreeProngInputSelector")<<"--> [ThreeProngInputSelector] found at least "<<minTau_<<" 3-prongs per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 bool ThreeProngInputSelector::sumCharge(std::vector<reco::TrackRef> &input){
 	int sum = abs(input.at(0)->charge() + input.at(1)->charge() + input.at(2)->charge());
@@ -76,7 +76,7 @@ std::vector<reco::TransientTrack> ThreeProngInputSelector::convToTransTrck(std::
 }
 bool ThreeProngInputSelector::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx){
 	if(trkVct.size()<2){
-		printf("Can't check SecVertex: Only %i Tracks.", trkVct.size());
+		LogTrace("ThreeProngInputSelector")<<"Can't check SecVertex: Only "<<trkVct.size()<<" Tracks.";
 		return false;
 	}else{
 		bool useAdaptive = false;
@@ -86,7 +86,7 @@ bool ThreeProngInputSelector::checkSecVtx(std::vector<reco::TransientTrack> &trk
 			try{
 				transVtx = avf.vertex(trkVct);//AdaptiveVertexFitter
 			}catch(...){
-				printf("ThreeProngInputSelector::checkSecVtx: Secondary vertex fit failed. Skip it.\n");
+                edm::LogWarning("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkSecVtx: Secondary vertex fit failed. Skip it.";
 				return false;
 			}
 		}else{
@@ -94,7 +94,7 @@ bool ThreeProngInputSelector::checkSecVtx(std::vector<reco::TransientTrack> &trk
 			try{
 				transVtx = kvf.vertex(trkVct);//KalmanVertexFitter
 			}catch(...){
-				printf("ThreeProngInputSelector::checkSecVtx: Secondary vertex fit failed. Skip it.\n");
+                edm::LogWarning("ThreeProngInputSelector")<<"ThreeProngInputSelector::checkSecVtx: Secondary vertex fit failed. Skip it.";
 				return false;
 			}
 		}
@@ -350,14 +350,12 @@ bool ThreeProngInputSelector::removeDuplicateTriplets(const std::vector<reco::Tr
 	//so that the whole triplet is equal
 	//do not delete triplet if tracks belong to different other combis!
 
-	//printf("found 3 duplicates in one triplet\n");
 	std::vector<std::vector<std::vector<reco::TrackRef> > >::const_iterator passedCandidates;
     std::vector<std::vector<reco::TrackRef> > ::const_iterator passedTriplets;
     std::vector<reco::TrackRef>::const_iterator tracks, duplicate;	
 	for(passedCandidates = threeProngCombis.begin(); passedCandidates != threeProngCombis.end(); ++passedCandidates){
 		for(passedTriplets = passedCandidates->begin(); passedTriplets != passedCandidates->end(); ++passedTriplets){
 			if(passedTriplets==triplets){//test only already passed triplets
-				//printf("no triplet copy found!\n");
 				return false;
 			}
 			unsigned int cntDuplicate = 0;
@@ -375,11 +373,10 @@ bool ThreeProngInputSelector::removeDuplicateTriplets(const std::vector<reco::Tr
 			}
 		}
 		if(passedCandidates==candidates){//test only already passed candidates
-			//printf("current candidate reached\n");
 			return false;
 		}
 	}
-	printf("ThreeProngInputSelector::removeDuplicateTriplets: One should never see this.\n");
+    edm::LogError("ThreeProngInputSelector")<<"ThreeProngInputSelector::removeDuplicateTriplets: One should never see this!";
 	return false;
 }
 

@@ -61,7 +61,7 @@ void KinematicTauAdvancedProducer::beginJob(){
 void KinematicTauAdvancedProducer::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-    printf("--> [KinematicTauAdvancedProducer] asks for >= %i kinTaus per event. Selection efficiency: %d/%d = %.2f%%\n", minKinTau_, cntFound_, cnt_, ratio*100.0);
+    edm::LogVerbatim("KinematicTauAdvancedProducer")<<"--> [KinematicTauAdvancedProducer] asks for >= "<<minKinTau_<<" kinTaus per event. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
 bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & refitDecays, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx){
@@ -73,7 +73,7 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
 	edm::Handle<InputTauCollection> usedTaus;
 	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
 	if(inputCollection->size() != usedTaus->size()){
-		std::cout<<"KinematicTauAdvancedProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")"<<std::endl;
+        edm::LogError("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")";
 		return false;
 	}
 	unsigned int index = 0;
@@ -140,7 +140,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	try{
 		tree->movePointerToTheTop();
 	}catch(VertexException){
-		std::cout<<"KinematicTree::movePointerToTheTop; tree is empty! -- Event skipped."<<std::endl;
+		edm::LogWarning("KinematicTauAdvancedProducer")<<"KinematicTree::movePointerToTheTop; tree is empty! -- Event skipped.";
 		return false;
 	}
 	int iterations = kcvFitter->getNit();
@@ -156,7 +156,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	if(tree->currentParticle()->currentState().particleCharge() != 0){
 		name = std::string("tau");
 	}else{
-		printf("KinematicTauAdvancedProducer::saveKinParticles: neutral tau detected. tau skipped.\n");
+		LogTrace("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::saveKinParticles: neutral tau detected. tau skipped.";
 		return 0;
 	}
 	
@@ -170,8 +170,6 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 			name = std::string("pion");
 		}else{
 			name = std::string("neutrino");
-//			printf("vtxGuess nu  prefit (%f,%f,%f)\n", (*iter)->initialState().globalPosition().x(), (*iter)->initialState().globalPosition().y(), (*iter)->initialState().globalPosition().z());
-//			printf("vtxGuess nu postfit (%f,%f,%f)\n", (*iter)->currentState().globalPosition().x(), (*iter)->currentState().globalPosition().y(), (*iter)->currentState().globalPosition().z());
 		}
 		refitTauDecay.push_back( SelectedKinematicParticle(*iter, name, iterations, maxiterations, csum, mincsum, emptyCandRef, ambiguityCnt, status) );
 	}
@@ -179,7 +177,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	std::map<std::string, bool> tauDiscriminators;
 	storePFTauDiscriminators(tauRef, tauDiscriminators);
 	
-	if(refitTauDecay.size() != 5) printf("KinematicTauAdvancedProducer::saveSelectedTracks:Saved only %i refitted particles.\n", refitTauDecay.size());
+	if(refitTauDecay.size() != 5) LogTrace("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
 	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(), tauDiscriminators) );
 
 	return refitTauDecay.size();
@@ -187,8 +185,6 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands){
 	unsigned index = 0;
 	std::vector<reco::RecoChargedCandidateRef> newRefs;
-//	printf("orphanCands size = %i\n", orphanCands->size());
-//	printf("selected size = %i\n", selected.size());
 	for(reco::RecoChargedCandidateCollection::const_iterator iter = orphanCands->begin(); iter != orphanCands->end(); ++iter, ++index){
 		reco::RecoChargedCandidateRef ref(orphanCands, index);
 		newRefs.push_back(ref);
@@ -200,12 +196,12 @@ void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayColle
 //		if(decay->front().ambiguity() == 2) index = index-3;//if second solution the last PFRefs are used again. (2nd sol only exists if a first one exists too)
 		for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
 			if(index >= newRefs.size()){
-				printf("evt %d KinematicTauAdvancedProducer::correctReferences: Bad selection size! index=%d, refs=%d\n", iEvent_->id().event(), index, newRefs.size());
+                edm::LogError("KinematicTauAdvancedProducer")<<"evt "<<iEvent_->id().event()<<" KinematicTauAdvancedProducer::correctReferences: Bad selection size! index="<<index<<", refs="<<newRefs.size();
 				throw 111;
 			}
 			if(*particle!=NULL){
 				(*particle)->setCandRef(newRefs[index]);
-			}else std::cout<<"KinematicTauAdvancedProducer::correctReferences: Reference not modified!!!(at index="<<index<<")"<<std::endl;
+			}else edm::LogError("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::correctReferences: Reference not modified!!!(at index="<<index<<")";
 			index++;
 		}
 	}
@@ -214,17 +210,16 @@ void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayColle
 void KinematicTauAdvancedProducer::storePFTauDiscriminators(const reco::PFTauRef & tauRef, std::map<std::string, bool> & tauDiscriminators){
 	//store pftau discriminators for each SelectedKinematicDecay
 	if(tauDiscriminators.size()!=0){
-		printf("KinematicTauAdvancedProducer::storePFTauDiscriminators:Warning! Please provide a clean map and not of size %i.\n", tauDiscriminators.size());
+		edm::LogWarning("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::storePFTauDiscriminators:Warning! Please provide a clean map and not of size "<<tauDiscriminators.size();
 		tauDiscriminators.clear();
 	}
 	
 	for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr) {
-		//std::cout<< "Discriminator name: " <<*discr<<std::endl;
 		edm::Handle<reco::PFTauDiscriminator> tmpHandle;
 		iEvent_->getByLabel(*discr, tmpHandle);
 		
 		if(tauDiscriminators.find(*discr)!=tauDiscriminators.end()){
-			printf("KinematicTauAdvancedProducer::storePFTauDiscriminators:Warning! Duplicate found in list of discriminators (%s). Please correct this in your cfi.\n", discr->c_str());
+			edm::LogWarning("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::storePFTauDiscriminators:Warning! Duplicate found in list of discriminators ("<<discr->c_str()<<"). Please correct this in your cfi.";
 			continue;
 		}
 		tauDiscriminators.insert( std::make_pair( *discr, (*tmpHandle)[tauRef] ) );

@@ -43,7 +43,7 @@ void PrimVtxSelector::beginJob(){
 void PrimVtxSelector::endJob() {
 	float ratio = 0.0;
 	if(cnt!=0) ratio=(float)cntFound/cnt;
-	printf("--> [PrimVtxSelector] asks for vertex with >= %i tracks and chi2ndf <= %f. Efficiency: %d/%d = %.2f%%\n", minTracks_, maxChi2ndf_, cntFound, cnt, ratio*100.0);
+    edm::LogInfo("PrimVtxSelector")<<"--> [PrimVtxSelector] asks for vertex with >= "<<minTracks_<<" tracks and chi2ndf <= "<<maxChi2ndf_<<". Efficiency: "<<cntFound<<"/"<<cnt<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
 bool PrimVtxSelector::checkPrimVtx(reco::VertexCollection & primaryVertex){

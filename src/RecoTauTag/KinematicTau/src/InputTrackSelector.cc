@@ -51,7 +51,7 @@ void InputTrackSelector::beginJob(){
 void InputTrackSelector::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-	printf("--> [InputTrackSelector] found at least %i tau candidate (with at least %i tracks) per event. Efficiency: %d/%d = %.2f%%\n", minTau_, minTracks_, cntFound_, cnt_, ratio*100.0);
+    edm::LogVerbatim("InputTrackSelector")<<"--> [InputTrackSelector] found at least "<<minTau_<<" tau candidate (with at least "<<minTracks_<<" tracks) per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollection & PFTauRef){
 	bool found = false;
