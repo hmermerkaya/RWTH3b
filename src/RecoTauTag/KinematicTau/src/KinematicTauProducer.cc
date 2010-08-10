@@ -78,15 +78,15 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		if(fitStatus==1){
 			success = true;
 			//modify tau in selected list
-			reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
+			reco::PFTau refitPFTau = kinTauCrtr->getPFTau(); //this is only the visible part of the tau momentum!
 			selected.at(tauRef.index()).setP4(refitPFTau.p4());
-			selected.at(tauRef.index()).setVertex(refitPFTau.vertex());//this is the rotated primary vertex
+			selected.at(tauRef.index()).setVertex(refitPFTau.vertex()); //this is the rotated primary vertex
 		}
 	}
 	
 	delete kinTauCrtr;
 	
-	return success;//at least one tau was fitted
+	return success; //at least one tau was fitted
 }
 bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx){
 	//combine a discriminator of important quality cuts

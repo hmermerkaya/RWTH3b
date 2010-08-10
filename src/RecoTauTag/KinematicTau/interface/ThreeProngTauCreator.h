@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.7 2010/03/25 16:39:36 perchall Exp $
+// $Id: ThreeProngTauCreator.h,v 1.8 2010/07/20 15:02:20 perchall Exp $
 //
 //
 
@@ -55,7 +55,7 @@ private:
 	RefCountedKinematicParticle virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess);	
 	template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
 	
-	template <typename T> double getInvariantMass(const T& tracks, const double mass = 0.140){//if second argument empty default pion is supposed
+	template <typename T> double getInvariantMass(const T& tracks, const double mass = ThreeProngTauCreator::piMass){ //if second argument empty default pion is supposed
 		double SumPx = 0;
 		double SumPy = 0;
 		double SumPz = 0;
@@ -91,4 +91,7 @@ private:
 	template <typename T> static bool cmpChi2(const T &a, const T &b){
 		return a->chi2() > b->chi2();
 	}
+    
+    static const ParticleMass piMass;
+    static const ParticleMass tauMass;
 };

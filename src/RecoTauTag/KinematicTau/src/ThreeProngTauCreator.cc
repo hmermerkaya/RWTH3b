@@ -1,9 +1,12 @@
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
 
 
+const ParticleMass ThreeProngTauCreator::piMass = .13957018;//PYTHIA: 0.140, PDG: 0.13957018
+const ParticleMass ThreeProngTauCreator::tauMass = 1.777;
+
 int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks){
-	std::vector<RefCountedKinematicParticle> *pions = new std::vector<RefCountedKinematicParticle>;//3 particles (3pi)
-	std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>;//1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
+	std::vector<RefCountedKinematicParticle> *pions = new std::vector<RefCountedKinematicParticle>; //3 particles (3pi)
+	std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>; //1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
 	std::vector<reco::TrackRef> input = inputTracks;
 	reco::Vertex primVtx = primaryVertex;
 	
@@ -26,7 +29,6 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 
 bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &input, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, reco::Vertex &primVtx){
 	KinematicParticleFactoryFromTransientTrack kinFactory;
-	ParticleMass piMass = .13957018;//PYTHIA: 0.140, PDG: 0.13957018
 	float piMassSigma = sqrt(pow(10.,-12.));//not to small to avoid singularities
 	float piChi = 0., piNdf = 0.;//only initial values
 	
@@ -41,8 +43,8 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad charge sum.";
 			return false;
 		}
-		double massA1 = getInvariantMass(input, 0.140);
-		if(massA1 > 2.0 || massA1 < 3*0.140){//soft upper value
+		double massA1 = getInvariantMass(input, ThreeProngTauCreator::piMass);
+		if(massA1 > 2.0 || massA1 < 3*piMass){//soft upper value
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad a1 mass.";
 			return false;
 		}
@@ -59,11 +61,11 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand.";
 		return false;
 	}
-	double massA1 = getInvariantMass(selectedTracks_, 0.140);
+	double massA1 = getInvariantMass(selectedTracks_, ThreeProngTauCreator::piMass);
 	TLorentzVector lorentzA1 = getSumTLorentzVec(selectedTracks_, massA1);
 	VertexRotation vtxC(lorentzA1, 0);
 	double thetaMax = vtxC.calcThetaMax();
-	if(lorentzA1.M() > 2.0 || lorentzA1.M() < 3*.140){//soft upper value due to neutrino resolution
+	if(lorentzA1.M() > 2.0 || lorentzA1.M() < 3*ThreeProngTauCreator::piMass){//soft upper value due to neutrino resolution
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad a1 mass = "<<lorentzA1.M()<<". Skip tauCand.";
 		return false;
 	}
@@ -71,25 +73,10 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	double theta0;
 	TVector3 tauFlghtDir;
 	double significance = vtxC.rotatePV(primVtx, secVtx, theta0, tauFlghtDir);//rotation is forced to reach thetaMax
-	//	vtxC.dumpEvt(primVtx, secVtx, thetaMax);
 	if(significance > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
 	
-//	VirtualKinematicParticleFactory factory;
-//	for(unsigned int i = 0; i!=transTrkVect.size();i++){//enlarge vtx errors
-//		RefCountedKinematicParticle tmp = kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma);
-//		//modify vertex
-//		AlgebraicSymMatrix77 newPar = tmp->currentState().kinematicParametersError().matrix();
-//		for (int i = 0; i < 3; i++) {//modify only vertex errors
-//			for (int j = 0; j < 3; j++) {
-//				if(i==j) newPar(i,j) = 100*newPar(i,j);//scale errors by factor of sqrt(100)
-//			}
-//		}
-//		KinematicState newkineState(tmp->currentState().kinematicParameters().vector(), newPar, tmp->currentState().particleCharge(), transTrackBuilder_.field());
-//		float chi2 = tmp->chiSquared(), ndof = tmp->degreesOfFreedom();
-//		pions.push_back(factory.particle(newkineState, chi2, ndof, 0,0));
-//	}
 	for(unsigned int i = 0; i!=transTrkVect.size();i++){
-		pions.push_back(kinFactory.particle(transTrkVect[i],piMass,piChi,piNdf,piMassSigma));
+		pions.push_back(kinFactory.particle(transTrkVect[i],ThreeProngTauCreator::piMass,piChi,piNdf,piMassSigma));
 	}
 	
 	if(theta0>TMath::Pi()/2){
@@ -102,18 +89,18 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		theta0 = thetaMax;
 	}
 
-	std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),1.777,theta0);//use a pair to prepare for ambiguities
+	std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),ThreeProngTauCreator::tauMass,theta0);//use a pair to prepare for ambiguities
 	LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: tau solutions = "<<tauSolutions.first<<", "<<tauSolutions.second;
 	bool ambiguity = false;
 	if(fabs(tauSolutions.first-tauSolutions.second) < pow(10.0,-6)) ambiguity = true;
 	
 	TLorentzVector tauGuess1;
 	tauFlghtDir = tauFlghtDir.Unit();
-	tauGuess1.SetXYZM(tauFlghtDir.X()*tauSolutions.first , tauFlghtDir.Y()*tauSolutions.first , tauFlghtDir.Z()*tauSolutions.first , 1.777);
+	tauGuess1.SetXYZM(tauFlghtDir.X()*tauSolutions.first , tauFlghtDir.Y()*tauSolutions.first , tauFlghtDir.Z()*tauSolutions.first , ThreeProngTauCreator::tauMass);
 	neutrinos.push_back(unknownNu(tauGuess1, lorentzA1, secVtx));
 	if(ambiguity==true){
 		TLorentzVector tauGuess2;
-		tauGuess2.SetXYZM(tauFlghtDir.X()*tauSolutions.second, tauFlghtDir.Y()*tauSolutions.second, tauFlghtDir.Z()*tauSolutions.second, 1.777);
+		tauGuess2.SetXYZM(tauFlghtDir.X()*tauSolutions.second, tauFlghtDir.Y()*tauSolutions.second, tauFlghtDir.Z()*tauSolutions.second, ThreeProngTauCreator::tauMass);
 		neutrinos.push_back(unknownNu(tauGuess2, lorentzA1, secVtx));
 	}
 	if(neutrinos.size() != 1 && neutrinos.size() != 2){
@@ -128,10 +115,9 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
         edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
 		return false;
 	}
-	ParticleMass tauMass = 1.777;
 
 	std::vector<MultiTrackKinematicConstraint* > constraintVector;
-	MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(tauMass, unfitDaughters.size());
+	MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(ThreeProngTauCreator::tauMass, unfitDaughters.size());
 	constraintVector.push_back(tauMass_c);
 	GlobalPoint linP(primVtx.x(), primVtx.y(), primVtx.z());
 //	MultiTrackKinematicConstraint *pointing_c = new MultiTrackPointingKinematicConstraint(linP);
@@ -141,7 +127,6 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 
 	GlobalPoint vtxGuess = unfitDaughters[3]->currentState().globalPosition();//nu was created at common/corrected vertex of pions
 	try{
-//		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC, &vtxGuess);//experimental
 		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC);
 	}catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
 		std::cout<<"VertexException. Skip tauCand."<<std::endl;
@@ -166,7 +151,6 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 		std::cout<<"ThreeProngTauCreator::choose3bestTracks:Bad combis. Skip it."<<std::endl;
 		return false;
 	}
-//	std::vector<std::pair<int,float> > chi2s;
 	std::vector<std::pair<int,double> > movements;
 	unsigned index=0;
 	for (std::vector<std::vector<reco::TrackRef> >::iterator iter=combis.begin(); iter!=combis.end();) {
@@ -175,8 +159,8 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to wrong charge sum. "<<combis.size()<<" combis left.";
 			continue;
 		}
-		double massA1 = getInvariantMass(*iter, 0.140);
-		if(massA1 > 2.0 || massA1 < 3*0.140){//soft upper value
+		double massA1 = getInvariantMass(*iter, ThreeProngTauCreator::piMass);
+		if(massA1 > 2.0 || massA1 < 3*ThreeProngTauCreator::piMass){//soft upper value
 			iter = combis.erase(iter);
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to wrong mass. "<<combis.size()<<" combis left.";
 			continue;
@@ -195,7 +179,6 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 		reco::Vertex pvTemp = pVtx;//do not modify original pv here
 		double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
 		movements.push_back(std::make_pair(index,significance));//significance of vertex modification
-//		chi2s.push_back(std::make_pair(index,tmpVtx.normalisedChiSquared()));
 		
 		++index;
 		++iter;//only moved if nothing was deleted
@@ -205,12 +188,7 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 		return false;
 	}
 	
-	if (combis.size()>1){//chose the pair with smallest vertex rotation needed!!!
-		//		sort(chi2s.begin(), chi2s.end(), pairSecond<int, float>);
-		//		LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take best common vtx (chi2/ndf = "<<chi2s.at(0).second<<"), second best is (chi2/ndf = "<<chi2s.at(1).second<<").";
-		//		unsigned int i = chi2s.front().first;
-		//		input.assign( combis.at(i).begin(), combis.at(i).end() );
-		
+	if (combis.size()>1){//chose the pair with smallest vertex rotation needed
 		sort(movements.begin(), movements.end(), pairSecond<int, double>);
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take one with smallest vtx correction movement ("<<movements.front().second<<" [sigma]), second best is ("<<movements.at(1).second<<" [sigma]).";
 		unsigned int i = movements.front().first;
@@ -226,7 +204,7 @@ bool ThreeProngTauCreator::sumCharge(std::vector<reco::TrackRef> &input){
 	return false;
 }
 std::vector<reco::TransientTrack> ThreeProngTauCreator::convToTransTrck(std::vector<reco::TrackRef> &input){
-	//TransientTrackBuilder liefert reco::TransientTrack*
+	//TransientTrackBuilder delivers reco::TransientTrack*
 	std::vector<reco::TransientTrack> transTrkVct;
 	for (std::vector<reco::TrackRef>::iterator iter=input.begin(); iter!=input.end(); ++iter) {
 		transTrkVct.push_back( transTrackBuilder_.build( *iter ) );
@@ -240,10 +218,10 @@ bool ThreeProngTauCreator::checkSecVtx(std::vector<reco::TransientTrack> &trkVct
 	}else{
 		bool useAdaptive = false;
 		if(useAdaptive){
-			AdaptiveVertexFitter avf;//more robust?
-			avf.setWeightThreshold(0.1);//weight per track. allow almost every fit, else --> exception
+			AdaptiveVertexFitter avf;
+			avf.setWeightThreshold(0.1); //weight per track. allow almost every fit, else --> exception
 			try{
-				transVtx = avf.vertex(trkVct);//AdaptiveVertexFitter
+				transVtx = avf.vertex(trkVct); //AdaptiveVertexFitter
 			}catch(...){
 				LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::checkSecVtx: Secondary vertex fit failed. Skip it.";
 				return false;
@@ -251,7 +229,7 @@ bool ThreeProngTauCreator::checkSecVtx(std::vector<reco::TransientTrack> &trkVct
 		}else{
 			KalmanVertexFitter kvf(true);
 			try{
-				transVtx = kvf.vertex(trkVct);//KalmanVertexFitter
+				transVtx = kvf.vertex(trkVct); //KalmanVertexFitter
 			}catch(...){
 				LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::checkSecVtx: Secondary vertex fit failed. Skip it.";
 				return false;
@@ -278,10 +256,10 @@ std::pair<double,double> ThreeProngTauCreator::getTauMomentumMagnitudes(double m
 	double tauMomentumMagnitude1 = (numerator - root) / denominator,
 	tauMomentumMagnitude2 = (numerator + root)	/ denominator;
 	
-	if(!(tauMomentumMagnitude1>0)) tauMomentumMagnitude1 = numerator / denominator;//catch 'nan' and replace by pseudo mean value
+	if(!(tauMomentumMagnitude1>0)) tauMomentumMagnitude1 = numerator / denominator; //catch 'nan' and replace by pseudo mean value
 	if(!(tauMomentumMagnitude2>0)) tauMomentumMagnitude2 = tauMomentumMagnitude1;
 	
-	if(!(tauMomentumMagnitude1>0)) tauMomentumMagnitude1 = 0;//catch 'nan'
+	if(!(tauMomentumMagnitude1>0)) tauMomentumMagnitude1 = 0; //catch 'nan'
 	if(!(tauMomentumMagnitude2>0)) tauMomentumMagnitude2 = 0;
 	
 	return std::make_pair(tauMomentumMagnitude1,tauMomentumMagnitude2);
@@ -299,7 +277,6 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(Trans
 	VirtualKinematicParticleFactory factory;
 	//(x,y,z,p_x,p_y,p_z,m)
 	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
-//	const KinematicParameters parameters(AlgebraicVector7(0,0,0,impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
 	ROOT::Math::SVector<double,28> svector28;
 	for(unsigned int i=1; i!=22; i++) svector28(i-1) = pow(10.,-12.);
 	for(unsigned int i=22; i!=28; i++) svector28(i-1) = pow(10.,-12.);//correlation between mass and momentum/vertex
@@ -309,17 +286,17 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(Trans
     if (std::abs(impulsGuess.x()) >= 5.0) {
         svector28[ 9] = pow(impulsGuess.x(), 2); //assume an error of 100% of the neutrino momentum component
     } else {
-        svector28[ 9] = pow(5.0, 2); //for momenta smaller than 1 GeV set the error to a static value
+        svector28[ 9] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
     }
     if (std::abs(impulsGuess.y()) >= 5.0) {
         svector28[14] = pow(impulsGuess.y(), 2); //assume an error of 100% of the neutrino momentum component
     } else {
-        svector28[14] = pow(5.0, 2); //for momenta smaller than 1 GeV set the error to a static value
+        svector28[14] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
     }
     if (std::abs(impulsGuess.z()) >= 5.0) {
         svector28[20] = pow(impulsGuess.z(), 2); //assume an error of 100% of the neutrino momentum component
     } else {
-        svector28[20] = pow(5.0, 2); //for momenta smaller than 1 GeV set the error to a static value
+        svector28[20] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
     }
 	
 	ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> > matrix(svector28);

@@ -92,19 +92,6 @@ bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter 
 	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorAgainstMuons; 
 	iEvent_->getByLabel(tauType_+"PFTauDiscriminationAgainstMuon",thePFTauDiscriminatorAgainstMuons);
 	
-//edmDumpEventContent /disk1/perchalla/data/CMSSW_3_1_2/KinTau/tau3piFromVBFH/AODSIMHLT_tau3piFromVBFH_145GeV.root | grep PFTau	
-//	fixedConeHighEffPFTauDiscriminationAgainstElectron
-//	fixedConeHighEffPFTauDiscriminationAgainstMuon
-//	fixedConeHighEffPFTauDiscriminationByECALIsolation
-//	fixedConeHighEffPFTauDiscriminationByECALIsolationUsingLeadingPion
-//	fixedConeHighEffPFTauDiscriminationByIsolation
-//	fixedConeHighEffPFTauDiscriminationByIsolationUsingLeadingPion
-//	fixedConeHighEffPFTauDiscriminationByLeadingPionPtCut
-//	fixedConeHighEffPFTauDiscriminationByLeadingTrackFinding
-//	fixedConeHighEffPFTauDiscriminationByLeadingTrackPtCut //MinPtLeadingTrack = cms.double(5.0)
-//	fixedConeHighEffPFTauDiscriminationByTrackIsolation
-//	fixedConeHighEffPFTauDiscriminationByTrackIsolationUsingLeadingPion
-	
     if (
         ((*thePFTauDiscriminatorAgainstMuons)[tau] == 1 || (*thePFTauDiscriminatorAgainstElectrons)[tau] == 1)
         && ((*thePFTauDiscriminatorByIsolation)[tau] == 1 || (*thePFTauDiscriminatorByLeadingTrackPtCut)[tau] == 1)
@@ -115,8 +102,8 @@ bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter 
 }
 reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau){
 	reco::TrackRefVector trkVct;
-	const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands();//cand in signal cone 
-	//isolationPFChargedHadrCands stores tracks in isol/veto cone
+	const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands(); //candidates in signal cone 
+	//isolationPFChargedHadrCands stores tracks in isolation/veto cone
 	for (reco::PFCandidateRefVector::const_iterator iter = cands.begin(); iter!=cands.end(); ++iter) {
 		LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::getPFTauDaughters: PFTau daughter pt "<<iter->get()->pt()<<", eta "<<iter->get()->eta()<<", vtx("<<iter->get()->vx()<<","<<iter->get()->vy()<<","<<iter->get()->vz()<<")";
 		if(iter->get()->trackRef().isNonnull()) trkVct.push_back( (*iter)->trackRef() );

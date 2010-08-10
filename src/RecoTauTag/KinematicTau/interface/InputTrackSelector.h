@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.6 2010/05/06 10:23:19 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.7 2010/07/12 13:07:35 perchall Exp $
 //
 //
 
@@ -33,7 +33,6 @@
 
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
-//#include "DataFormats/RecoCandidate/interface/RecoCandidate.h"//for: get<reco::TrackRef>()
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/KinematicFit/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/PFTauFwd.h"
