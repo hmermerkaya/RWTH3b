@@ -4,16 +4,14 @@
 // Class:      ThreeProngTauCreator
 // 
 /**
- 
- Description: creates kinemtic tau from 3prong decay suggestion
- 
- Implementation:
- <Notes on implementation>
+ * This class creates a kinemtic tau from the 3prong decay suggestion.
+ *
+ * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.8 2010/07/20 15:02:20 perchall Exp $
+// $Id: ThreeProngTauCreator.h,v 1.9 2010/08/10 15:19:11 sauerlan Exp $
 //
 //
 

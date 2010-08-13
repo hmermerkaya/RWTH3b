@@ -1,6 +1,6 @@
 // -*- C++ -*-
 //
-// Package:    InputTrackSelector
+// Package:    KinematicTau
 // Class:      InputTrackSelector
 // 
 /**
@@ -8,13 +8,14 @@
  *
  * This framework module returns a boolean whether the minimum number of taus was found with enough daughters.
  * For convenience a reference to the taus is also stored in case of success.
+ * Part of the KinematicTau package.
  *
  * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.8 2010/08/10 15:19:07 sauerlan Exp $
+// $Id: InputTrackSelector.h,v 1.9 2010/08/13 10:39:46 perchall Exp $
 //
 //
 
