@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauAdvancedProducer.h,v 1.1 2010/06/09 15:49:22 perchall Exp $
+// $Id: KinematicTauAdvancedProducer.h,v 1.2 2010/07/12 12:10:58 perchall Exp $
 //
 //
 
@@ -36,8 +36,6 @@
 
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"//own class of tauGroup to store fitted particles in event stream
-#include "DataFormats/KinematicFit/interface/TrackFwd.h"
-#include "DataFormats/KinematicFit/interface/PFTauFwd.h"
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
@@ -54,7 +52,7 @@ private:
 	virtual bool filter(edm::Event&, const edm::EventSetup&);
 	virtual void endJob();
 	
-	bool select(SelectedKinematicDecayCollection & refitDecays, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx);
+	bool select(SelectedKinematicDecayCollection & refitDecays, reco::PFTauRefVector & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx);
 	void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
 	int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::PFTauRef & tauRef);
 	void correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);

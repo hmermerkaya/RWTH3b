@@ -3,17 +3,17 @@
 // Package:    KinematicTauAnalyzer
 // Class:      KinematicTauAnalyzer
 // 
-/**\class KinematicTauAnalyzer KinematicTauAnalyzer.cc RecoTauTag/KinematicTauAnalyzer/src/KinematicTauAnalyzer.cc
- 
- Description: Test the KinematicTau package
- 
- Implementation:
- <Notes on implementation>
+/**
+ *
+ * Description: Test the KinematicTau package
+ *
+ * Implementation:
+ * <Notes on implementation>
  */
 //
 // Original Author:  Lars Perchalla
 //         Created:  Thu Jun 10 10:45:54 CEST 2010
-// $Id: KinematicTauAnalyzer.cc,v 1.1 2010/06/10 12:38:50 perchall Exp $
+// $Id: KinematicTauAnalyzer.cc,v 1.2 2010/06/24 12:18:15 perchall Exp $
 //
 //
 
@@ -30,7 +30,6 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
-#include "DataFormats/TauReco/interface/PFTauFwd.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 
 

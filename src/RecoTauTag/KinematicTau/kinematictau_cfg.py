@@ -16,7 +16,7 @@ process.MessageLogger.cerr = cms.untracked.PSet(
 	KinematicTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(-1))
 )
 
-numberOfEvents = -1
+numberOfEvents = 100
 
 inPath = '/disk1/perchalla/data/CMSSW_3_1_1/KinTau/tau3piFromZ/'
 jobName = 'AODSIMHLT_tau3piFromZ_10000evts'

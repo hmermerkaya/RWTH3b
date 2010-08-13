@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.14 2010/07/02 15:57:06 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.15 2010/08/10 15:19:10 sauerlan Exp $
 //
 //
 
@@ -35,8 +35,6 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
-#include "DataFormats/KinematicFit/interface/TrackFwd.h"
-#include "DataFormats/KinematicFit/interface/PFTauFwd.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"

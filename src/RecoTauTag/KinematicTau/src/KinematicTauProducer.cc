@@ -26,7 +26,7 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	iEvent_->getByLabel( primVtx_, primVtxs);
 
 	//make copy of initial tau collection with unmodified 4vects
-	edm::Handle<InputTauCollection> usedTaus;
+	edm::Handle<reco::PFTauRefVector> usedTaus;
 	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
 	selected.insert(selected.begin(), usedTaus->product()->begin(), usedTaus->product()->end());
 
@@ -53,9 +53,9 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	bool success = false;
 	discrimValues.clear();
 	
-	edm::Handle<InputTrackCollection> inputCollection;
+	edm::Handle<std::vector<reco::TrackRefVector> > inputCollection;
 	iEvent_->getByLabel(inputCollectionTag_, inputCollection);
-	edm::Handle<InputTauCollection> usedTaus;
+	edm::Handle<reco::PFTauRefVector> usedTaus;
 	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
 	if(inputCollection->size() != usedTaus->size()){
 		edm::LogError("KinematicTauProducer")<<"KinematicTauProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")";
@@ -64,7 +64,7 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	unsigned int index = 0;
 	TransientTrackBuilder trkBuilder = *transTrackBuilder_;
 	KinematicTauCreator *kinTauCrtr = new ThreeProngTauCreator(trkBuilder, fitParameters_);
-	for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
+	for(std::vector<reco::TrackRefVector>::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
 		int fitStatus = kinTauCrtr->create(primaryVtx, input);

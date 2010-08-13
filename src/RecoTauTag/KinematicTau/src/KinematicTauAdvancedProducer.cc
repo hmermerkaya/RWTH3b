@@ -9,7 +9,7 @@ discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminator
 minKinTau_( iConfig.getUntrackedParameter<unsigned int>( "minKinTau", 1 ) )//filter returns true if more than minKinTau_ taus were fitted
 {
 	produces<int>("flag");//0=invalid, 1=valid
-	produces<InputTauCollection>("selectedTauRefs");//currently not in use
+	produces<reco::PFTauRefVector>("selectedTauRefs");//currently not in use
 	produces<reco::RecoChargedCandidateCollection>("selectedTauDaughters");//for matching issues
 	produces<SelectedKinematicDecayCollection>("SelectedKinematicDecays");
 }
@@ -26,8 +26,8 @@ bool KinematicTauAdvancedProducer::filter(edm::Event& iEvent, const edm::EventSe
 	
 	std::auto_ptr<SelectedKinematicDecayCollection> selected_ = std::auto_ptr<SelectedKinematicDecayCollection >(new SelectedKinematicDecayCollection);
 	SelectedKinematicDecayCollection & selected = * selected_;
-	std::auto_ptr<InputTauCollection> PFTauRefCollection_ = std::auto_ptr<InputTauCollection>(new InputTauCollection);
-	InputTauCollection & PFTauRefCollection = * PFTauRefCollection_;
+	std::auto_ptr<reco::PFTauRefVector> PFTauRefCollection_ = std::auto_ptr<reco::PFTauRefVector>(new reco::PFTauRefVector);
+	reco::PFTauRefVector & PFTauRefCollection = * PFTauRefCollection_;
 	std::auto_ptr<reco::RecoChargedCandidateCollection> daughterCollection_ = std::auto_ptr<reco::RecoChargedCandidateCollection>(new reco::RecoChargedCandidateCollection);
 	reco::RecoChargedCandidateCollection & daughterCollection = * daughterCollection_;
 	
@@ -64,13 +64,13 @@ void KinematicTauAdvancedProducer::endJob(){
     edm::LogVerbatim("KinematicTauAdvancedProducer")<<"--> [KinematicTauAdvancedProducer] asks for >= "<<minKinTau_<<" kinTaus per event. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
-bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & refitDecays, InputTauCollection & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx){
+bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & refitDecays, reco::PFTauRefVector & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx){
 	bool fullyDetermined = false;
 //	std::vector<bool> ambiguity;
 	
-	edm::Handle<InputTrackCollection> inputCollection;
+	edm::Handle<std::vector<reco::TrackRefVector> > inputCollection;
 	iEvent_->getByLabel(inputCollectionTag_, inputCollection);
-	edm::Handle<InputTauCollection> usedTaus;
+	edm::Handle<reco::PFTauRefVector> usedTaus;
 	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
 	if(inputCollection->size() != usedTaus->size()){
         edm::LogError("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")";
@@ -80,7 +80,7 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
 	TransientTrackBuilder trkBuilder = *transTrackBuilder_;
 	KinematicTauCreator *kinTauCrtr = new ThreeProngTauCreator(trkBuilder, fitParameters_);
 	unsigned int cntValid = 0;
-	for(InputTrackCollection::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
+	for(std::vector<reco::TrackRefVector>::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
 		std::vector<reco::TrackRef> input;
 		for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
 		int fitStatus = kinTauCrtr->create(primaryVtx, input);

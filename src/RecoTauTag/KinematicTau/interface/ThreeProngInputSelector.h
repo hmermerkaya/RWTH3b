@@ -32,10 +32,8 @@
 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
-#include "DataFormats/KinematicFit/interface/TrackFwd.h"
 
 #include "DataFormats/TauReco/interface/PFTau.h"
-#include "DataFormats/KinematicFit/interface/PFTauFwd.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -69,9 +67,9 @@ private:
     template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
     std::vector<std::vector<reco::TrackRef> > choose3Prongs(std::vector<reco::TrackRef> &input);
     bool createNewPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<reco::TrackRef> & tautracks);
-    bool select(InputTrackCollection & selected, InputTauCollection & taurefs, reco::VertexCollection & primaryVertex);
+    bool select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & taurefs, reco::VertexCollection & primaryVertex);
     bool checkPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<TransientVertex> & newvertices);
-    bool choose3bestTracks(InputTrackCollection & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx);
+    bool choose3bestTracks(std::vector<reco::TrackRefVector> & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx);
 	bool removeDuplicateTriplets(const std::vector<reco::TrackRef> & duplicateTracks, 
 								 std::vector<std::vector<std::vector<reco::TrackRef> > > & threeProngCombis, 
 								 std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator & candidates, 
