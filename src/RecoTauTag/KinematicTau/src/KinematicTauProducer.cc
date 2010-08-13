@@ -7,8 +7,8 @@ selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCand
 inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) )
 {
 	produces<reco::PFTauCollection>();
-	produces<reco::PFTauDiscriminator>("PFRecoTauDiscriminationByKinematicFit");
-	produces<reco::PFTauDiscriminator>("PFRecoTauDiscriminationByKinematicFitQuality");
+	produces<reco::PFTauDiscriminator>("PFRecoTauDiscriminationByKinematicFit");//boolean per decay whether the fit was successfull
+	produces<reco::PFTauDiscriminator>("PFRecoTauDiscriminationByKinematicFitQuality");//boolean per decay whether it passes some major quality cuts
 }
 
 KinematicTauProducer::~KinematicTauProducer(){

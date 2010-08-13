@@ -4,16 +4,15 @@
 // Class:      KinematicTauProducer
 // 
 /**
- 
- Description: test application of KinematicTauCreator
- 
- Implementation:
- <Notes on implementation>
+ * This framework module copies an existing PFTauCollection and modifies the tau's parameters according to a kinematical refit of its decay.
+ * A particular decay mode has to be assumed. New discriminators regarding the fits quality are provided.
+ *
+ * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.15 2010/08/10 15:19:10 sauerlan Exp $
+// $Id: KinematicTauProducer.h,v 1.16 2010/08/13 10:47:06 perchall Exp $
 //
 //
 
@@ -57,11 +56,17 @@ private:
 	 Execute the kinematic fit and in case of success modify the taus parameters
 	 */
 	bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
+	/**
+	 combine a discriminator of important quality cuts of a refitted tau decay
+	 */
 	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
 	/**
 	 Fill the new PFTau dicriminators from fit result
 	 */
 	void discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & dicrimValues);
+	/**
+	 Calulate the maximal allowed GJ angle from a1 parameters
+	 */	
 	double thetaGJMax(double ma1, double pa1, double Mtau = 1.777);
 	
 	const edm::ParameterSet fitParameters_;

@@ -5,15 +5,14 @@
 // 
 /**
  
- Description: test application of KinematicTauCreator
+ Entire application of KinematicTauCreator for DEBUG issues only! Use KinematicTauProducer instead.
  
- Implementation:
- <Notes on implementation>
+ * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauAdvancedProducer.h,v 1.2 2010/07/12 12:10:58 perchall Exp $
+// $Id: KinematicTauAdvancedProducer.h,v 1.3 2010/08/13 10:47:06 perchall Exp $
 //
 //
 
