@@ -1,14 +1,13 @@
 #include "RecoTauTag/KinematicTau/interface/InputTrackSelector.h"
 
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
-tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "fixedCone") ),
+tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "shrinkingCone") ),
 minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
-minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),//filter returns true if more/equal than minTau_ taus were selected
-filterTaus_( iConfig.getUntrackedParameter<bool>("filterTaus", true) )//decide whether to pre-filter the pftaus, default is true
+minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more/equal than minTau_ taus were selected
 {
 	produces<int>("flag");//0=invalid, 1=valid
-	produces<InputTrackCollection>("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
-	produces<InputTauCollection>("InputTauRefs");//needed to fill in unfit KinematicParticle later on
+	produces<std::vector<reco::TrackRefVector> >("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
+	produces<reco::PFTauRefVector>("InputTauRefs");//needed to fill in unfit KinematicParticle later on
 }
 
 
@@ -22,10 +21,10 @@ bool InputTrackSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
 	cnt_++;
 	iEvent_ = &iEvent;
 
-	std::auto_ptr<InputTrackCollection> selected_ = std::auto_ptr<InputTrackCollection >(new InputTrackCollection);
-	InputTrackCollection & selected = * selected_;
-	std::auto_ptr<InputTauCollection> PFTauRef_ = std::auto_ptr<InputTauCollection>(new InputTauCollection);
-	InputTauCollection & PFTauRef = * PFTauRef_;
+	std::auto_ptr<std::vector<reco::TrackRefVector> > selected_ = std::auto_ptr<std::vector<reco::TrackRefVector> >(new std::vector<reco::TrackRefVector>);
+	std::vector<reco::TrackRefVector> & selected = * selected_;
+	std::auto_ptr<reco::PFTauRefVector> PFTauRef_ = std::auto_ptr<reco::PFTauRefVector>(new reco::PFTauRefVector);
+	reco::PFTauRefVector & PFTauRef = * PFTauRef_;
 
 	bool filterValue = select(selected, PFTauRef);
 
@@ -53,7 +52,7 @@ void InputTrackSelector::endJob(){
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
     edm::LogVerbatim("InputTrackSelector")<<"--> [InputTrackSelector] found at least "<<minTau_<<" tau candidate (with at least "<<minTracks_<<" tracks) per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
-bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollection & PFTauRef){
+bool InputTrackSelector::select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & PFTauRef){
 	bool found = false;
 	
 	edm::Handle<reco::PFTauCollection> inputCollection;
@@ -61,10 +60,6 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 	LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: no. of PFTaus in event = "<<inputCollection->size();
 	for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
 		reco::PFTauRef thePFTau(inputCollection, iPFTau);
-		if(filterTaus_){
-			if(!filterInput(thePFTau)) continue;//move into external module?
-		}
-
 		LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: test tau "<<iPFTau;
 		reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
 		if(tauDaughters.size()>=minTracks_){
@@ -80,25 +75,6 @@ bool InputTrackSelector::select(InputTrackCollection & selected, InputTauCollect
 	}else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select:Warning: only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Evt.";
 
 	return found;
-}
-bool InputTrackSelector::filterInput(reco::PFTauRef &tau){//use seperate filter module?
-	bool filter = false;
-	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorByIsolation;
-	iEvent_->getByLabel(tauType_+"PFTauDiscriminationByTrackIsolation",thePFTauDiscriminatorByIsolation); 
-	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorByLeadingTrackPtCut; 
-	iEvent_->getByLabel(tauType_+"PFTauDiscriminationByLeadingTrackPtCut",thePFTauDiscriminatorByLeadingTrackPtCut); 
-	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorAgainstElectrons; 
-	iEvent_->getByLabel(tauType_+"PFTauDiscriminationAgainstElectron",thePFTauDiscriminatorAgainstElectrons); 
-	edm::Handle<reco::PFTauDiscriminator> thePFTauDiscriminatorAgainstMuons; 
-	iEvent_->getByLabel(tauType_+"PFTauDiscriminationAgainstMuon",thePFTauDiscriminatorAgainstMuons);
-	
-    if (
-        ((*thePFTauDiscriminatorAgainstMuons)[tau] == 1 || (*thePFTauDiscriminatorAgainstElectrons)[tau] == 1)
-        && ((*thePFTauDiscriminatorByIsolation)[tau] == 1 || (*thePFTauDiscriminatorByLeadingTrackPtCut)[tau] == 1)
-       ) filter = true;
-	else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::filterInput:Info: Bad tau discriminator (isolation = "<<(int)(*thePFTauDiscriminatorByIsolation)[tau]<<", minTrackPt = "<<(int)(*thePFTauDiscriminatorByLeadingTrackPtCut)[tau]<<", electron veto = "<<(int)(*thePFTauDiscriminatorAgainstElectrons)[tau]<<", muon veto = "<<(int)(*thePFTauDiscriminatorAgainstMuons)[tau]<<"). Skip tauCand.";
-	
-	return filter;
 }
 reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau){
 	reco::TrackRefVector trkVct;

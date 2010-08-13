@@ -4,16 +4,17 @@
 // Class:      InputTrackSelector
 // 
 /**
- 
- Description: creates collection of reco::TrackRefVector for each tau candidate
- 
- Implementation:
- <Notes on implementation>
+ * The InputTrackSelector selects tracks from within a PFTaus signal cone and stores combinations of these according to the required number of tracks defined by the user.
+ *
+ * This framework module returns a boolean whether the minimum number of taus was found with enough daughters.
+ * For convenience a reference to the taus is also stored in case of success.
+ *
+ * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.7 2010/07/12 13:07:35 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.8 2010/08/10 15:19:07 sauerlan Exp $
 //
 //
 
@@ -32,10 +33,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DataFormats/TauReco/interface/PFTau.h"
-#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/KinematicFit/interface/TrackFwd.h"
-#include "DataFormats/KinematicFit/interface/PFTauFwd.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
@@ -49,14 +47,12 @@ private:
 	virtual void beginJob();
 	virtual bool filter(edm::Event&, const edm::EventSetup&);
 	virtual void endJob();
-	bool select(InputTrackCollection & refitParticles, InputTauCollection & PFTauRef);
-	bool filterInput(reco::PFTauRef &tau);
+	bool select(std::vector<reco::TrackRefVector> & refitParticles, reco::PFTauRefVector & PFTauRef);
 	reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
 	
 	edm::Event * iEvent_;
 	std::string tauType_;
 	edm::InputTag primVtx_;
 	unsigned int minTracks_, minTau_, cnt_, cntFound_;
-	bool filterTaus_;
 
 };
