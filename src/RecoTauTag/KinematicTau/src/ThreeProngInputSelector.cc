@@ -288,7 +288,6 @@ bool ThreeProngInputSelector::checkPrimVtx(reco::VertexCollection & primaryVerte
 	return true;
 }
 bool ThreeProngInputSelector::choose3bestTracks(std::vector<reco::TrackRefVector> & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx){
-//	std::vector<std::pair<int,float> > chi2s;
 	std::vector<std::pair<int,double> > movements;
 	unsigned index=0;
 	for (std::vector<std::vector<reco::TrackRef> >::iterator iter=combis.begin(); iter!=combis.end();) {
@@ -307,7 +306,6 @@ bool ThreeProngInputSelector::choose3bestTracks(std::vector<reco::TrackRefVector
 		reco::Vertex pvTemp = pVtx;//do not modify original pv here
 		double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
 		movements.push_back(std::make_pair(index, significance));
-//		chi2s.push_back(std::make_pair(index,tmpVtx.normalisedChiSquared()));
 		
 		++index;
 		++iter;//only moved if nothing was deleted
@@ -320,11 +318,6 @@ bool ThreeProngInputSelector::choose3bestTracks(std::vector<reco::TrackRefVector
     reco::TrackRefVector tmpvec;
     
 	if (combis.size()>1){//chose the pair with smallest vertex rotation needed!!!
-		//		sort(chi2s.begin(), chi2s.end(), pairSecond<int, float>);
-		//		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take best common vtx (chi2/ndf = "<<chi2s.at(0).second<<"), second best is (chi2/ndf = "<<chi2s.at(1).second<<").";
-		//		unsigned int i = chi2s.front().first;
-		//		input.assign( combis.at(i).begin(), combis.at(i).end() );
-		
 		sort(movements.begin(), movements.end(), pairSecond<int, double>);
 		LogTrace("ThreeProngInputSelector")<<"ThreeProngInputSelector::choose3bestTracks:Too much combis ("<<combis.size()<<") left. Take one with smallest vtx correction movement ("<<movements.front().second<<" [sigma]), second best is ("<<movements.at(1).second<<" [sigma]).";
 		unsigned int i = movements.front().first;
