@@ -4,20 +4,18 @@
 // Class:      KinematicTauCreator
 // 
 /**
- 
- Description: pure abstract class. use e.g. ThreeProngTauCreator to implement create()
- 
- Implementation:
- <Notes on implementation>
+ * This is a pure abstract class providing the interface to the KinematicFit. Use derived classes e.g. ThreeProngTauCreator to implement the create() function.
+ *
+ * @author Lars Perchalla, Philip Sauerland in 2010
  */
 //
-// $Id: KinematicTauCreator.h,v 1.13 2010/07/02 15:55:39 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.14 2010/08/10 15:19:10 sauerlan Exp $
 //
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.13 2010/07/02 15:55:39 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.14 2010/08/10 15:19:10 sauerlan Exp $
 //
 //
 
@@ -38,6 +36,9 @@ public:
     KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg);
     virtual ~KinematicTauCreator();
 
+	/**
+	 main function of the KinematicTau algorithm. It will call the Fitter and provide the fitted results. It returns true if the fit was successfull.
+	 */
     virtual int create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks) = 0;
 
 	/**
@@ -78,6 +79,9 @@ protected:
 	 */
     KinematicConstrainedVertexFitter *kcvFitter_;
     RefCountedKinematicTree kinTree_;
+	/**
+	 ref to original tracks used by the fit
+	 */
     std::vector<reco::TrackRef> selectedTracks_;
 	TransientTrackBuilder transTrackBuilder_;
 	/**
