@@ -9,13 +9,13 @@
  * @author Lars Perchalla, Philip Sauerland in 2010
  */
 //
-// $Id: KinematicTauCreator.h,v 1.14 2010/08/10 15:19:10 sauerlan Exp $
+// $Id: KinematicTauCreator.h,v 1.15 2010/08/13 12:00:08 perchall Exp $
 //
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.14 2010/08/10 15:19:10 sauerlan Exp $
+// $Id: KinematicTauCreator.h,v 1.15 2010/08/13 12:00:08 perchall Exp $
 //
 //
 
@@ -32,7 +32,13 @@
 class KinematicTauCreator
 {
 public:
+	/**
+	 default constructor
+	 */
     KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder);
+	/**
+	 constructor with user defined fit parameters
+	 */
     KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg);
     virtual ~KinematicTauCreator();
 
@@ -49,7 +55,13 @@ public:
 	 the full tau constructed from refitted tracks including neutrals (the stored primary vertex might be rotated)
 	 */
 	reco::PFTau getKinematicTau() const;
+	/**
+	 returns vector of all refitted charged particles involved in the fit
+	 */
     std::vector<math::XYZTLorentzVector> getRefittedChargedDaughters() const;
+	/**
+	 returns vector of all refitted neutral particles involved in the fit
+	 */
     std::vector<math::XYZTLorentzVector> getRefittedNeutralDaughters() const;
 
 	/**
