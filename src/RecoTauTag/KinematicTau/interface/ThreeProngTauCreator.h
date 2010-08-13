@@ -1,17 +1,18 @@
 // -*- C++ -*-
 //
-// Package:    ThreeProngTauCreator
+// Package:    KinematicTau
 // Class:      ThreeProngTauCreator
 // 
 /**
  * This class creates a kinemtic tau from the 3prong decay suggestion.
+ * Part of the KinematicTau package.
  *
  * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.9 2010/08/10 15:19:11 sauerlan Exp $
+// $Id: ThreeProngTauCreator.h,v 1.10 2010/08/13 12:22:51 perchall Exp $
 //
 //
 

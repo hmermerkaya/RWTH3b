@@ -1,18 +1,19 @@
 // -*- C++ -*-
 //
-// Package:    KinematicTauProducer
+// Package:    KinematicTau
 // Class:      KinematicTauProducer
 // 
 /**
  * This framework module copies an existing PFTauCollection and modifies the tau's parameters according to a kinematical refit of its decay.
  * A particular decay mode has to be assumed. New discriminators regarding the fits quality are provided.
+ * Part of the KinematicTau package.
  *
  * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.16 2010/08/13 10:47:06 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.17 2010/08/13 12:12:36 perchall Exp $
 //
 //
 

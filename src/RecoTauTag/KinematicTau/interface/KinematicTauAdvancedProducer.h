@@ -1,18 +1,18 @@
 // -*- C++ -*-
 //
-// Package:    KinematicTauAdvancedProducer
+// Package:    KinematicTau
 // Class:      KinematicTauAdvancedProducer
 // 
 /**
- 
- Entire application of KinematicTauCreator for DEBUG issues only! Use KinematicTauProducer instead.
- 
+ * Entire application of KinematicTauCreator for DEBUG issues only! Use KinematicTauProducer instead.
+ * Part of the KinematicTau package.
+ *
  * @author Lars Perchalla, Philip Sauerland in 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauAdvancedProducer.h,v 1.3 2010/08/13 10:47:06 perchall Exp $
+// $Id: KinematicTauAdvancedProducer.h,v 1.4 2010/08/13 12:16:31 perchall Exp $
 //
 //
 

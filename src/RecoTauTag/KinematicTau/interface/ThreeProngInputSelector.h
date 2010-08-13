@@ -1,12 +1,13 @@
 // -*- C++ -*-
 //
-// Package:    ThreeProngInputSelector
+// Package:    KinematicTau
 // Class:      ThreeProngInputSelector
 // 
 /**
  * This framework module creates the appropriate input for the KinematicTauProducer.
  * In this case the tau decay tau->3pi+nu is assumed.
  * It creates a collection of reco::TrackRefVector of size 3 for each tau candidate and refits the primary vertex without tracks assigned already to the tau decay.
+ * Part of the KinematicTau package.
  *
  * @author Lars Perchalla, Philip Sauerland in 2010
  */
