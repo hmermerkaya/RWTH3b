@@ -2,18 +2,18 @@
 #define DataFormats_KinematicFit_SelectedKinematicDecay_h
 // -*- C++ -*-
 //
-// Package:    SelectedKinematicDecay
+// Package:    KinematicTau
 // Class:      SelectedKinematicDecay
 // 
 /**
- * This data format stores all objects of type SelectedKinematicParticle of one tau decay.
+ * This data format combines all objects of type SelectedKinematicParticle assigned to one tau decay.
  * @author Lars Perchalla, Philip Sauerland
  * @date 2010
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.9 2010/07/12 12:08:53 perchall Exp $
+// $Id: SelectedKinematicDecay.h,v 1.10 2010/08/13 14:42:43 perchall Exp $
 //
 //
 

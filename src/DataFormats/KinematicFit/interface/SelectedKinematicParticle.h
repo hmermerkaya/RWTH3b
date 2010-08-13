@@ -2,21 +2,19 @@
 #define DataFormats_KinematicFit_SelectedKinematicParticle_h
 // -*- C++ -*-
 //
-// Package:    SelectedKinematicParticle
+// Package:    KinematicTau
 // Class:      SelectedKinematicParticle
 // 
 /**
- 
- Description: stores results from kinematically refitted particles
- 
- Implementation:
- <Notes on implementation>
+ * This class stores the results from kinematically refitted particles.
+ * @author Lars Perchalla, Philip Sauerland
+ * @date 2009
  */
 //
-// $Id: SelectedKinematicParticle.h,v 1.6 2010/06/10 15:56:25 perchall Exp $
-//
-//
 // Original Author:  Lars Perchalla, Philip Sauerland
+//         Created:  Thu Dec  17 12:27:34 CEST 2009
+// $Id: SelectedKinematicParticle.h,v 1.7 2010/06/24 11:50:41 sauerlan Exp $
+//
 
 
 
