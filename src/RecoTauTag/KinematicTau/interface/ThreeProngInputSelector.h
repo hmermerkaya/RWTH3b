@@ -9,7 +9,8 @@
  * It creates a collection of reco::TrackRefVector of size 3 for each tau candidate and refits the primary vertex without tracks assigned already to the tau decay.
  * Part of the KinematicTau package.
  *
- * @author Lars Perchalla, Philip Sauerland in 2010
+ * @author Lars Perchalla, Philip Sauerland
+ * @date 2010
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland

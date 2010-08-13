@@ -10,12 +10,13 @@
  * For convenience a reference to the taus is also stored in case of success.
  * Part of the KinematicTau package.
  *
- * @author Lars Perchalla, Philip Sauerland in 2009
+ * @author Lars Perchalla, Philip Sauerland
+ * @date 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.9 2010/08/13 10:39:46 perchall Exp $
+// $Id: InputTrackSelector.h,v 1.10 2010/08/13 12:29:00 perchall Exp $
 //
 //
 

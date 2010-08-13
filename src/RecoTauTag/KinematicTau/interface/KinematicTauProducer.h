@@ -8,12 +8,13 @@
  * A particular decay mode has to be assumed. New discriminators regarding the fits quality are provided.
  * Part of the KinematicTau package.
  *
- * @author Lars Perchalla, Philip Sauerland in 2009
+ * @author Lars Perchalla, Philip Sauerland
+ * @date 2009
  */
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.17 2010/08/13 12:12:36 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.18 2010/08/13 12:29:00 perchall Exp $
 //
 //
 

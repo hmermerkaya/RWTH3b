@@ -7,16 +7,17 @@
  * This is a pure abstract class providing the interface to the KinematicFit. Use derived classes e.g. ThreeProngTauCreator to implement the create() function.
  * Part of the KinematicTau package.
  *
- * @author Lars Perchalla, Philip Sauerland in 2010
+ * @author Lars Perchalla, Philip Sauerland
+ * @date 2010
  */
 //
-// $Id: KinematicTauCreator.h,v 1.16 2010/08/13 12:03:46 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.17 2010/08/13 12:29:00 perchall Exp $
 //
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.16 2010/08/13 12:03:46 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.17 2010/08/13 12:29:00 perchall Exp $
 //
 //
 
