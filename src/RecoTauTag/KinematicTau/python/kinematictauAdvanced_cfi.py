@@ -7,12 +7,13 @@ from RecoTauTag.KinematicTau.InputTrackSelector_cfi import pfTau #choose tau typ
 KinematicTauProducer = cms.EDFilter("KinematicTauAdvancedProducer",#creates reco::CandidateRefVector containing refs to selected jets
 	#parameters for KinematicConstrainedVertexFitter
 	fitParameters = cms.PSet(#parameters for KinematicConstrainedVertexFitter
-		maxDistance = cms.double(.001),#stopping condition
+		maxDelta = cms.double(.001),#stopping condition
 		maxNbrOfIterations = cms.int32(20),	#number of iterations
-		maxOfInitialValue = cms.double(9999.)
+		maxReducedChiSq = cms.double(225.),
+		minChiSqImprovement = cms.double(50.)
 	),
-	primVtx = cms.InputTag("PrimVtxSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
-	selectedTauCandidates = cms.InputTag("InputTrackSelector","InputTauRefs"),
+	primVtx = cms.InputTag("ThreeProngInputSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
+	selectedTauCandidates = cms.InputTag("ThreeProngInputSelector","InputTauRefs"),
 	discriminators = cms.vstring(#all discrimns from evtDump on 3_1_4 skim to be stored in SelectedKinematicDecay
 		pfTau+"PFTauDiscriminationAgainstElectron",
 		pfTau+"PFTauDiscriminationAgainstMuon",
@@ -26,7 +27,7 @@ KinematicTauProducer = cms.EDFilter("KinematicTauAdvancedProducer",#creates reco
 		pfTau+"PFTauDiscriminationByTrackIsolation",
 		pfTau+"PFTauDiscriminationByTrackIsolationUsingLeadingPion"
 	),
-	inputTracks = cms.InputTag("InputTrackSelector","InputTracks"),#selected tracks from PFTaus (daughters of selectedTauCandidates)
+	inputTracks = cms.InputTag("ThreeProngInputSelector","InputTracks"),#selected tracks from PFTaus (daughters of selectedTauCandidates)
 
 	minKinTau = cms.untracked.uint32(1)#minimum kin. taus to produce (otherwise filter returns false)	
 )
