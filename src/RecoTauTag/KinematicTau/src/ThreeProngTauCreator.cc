@@ -129,7 +129,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	try{
 		kinTree_ = kcvFitter_->fit(unfitDaughters, combiC);
 	}catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
-		std::cout<<"VertexException. Skip tauCand."<<std::endl;
+		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: VertexException. Skip tau candidate.";
 		return false;
 	}
 
