@@ -5,22 +5,22 @@ const ParticleMass ThreeProngTauCreator::piMass = .13957018;//PYTHIA: 0.140, PDG
 const ParticleMass ThreeProngTauCreator::tauMass = 1.777;
 
 int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks){
-	std::vector<RefCountedKinematicParticle> *pions = new std::vector<RefCountedKinematicParticle>; //3 particles (3pi)
+	std::vector<RefCountedKinematicParticle> *daughters = new std::vector<RefCountedKinematicParticle>; //3 particles (3pi)
 	std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>; //1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
 	std::vector<reco::TrackRef> input = inputTracks;
 	reco::Vertex primVtx = primaryVertex;
 	
-	if(!createStartScenario(input, *pions, *neutrinos, primVtx)) return 0;
-	if (pions->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2)){
-		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<pions->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
+	if(!createStartScenario(input, *daughters, *neutrinos, primVtx)) return 0;
+	if (daughters->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2)){
+		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<daughters->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
 		return 0;
 	}
 	//in this version createStartScenario always rotates up to thetaMax so that there is always only one solution
-	pions->push_back(neutrinos->at(0));
+	daughters->push_back(neutrinos->at(0));
 	
-	bool fitWorked = kinematicRefit(*pions, primVtx);
+	bool fitWorked = kinematicRefit(*daughters, primVtx);
 
-	delete pions;
+	delete daughters;
 	delete neutrinos;
 	
 	if(fitWorked) return 1;
@@ -92,7 +92,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),ThreeProngTauCreator::tauMass,theta0);//use a pair to prepare for ambiguities
 	LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: tau solutions = "<<tauSolutions.first<<", "<<tauSolutions.second;
 	bool ambiguity = false;
-	if(fabs(tauSolutions.first-tauSolutions.second) < pow(10.0,-6)) ambiguity = true;
+	if(fabs(tauSolutions.first-tauSolutions.second) > pow(10.0,-6)) ambiguity = true;
 	
 	TLorentzVector tauGuess1;
 	tauFlghtDir = tauFlghtDir.Unit();
@@ -139,7 +139,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	
 	if(kinTree_->isValid()) return true;
 	else{
-		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
+		edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
 		return false;
 	}
 }
@@ -148,7 +148,7 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 	sort(input.begin(), input.end(), cmpPt<reco::TrackRef>);
 	std::vector<std::vector<reco::TrackRef> > combis = permuteCombinations(input);
 	if(combis.size()==0){
-		std::cout<<"ThreeProngTauCreator::choose3bestTracks:Bad combis. Skip it."<<std::endl;
+		edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::choose3bestTracks: ERROR! Bad combinations. Skip it.";
 		return false;
 	}
 	std::vector<std::pair<int,double> > movements;
