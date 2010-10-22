@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.10 2010/08/13 14:42:43 perchall Exp $
+// $Id: SelectedKinematicDecay.h,v 1.11 2010/08/13 14:47:17 perchall Exp $
 //
 //
 
@@ -63,6 +63,14 @@ public:
 	 */
 	void modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par);
  	
+	
+	void setPFTauRef(const std::vector<int> & value);
+	void addPFTauRef(const int & value);
+	/**
+	 index of the initial PFTau from which this decay was created. multiple indeces possible
+	 */
+	std::vector<int> PFTauRef() const;
+
 private:
     SelectedKinematicParticleCollection particles_;
 	/**
@@ -78,6 +86,12 @@ private:
 	 official pftau discriminators (ensure same size and order)
 	 */
 	std::map<std::string, bool> discriminators_;
+	
+	/**
+	 store the index of the initial PFTau from which this decay was created. multiple indeces possible
+	 */
+	std::vector<int> PFTauRef_;
+	
 };
 
 typedef std::vector<SelectedKinematicDecay> SelectedKinematicDecayCollection;
