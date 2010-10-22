@@ -150,7 +150,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	std::string name;
 	int ambiguityCnt = -1;
 	int maxiterations = fitParameters_.getParameter<int>( "maxNbrOfIterations" );
-	double mincsum = fitParameters_.getParameter<double>( "maxDistance" );
+	double mincsum = fitParameters_.getParameter<double>( "maxDelta" );
 	reco::RecoChargedCandidateRef emptyCandRef;//pions will be filled later on by correctReferences()
 		
 	if(tree->currentParticle()->currentState().particleCharge() != 0){
@@ -178,8 +178,11 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	storePFTauDiscriminators(tauRef, tauDiscriminators);
 	
 	if(refitTauDecay.size() != 5) LogTrace("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
-	else refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(), tauDiscriminators) );
-
+	else{
+		refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(), tauDiscriminators) );
+		refitDecays.back().addPFTauRef(tauRef.index());
+	}
+	
 	return refitTauDecay.size();
 }
 void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands){
