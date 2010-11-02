@@ -16,13 +16,6 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 		return 0;
 	}
     
-//    for ( unsigned int i = 0; i < daughters->size(); ++i ) {
-//        std::cerr << "pion_" << i+1 << " matrix: " << std::endl;
-//        std::cerr << daughters->at(i)->initialState().kinematicParametersError().matrix() << std::endl;
-//    }
-//    std::cerr << "neutrino matrix: " << std::endl;
-//    std::cerr << neutrinos->at(0)->initialState().kinematicParametersError().matrix() << std::endl;
-    
 	//in this version createStartScenario always rotates up to thetaMax so that there is always only one solution
 	daughters->push_back(neutrinos->at(0));
 	
