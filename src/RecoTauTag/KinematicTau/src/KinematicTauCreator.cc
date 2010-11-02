@@ -8,7 +8,8 @@ transTrackBuilder_(transTrackBuilder)
 	edm::ParameterSet defaultConfig;
 	defaultConfig.addParameter("maxDistance", .001);
 	defaultConfig.addParameter("maxNbrOfIterations", 20);
-	defaultConfig.addParameter("maxOfInitialValue", 9999.);
+	defaultConfig.addParameter("maxReducedChiSq", 225.0);
+    defaultConfig.addParameter("minChiSqImprovement", 50.0);
 	kcvFitter_->setParameters(defaultConfig);
 	modifiedPV_ = reco::Vertex();
 }
