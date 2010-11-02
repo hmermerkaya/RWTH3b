@@ -15,6 +15,14 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<daughters->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
 		return 0;
 	}
+    
+//    for ( unsigned int i = 0; i < daughters->size(); ++i ) {
+//        std::cerr << "pion_" << i+1 << " matrix: " << std::endl;
+//        std::cerr << daughters->at(i)->initialState().kinematicParametersError().matrix() << std::endl;
+//    }
+//    std::cerr << "neutrino matrix: " << std::endl;
+//    std::cerr << neutrinos->at(0)->initialState().kinematicParametersError().matrix() << std::endl;
+    
 	//in this version createStartScenario always rotates up to thetaMax so that there is always only one solution
 	daughters->push_back(neutrinos->at(0));
 	
@@ -76,7 +84,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	if(significance > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
 	
 	for(unsigned int i = 0; i!=transTrkVect.size();i++){
-		pions.push_back(kinFactory.particle(transTrkVect[i],ThreeProngTauCreator::piMass,piChi,piNdf,piMassSigma));
+		pions.push_back(kinFactory.particle(transTrkVect[i],ThreeProngTauCreator::piMass,piChi,piNdf,secVtx.position(),piMassSigma));
 	}
 	
 	if(theta0>TMath::Pi()/2){
@@ -278,10 +286,17 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(Trans
 	//(x,y,z,p_x,p_y,p_z,m)
 	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
 	ROOT::Math::SVector<double,28> svector28;
-	for(unsigned int i=1; i!=22; i++) svector28(i-1) = pow(10.,-12.);
-	for(unsigned int i=22; i!=28; i++) svector28(i-1) = pow(10.,-12.);//correlation between mass and momentum/vertex
+	for(unsigned int i=1; i!=22; i++) svector28(i-1) = 0.0;
+	for(unsigned int i=22; i!=28; i++) svector28(i-1) = 0.0;//correlation between mass and momentum/vertex
 	for(unsigned int n=1; n!=7; n++) svector28(n*(n+1)/2 - 1) = pow(10.,2.);//diagonals, huge error method
 	svector28(27) = pow(10.,-12.);//mass error
+    //insert 3prong vertex errors
+    svector28[ 0] = vtxGuess.positionError().cxx();
+    svector28[ 1] = vtxGuess.positionError().cyx();
+    svector28[ 2] = vtxGuess.positionError().cyy();
+    svector28[ 3] = vtxGuess.positionError().czx();
+    svector28[ 4] = vtxGuess.positionError().czy();
+    svector28[ 5] = vtxGuess.positionError().czz();
     
     if (std::abs(impulsGuess.x()) >= 5.0) {
         svector28[ 9] = pow(impulsGuess.x(), 2); //assume an error of 100% of the neutrino momentum component
@@ -304,7 +319,7 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(Trans
 	const KinematicParametersError parametersError(matrix);
 	const TrackCharge charge = 0;
 	KinematicState kineState(parameters, parametersError, charge, transTrackBuilder_.field());
-	float chiSquared=1000, degreesOfFr=7;
+	float chiSquared=0.0, degreesOfFr=0.0;
 	
 	return factory.particle(kineState, chiSquared, degreesOfFr, 0,0);
 }
