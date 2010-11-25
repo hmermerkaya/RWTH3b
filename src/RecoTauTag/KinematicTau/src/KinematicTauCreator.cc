@@ -44,15 +44,12 @@ reco::PFTau KinematicTauCreator::getPFTau() const
 
 reco::PFTau KinematicTauCreator::getKinematicTau() const
 {
-    math::XYZTLorentzVector ptau;
-    for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
-		ptau += math::XYZTLorentzVector((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x(),
-										(kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y(),
-										(kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z(),
-										sqrt((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().mag2()+(kinTree_->daughterParticles().at(i))->currentState().mass()*(kinTree_->daughterParticles().at(i))->currentState().mass()));
-	}
-    
-    return reco::PFTau(int((kinTree_->topParticle()->currentState()).particleCharge()), ptau, modifiedPV_.position());
+    math::XYZTLorentzVector ptau(kinTree_->topParticle()->currentState().globalMomentum().x(),
+								 kinTree_->topParticle()->currentState().globalMomentum().y(),
+								 kinTree_->topParticle()->currentState().globalMomentum().z(),
+								 sqrt(kinTree_->topParticle()->currentState().globalMomentum().mag2() + kinTree_->topParticle()->currentState().mass()*kinTree_->topParticle()->currentState().mass())
+								 );    
+    return reco::PFTau(int(kinTree_->topParticle()->currentState().particleCharge()), ptau, modifiedPV_.position());
 }
 
 std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedDaughters() const
@@ -102,4 +99,8 @@ reco::Vertex KinematicTauCreator::getModifiedPrimaryVertex() const
         LogTrace("KinematicTauCreator")<<"getModifiedPrimaryVertex: WARNING! Invalid vertex requested. The function create() has not yet stored a valid vertex.";
 	}
 	return modifiedPV_;
+}
+
+float KinematicTauCreator::chi2() const {
+	return kinTree_->topParticle()->chiSquared();
 }

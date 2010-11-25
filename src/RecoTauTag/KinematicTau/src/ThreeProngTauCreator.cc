@@ -140,6 +140,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	
 	if(kinTree_->isValid()) return true;
 	else{
+//		edm::LogInfo("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
 		edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
 		return false;
 	}
@@ -336,3 +337,14 @@ template <typename T> std::vector<std::vector<T> > ThreeProngTauCreator::permute
 	}
 	return combis;
 }
+
+int ThreeProngTauCreator::ndf() const {
+	int freeParameters = 28-15-4-3;
+	int constraints = (int)kinTree_->topParticle()->degreesOfFreedom();
+	int ndf = constraints - freeParameters;
+	
+	if(ndf != 2) printf("ThreeProngTauCreator::ndf: Warning! Unexpected ndf of %i. Expected 2.\n", ndf );
+	
+	return ndf;
+}
+

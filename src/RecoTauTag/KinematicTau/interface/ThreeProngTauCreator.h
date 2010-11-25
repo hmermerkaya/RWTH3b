@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.11 2010/08/13 12:29:00 perchall Exp $
+// $Id: ThreeProngTauCreator.h,v 1.12 2010/08/13 14:22:54 perchall Exp $
 //
 //
 
@@ -40,6 +40,11 @@ class ThreeProngTauCreator : public KinematicTauCreator
 public:
 	explicit ThreeProngTauCreator(const TransientTrackBuilder & transTrackBuilder):KinematicTauCreator(transTrackBuilder){}
     explicit ThreeProngTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg):KinematicTauCreator(transTrackBuilder, cfg){}
+	
+	/**
+	 ndf depends on specific decay.
+	 */
+	virtual int ndf() const;
 
 private:
     virtual int create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks);

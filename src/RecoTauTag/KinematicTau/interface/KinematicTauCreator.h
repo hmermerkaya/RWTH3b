@@ -11,13 +11,13 @@
  * @date 2010
  */
 //
-// $Id: KinematicTauCreator.h,v 1.17 2010/08/13 12:29:00 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.18 2010/08/13 14:22:54 perchall Exp $
 //
 //
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.17 2010/08/13 12:29:00 perchall Exp $
+// $Id: KinematicTauCreator.h,v 1.18 2010/08/13 14:22:54 perchall Exp $
 //
 //
 
@@ -86,6 +86,12 @@ public:
 	 Otherwise an invalid reco::Vertex is returned.
 	 */
 	reco::Vertex getModifiedPrimaryVertex() const;
+	
+	float chi2() const ;
+	/**
+	 int depends on specific decay.
+	 */
+	virtual int ndf() const = 0;
 	
 protected:
 	/**
