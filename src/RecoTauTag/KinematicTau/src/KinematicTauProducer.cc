@@ -113,7 +113,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauC
 	
 	//chi2prob
 	ChiSquared chiSquared(kinTauCrtr->chi2(), kinTauCrtr->ndf());
-	if( fabs(TMath::Prob(kinTauCrtr->chi2(), kinTauCrtr->ndf()) - chiSquared.probability()) > 0.00001) printf("KinematicTauProducer::dicriminatorByKinematicFitQuality: tested probs differ. TMath %f, CMSSW %f\n", TMath::Prob(kinTauCrtr->chi2(), kinTauCrtr->ndf()), chiSquared.probability());
+//	if( fabs(TMath::Prob(kinTauCrtr->chi2(), kinTauCrtr->ndf()) - chiSquared.probability()) > 0.00001) printf("KinematicTauProducer::dicriminatorByKinematicFitQuality: tested probs differ. TMath %f, CMSSW %f\n", TMath::Prob(kinTauCrtr->chi2(), kinTauCrtr->ndf()), chiSquared.probability());
 	if( chiSquared.probability() < 0.03 ){
 //		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad chi2prob of "<<chiSquared.probability()<<"! cntFound is "<<cntFound_;
 		return false;
