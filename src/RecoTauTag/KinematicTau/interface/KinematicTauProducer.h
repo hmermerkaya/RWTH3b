@@ -14,7 +14,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauProducer.h,v 1.18 2010/08/13 12:29:00 perchall Exp $
+// $Id: KinematicTauProducer.h,v 1.19 2010/08/13 14:22:54 perchall Exp $
 //
 //
 
@@ -42,6 +42,7 @@
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
+#include "CommonTools/Statistics/interface/ChiSquared.h"
 
 
 class KinematicTauProducer : public edm::EDFilter {
@@ -76,5 +77,7 @@ private:
 	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 	
 	edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
+	
+	unsigned int cnt_, cntFound_;
 	
 };

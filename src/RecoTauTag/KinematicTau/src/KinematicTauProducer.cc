@@ -17,6 +17,7 @@ KinematicTauProducer::~KinematicTauProducer(){
 // ------------ method called on each new Event  ------------
 bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	bool filterValue = false;
+	cnt_++;
 
 	std::auto_ptr<reco::PFTauCollection> selected_ = std::auto_ptr<reco::PFTauCollection >(new reco::PFTauCollection);
 	reco::PFTauCollection & selected = * selected_;
@@ -41,12 +42,19 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 	edm::OrphanHandle<reco::PFTauCollection> orphanTaus = iEvent_->put(selected_);
 	discriminate(orphanTaus, discrimValues);
 	
+	if(filterValue) cntFound_++;//found at least 1 refit tau
+	
 	return filterValue;
 }
 
 void KinematicTauProducer::beginJob(){
+	cnt_ = 0;
+	cntFound_ = 0;
 }
 void KinematicTauProducer::endJob(){
+	float ratio = 0.0;
+	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
+    edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] asks for >= 1 kinTau per event. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
 bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx){
@@ -78,8 +86,9 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 		if(fitStatus==1){
 			success = true;
 			//modify tau in selected list
-			reco::PFTau refitPFTau = kinTauCrtr->getPFTau(); //this is only the visible part of the tau momentum!
-			selected.at(tauRef.index()).setP4(refitPFTau.p4());
+			reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//this is only the visible part of the tau momentum!
+			selected.at(tauRef.index()).setP4(refitPFTau.p4());//this is only the visible part of the tau momentum!
+			selected.at(tauRef.index()).setalternatLorentzVect(kinTauCrtr->getKinematicTau().p4());//this is the refitted part of the tau momentum including the neutrino!
 			selected.at(tauRef.index()).setVertex(refitPFTau.vertex()); //this is the rotated primary vertex
 		}
 	}
@@ -89,22 +98,40 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 	return success; //at least one tau was fitted
 }
 bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx){
-	//combine a discriminator of important quality cuts
+	//combine a discriminator of loose quality cuts
+	bool debug = false;
 	
 	//test if fit could create the final decay tree
-	if(!fitStatus) return false;
-	reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//only the visible part!
+	if(!fitStatus){
+//		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad fit status! cntFound is "<<cntFound_;
+		return false;
+	}
+	reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//this is only the visible part of the refitted tau momentum!
+	refitPFTau.setalternatLorentzVect(kinTauCrtr->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
 	std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCrtr->getRefittedChargedDaughters();
 	std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCrtr->getRefittedNeutralDaughters();
+	
+	//chi2prob
+	ChiSquared chiSquared(kinTauCrtr->chi2(), kinTauCrtr->ndf());
+	if( fabs(TMath::Prob(kinTauCrtr->chi2(), kinTauCrtr->ndf()) - chiSquared.probability()) > 0.00001) printf("KinematicTauProducer::dicriminatorByKinematicFitQuality: tested probs differ. TMath %f, CMSSW %f\n", TMath::Prob(kinTauCrtr->chi2(), kinTauCrtr->ndf()), chiSquared.probability());
+	if( chiSquared.probability() < 0.03 ){
+//		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad chi2prob of "<<chiSquared.probability()<<"! cntFound is "<<cntFound_;
+		return false;
+	}
     
 	//vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
 	reco::Vertex modifiedPV = kinTauCrtr->getModifiedPrimaryVertex();
     VertexState secVtx(kinTauCrtr->getKinematicTree()->currentDecayVertex()->position(), kinTauCrtr->getKinematicTree()->currentDecayVertex()->error());
     VertexDistance3D vtxdist;
-    if ( vtxdist.distance(modifiedPV, secVtx).value() < 0.1 ) return false;
-	
+    if ( vtxdist.distance(modifiedPV, secVtx).significance() < 2. ){
+//		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad SV sign of "<<vtxdist.distance(modifiedPV, secVtx).significance()<<"! cntFound is "<<cntFound_;
+		return false;
+	}
 	//vertex significance between modified and initial primary vertex
-	if ( vtxdist.distance(modifiedPV, primaryVtx).significance() > 3.0 ) return false;
+	if ( vtxdist.distance(modifiedPV, primaryVtx).significance() > 2. ){
+//		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad PV rot of "<<vtxdist.distance(modifiedPV, primaryVtx).significance()<<"! cntFound is "<<cntFound_;
+		return false;
+	}
 	
 	//WARNING!!!
 	//from now one we assume a tau decay into three pions and neutrino
@@ -116,25 +143,31 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauC
 	}
 	
 	//tracks in signal cone of initial pftau candidate
-    if ( tauRef->signalPFChargedHadrCands().size() > 5 ) return false;
-
-    //dR between fitted a1 and neutrino
-	math::XYZTLorentzVector sum;//assume a1=sum(3pi)
-	for(std::vector<math::XYZTLorentzVector>::const_iterator daughter = chargedDaughters.begin(); daughter!=chargedDaughters.end(); ++daughter){
-		sum += *daughter;
+    if ( tauRef->signalPFChargedHadrCands().size() > 3 ){
+//		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad track size of "<<tauRef->signalPFChargedHadrCands().size()<<"! cntFound is "<<cntFound_;
+		return false;
 	}
-	TLorentzVector a1;
-	a1.SetXYZM(sum.px(), sum.py(), sum.pz(), sum.M());
-	TLorentzVector nu;
-	nu.SetXYZM(neutralDaughters.front().px(), neutralDaughters.front().py(), neutralDaughters.front().pz(), neutralDaughters.front().M());
-	if( a1.DeltaR(nu) > .09)  return false;
-    
-	//maximal allowed value of GJ angle
-	if( thetaGJMax(a1.M(), a1.P()) > .02) return false;
-
-	//a1 mass
-	if( a1.M() < 0.6 || a1.M() > 1.8 ) return false;
 	
+	//a1 mass
+	if( refitPFTau.mass() < 0.8){
+		//if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad a1 mass of "<<refitPFTau.mass()<<"! cntFound is "<<cntFound_;
+		return false;//refitPFTau equals refitted a1 in 3-prong case
+	}
+	
+	//energy fraction
+	double fraction = refitPFTau.alternatLorentzVect().Et();
+	if( fraction == 0.){
+		edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality:WARNING!!! Bad energy in alternatLorentzVect of 0! visible energy is "<<refitPFTau.et()<<".";		
+		return false;
+	}	
+	fraction = tauRef->et()/fraction;
+	if(fraction < 0 || fraction > 1.){
+//		if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: Bad energy ratio of "<<fraction<<"! cntFound is "<<cntFound_;
+		return false;
+	}
+
+//	if(debug) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality: counter is "<<cntFound_<<" values are: chi2prob "<<chiSquared.probability()<<", SV sep "<<vtxdist.distance(modifiedPV, secVtx).significance()<<", PV rot"<<vtxdist.distance(modifiedPV, primaryVtx).significance()<<", trks size "<<tauRef->signalPFChargedHadrCands().size()<<", a1 mass "<<refitPFTau.mass()<<", fraction"<<fraction;
+
 	return true;
 }
 void KinematicTauProducer::discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & discrimValues){
