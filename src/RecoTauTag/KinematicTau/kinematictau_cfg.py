@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("KinTauCreator")
+process = cms.Process("KinematicTauAnalyzer")
 
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")#https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions#Global_Tags_for_Monte_Carlo_Prod
 process.GlobalTag.globaltag = 'START36_V9::All'
