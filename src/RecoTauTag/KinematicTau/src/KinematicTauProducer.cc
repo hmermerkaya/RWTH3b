@@ -99,7 +99,7 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
 }
 bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx){
 	//combine a discriminator of loose quality cuts
-	bool debug = false;
+//	bool debug = true;
 	
 	//test if fit could create the final decay tree
 	if(!fitStatus){
