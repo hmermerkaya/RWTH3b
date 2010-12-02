@@ -6,7 +6,7 @@ transTrackBuilder_(transTrackBuilder)
 {
     kcvFitter_ = new KinematicConstrainedVertexFitter();
 	edm::ParameterSet defaultConfig;
-	defaultConfig.addParameter("maxDistance", .001);
+	defaultConfig.addParameter("maxDelta", .001);
 	defaultConfig.addParameter("maxNbrOfIterations", 20);
 	defaultConfig.addParameter("maxReducedChiSq", 225.0);
     defaultConfig.addParameter("minChiSqImprovement", 50.0);
