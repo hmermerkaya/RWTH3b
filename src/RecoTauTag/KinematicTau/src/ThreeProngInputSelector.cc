@@ -273,7 +273,7 @@ bool ThreeProngInputSelector::select(std::vector<reco::TrackRefVector> & selecte
 }
 bool ThreeProngInputSelector::checkPrimVtx(reco::VertexCollection & primaryVertex, const std::vector<TransientVertex> & newvertices){
     std::vector<reco::Vertex> vtx;
-    for (vector<TransientVertex>::const_iterator iv = newvertices.begin(); iv != newvertices.end(); ++iv) {
+    for (std::vector<TransientVertex>::const_iterator iv = newvertices.begin(); iv != newvertices.end(); ++iv) {
         reco::Vertex v = *iv;
         if(v.tracksSize() >= minVtxTracks_ && v.normalizedChi2() <= maxChi2ndf_) vtx.push_back(v);
     }
