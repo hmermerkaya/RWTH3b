@@ -40,4 +40,4 @@ process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 process.load("RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi")
 
 #process.p = cms.Path(process.tauSelectorSeq)
-process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*cms.ignore(process.KinematicTauProducer)*process.KinematicTauAnalyzer)
+process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*cms.ignore(process.KinematicTauBasicProducer)*process.KinematicTauAnalyzer)

@@ -2,7 +2,8 @@
 
 KinematicTauSkim::KinematicTauSkim(const edm::ParameterSet& iConfig):
 kinTausTag_( iConfig.getParameter<edm::InputTag>( "kinematicTaus" ) ),
-discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") )
+discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") ),
+minTau_( iConfig.getUntrackedParameter<unsigned int>( "minTau", 1 ) )//filter returns true if more than minTau_ taus are found
 {
 }
 
@@ -20,7 +21,7 @@ bool KinematicTauSkim::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr) {
 		//std::cout<< "KinematicTauSkim::filter: Discriminator name: " <<*discr<<std::endl;
 		edm::Handle<reco::PFTauDiscriminator> tmpHandle;
-		iEvent.getByLabel("KinematicTauProducer", *discr, tmpHandle);
+		iEvent.getByLabel(kinTausTag_.label(), *discr, tmpHandle);
 		tauDiscriminators.push_back(tmpHandle);
 	}		
 	
@@ -41,7 +42,7 @@ bool KinematicTauSkim::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if(passed) validTaus++;
 	}
 	
-	if(validTaus > 0){
+	if(validTaus > minTau_){
 		cntFound_++;//found at least 1 refit tau
 		filterValue = true;
 	}
@@ -57,7 +58,7 @@ void KinematicTauSkim::beginJob(){
 void KinematicTauSkim::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-    edm::LogVerbatim("KinematicTauSkim")<<"--> [KinematicTauSkim] asks for >= 1 kinTau per event passing the provided discriminators. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
+    edm::LogVerbatim("KinematicTauSkim")<<"--> [KinematicTauSkim] asks for >= "<<minTau_<<" tau(s) per event passing the provided discriminators. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
 //define this as a plug-in

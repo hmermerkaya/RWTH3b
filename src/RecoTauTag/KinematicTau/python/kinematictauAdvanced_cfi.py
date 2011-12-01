@@ -12,8 +12,12 @@ KinematicTauProducer = cms.EDFilter("KinematicTauAdvancedProducer",#creates reco
 		maxReducedChiSq = cms.double(225.),
 		minChiSqImprovement = cms.double(50.)
 	),
-	primVtx = cms.InputTag("ThreeProngInputSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack
+	primVtx = cms.InputTag("ThreeProngInputSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack, use the reduced vertex from ThreeProngInputSelector here
 	selectedTauCandidates = cms.InputTag("ThreeProngInputSelector","InputTauRefs"),
+	inputTracks = cms.InputTag("ThreeProngInputSelector","InputTracks"),#selected tracks from PFTaus (daughters of selectedTauCandidates)
+
+	minKinTau = cms.untracked.uint32(1),#minimum kin. taus to produce (otherwise filter returns false)
+	
 	discriminators = cms.vstring(#all discrimns from evtDump on 3_1_4 skim to be stored in SelectedKinematicDecay
 		pfTau+"PFTauDiscriminationAgainstElectron",
 		pfTau+"PFTauDiscriminationAgainstMuon",
@@ -26,8 +30,19 @@ KinematicTauProducer = cms.EDFilter("KinematicTauAdvancedProducer",#creates reco
 		pfTau+"PFTauDiscriminationByLeadingTrackPtCut",
 		pfTau+"PFTauDiscriminationByTrackIsolation",
 		pfTau+"PFTauDiscriminationByTrackIsolationUsingLeadingPion"
-	),
-	inputTracks = cms.InputTag("ThreeProngInputSelector","InputTracks"),#selected tracks from PFTaus (daughters of selectedTauCandidates)
-
-	minKinTau = cms.untracked.uint32(1)#minimum kin. taus to produce (otherwise filter returns false)	
+	)
 )
+
+if pfTau == "hps":
+  KinematicTauProducer.discriminators = cms.vstring(#all discrimns from evtDump on 4_2_1 for hps taus
+   pfTau+"PFTauDiscriminationByDecayModeFinding",
+   pfTau+"PFTauDiscriminationByLooseElectronRejection",
+   pfTau+"PFTauDiscriminationByLooseIsolation",
+   pfTau+"PFTauDiscriminationByLooseMuonRejection",
+   pfTau+"PFTauDiscriminationByMediumElectronRejection",
+   pfTau+"PFTauDiscriminationByMediumIsolation",
+   pfTau+"PFTauDiscriminationByTightElectronRejection",
+   pfTau+"PFTauDiscriminationByTightIsolation",
+   pfTau+"PFTauDiscriminationByTightMuonRejection",
+   pfTau+"PFTauDiscriminationByVLooseIsolation"
+  )

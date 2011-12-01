@@ -10,7 +10,7 @@
 //
 // Original Author:  Lars Perchalla
 //         Created:  Wed Nov 24 10:27:57 CET 2010
-// $Id$
+// $Id: KinematicTauSkim.h,v 1.1 2010/11/25 09:28:38 perchall Exp $
 //
 //
 
@@ -41,5 +41,5 @@ private:
 	edm::InputTag kinTausTag_;
 	std::vector<std::string> discriminators_;
 
-	unsigned int cnt_, cntFound_;	
+	unsigned int minTau_, cnt_, cntFound_;	
 };

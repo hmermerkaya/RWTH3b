@@ -56,7 +56,7 @@ process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cfi")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
 
-process.skim_QualityTau = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*process.KinematicTauProducer*process.KinematicTauSkim)
+process.skim_QualityTau = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*process.KinematicTauBasicProducer*process.KinematicTauSkim)
 process.out_step = cms.EndPath(process.output)
 
 # Schedule definition
