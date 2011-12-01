@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.11 2010/08/13 14:47:17 perchall Exp $
+// $Id: SelectedKinematicDecay.h,v 1.12 2010/10/22 16:19:19 perchall Exp $
 //
 //
 
@@ -49,11 +49,11 @@ public:
 	/**
 	 return the number of charged candidates found within the signal cone of the initial PFlow candidate
 	 */	
-	int signalPFChargedHadrCands();
+	int signalPFChargedHadrCands() const ;
 	/**
 	 return the number of neutral candidates found within the signal cone of the initial PFlow candidate
 	 */	
-	int signalPFNeutrHadrCands();	
+	int signalPFNeutrHadrCands() const ;
 	/**
 	 return a map of discriminators of the initial PFlow candidate
 	 */	
@@ -73,23 +73,13 @@ public:
 
 private:
     SelectedKinematicParticleCollection particles_;
-	/**
-	 size of tracks in signal cone of PFTau candidate
-	 */
+    ///size of tracks in the signal cone of the PFTau candidate
 	int signalPFChargedHadrCands_;
-	/**
-	 size of neutral candidates in signal cone of PFTau candidate
-	 */
+    ///size of neutral candidates in the signal cone of the PFTau candidate
 	int signalPFNeutrHadrCands_;
-	
-	/**
-	 official pftau discriminators (ensure same size and order)
-	 */
+    ///official pftau discriminators (ensure same size and order)
 	std::map<std::string, bool> discriminators_;
-	
-	/**
-	 store the index of the initial PFTau from which this decay was created. multiple indeces possible
-	 */
+    ///store the index of the initial PFTau from which this decay was created. multiple indeces possible
 	std::vector<int> PFTauRef_;
 	
 };

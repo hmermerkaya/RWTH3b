@@ -186,6 +186,6 @@ void SelectedKinematicParticle::setInitialState(const TLorentzVector & momentum,
 	input_kinparm__[6] = momentum.M();
 
 	input_kinmatrix__.ResizeTo(TMatrixDSym(7));
-	for (int i = 0; i < 3; i++)	for (int j = 0; j < 3; j++)	input_kinmatrix__[i][j] = primVtx.covariance(i,j);
+	for (int i = 0; i < 3; i++)	for (int j = 0; j < 3; j++)	input_kinmatrix__[i][j] = primVtx.covariance(i,j);//how to treat correlation between vertex and momentum block?
 }
 	

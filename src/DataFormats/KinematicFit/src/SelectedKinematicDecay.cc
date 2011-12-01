@@ -54,10 +54,10 @@ void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicPart
         }
     }
 }
-int SelectedKinematicDecay::signalPFChargedHadrCands(){
+int SelectedKinematicDecay::signalPFChargedHadrCands() const {
 	return signalPFChargedHadrCands_;
 }
-int SelectedKinematicDecay::signalPFNeutrHadrCands(){
+int SelectedKinematicDecay::signalPFNeutrHadrCands() const {
 	return signalPFNeutrHadrCands_;
 }
 std::map<std::string, bool> SelectedKinematicDecay::discriminators() const
