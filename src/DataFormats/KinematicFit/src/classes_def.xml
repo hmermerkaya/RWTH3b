@@ -1,4 +1,5 @@
 <lcgdict>
+  <class name="std::vector<edm::Ref<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> > >"/>
   <class name="SelectedKinematicParticle"/>
   <class name="std::vector< SelectedKinematicParticle >"/>
   <class name="std::vector< std::vector<SelectedKinematicParticle> >"/>

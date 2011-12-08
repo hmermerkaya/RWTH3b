@@ -73,12 +73,12 @@ void SelectedKinematicDecay::modifiableChargedDaughters(std::vector< SelectedKin
     }
 }
 
-void SelectedKinematicDecay::setPFTauRef(const std::vector<int> & value){
+void SelectedKinematicDecay::setPFTauRef(const std::vector<reco::PFTauRef> & value){
 	PFTauRef_ = value;
 }
-void SelectedKinematicDecay::addPFTauRef(const int & value){
+void SelectedKinematicDecay::addPFTauRef(const reco::PFTauRef & value){
 	PFTauRef_.push_back(value);
 }
-std::vector<int> SelectedKinematicDecay::PFTauRef() const{
+std::vector<reco::PFTauRef> SelectedKinematicDecay::PFTauRef() const{
 	return PFTauRef_;
 }

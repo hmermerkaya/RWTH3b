@@ -180,7 +180,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	if(refitTauDecay.size() != 5) LogTrace("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
 	else{
 		refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(), tauDiscriminators) );
-		refitDecays.back().addPFTauRef(tauRef.index());
+		refitDecays.back().addPFTauRef(tauRef);
 	}
 	
 	return refitTauDecay.size();
