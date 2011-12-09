@@ -1,0 +1,7 @@
+<use   name="root"/>
+<use   name="DataFormats/KinematicFit"/>
+<use   name="ACDataFormats/ACGeneral"/>
+<use   name="ACFrameworkModules/Common"/>
+<export>
+  <lib   name="1"/>
+</export>

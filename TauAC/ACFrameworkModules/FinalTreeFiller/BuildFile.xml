@@ -1,0 +1,8 @@
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/PluginManager"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="PhysicsTools/UtilAlgos"/>
+<use   name="HLTrigger/HLTcore"/>
+<use   name="ACDataFormats/ACGeneral"/>
+<use   name="ACDataFormats/ACConversion"/>
+<flags   EDM_PLUGIN="1"/>
