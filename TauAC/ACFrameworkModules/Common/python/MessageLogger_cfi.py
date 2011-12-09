@@ -63,7 +63,7 @@ if useDEBUG:
       #HLTSelector = cms.untracked.PSet(limit = cms.untracked.int32(0)),#listen only to specific module(s)
 	)
 #tmp disable "TauMotherCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand"
-print '-->FinalTreeFiller.MessageLogger_cfi::Warning: Some messages will be partially suppressed if like "ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid."'
+#print '-->FinalTreeFiller.MessageLogger_cfi::Warning: Some messages will be partially suppressed if like "ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid."'
 MessageLogger.cerr.ThreeProngTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(1))#reduce reoccurence (after limit is reached reports are shown exponentially)
 MessageLogger.cerr.TauMother = cms.untracked.PSet(limit = cms.untracked.int32(1))
 
