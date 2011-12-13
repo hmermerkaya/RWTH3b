@@ -8,7 +8,6 @@
  */
 
 #include "ACCommon.h"
-#include "ACParticle.h"
 
 class ACEventInfo : public ACCommon {
 public:

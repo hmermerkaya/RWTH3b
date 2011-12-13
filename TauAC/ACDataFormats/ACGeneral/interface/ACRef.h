@@ -1,7 +1,9 @@
 #ifndef ACRef_h
 #define ACRef_h
 /**
- Class to store a reference to a TObject.
+ Class to store a reference to an object derived from ACCommon.
+
+ @tparam T Class type of the referenced object (e.g. T=ACParticle).
 
  @author Lars Perchalla & Philip Sauerland
  @date 2011
@@ -11,7 +13,7 @@
 
 #include "TRef.h"
 
-/// forward declarations
+// forward declarations
 class ACCandidate;
 class ACGenParticle;
 class ACParticle;
@@ -23,12 +25,12 @@ template<class T> class ACDecayBase;
 class ACFittedDecay;
 class ACFittedThreeProngDecay;
 
-template<typename T> class ACRef : public ACCommon {
+template<class T> class ACRef : public ACCommon {
 public:
     virtual std::string classname() const { return "ACRef"; }
+    ACRef();
     ACRef(T* obj);
     ACRef(const T* obj);
-    ACRef();
     virtual ~ACRef() {};
 
     /// tests whether the reference is valid
@@ -47,26 +49,26 @@ protected:
     TRef ref_;
 };
 
-template<typename T> ACRef<T>::ACRef() {
+template<class T> ACRef<T>::ACRef() {
     ref_ = TRef();
 }
-template<typename T> ACRef<T>::ACRef(T* obj) {
+template<class T> ACRef<T>::ACRef(T* obj) {
     ref_ = (TObject*)obj;
 }
-template<typename T> ACRef<T>::ACRef(const T* obj) {
+template<class T> ACRef<T>::ACRef(const T* obj) {
     ref_ = (TObject*)obj;
 }
-template<typename T> bool ACRef<T>::isValid() const {
+template<class T> bool ACRef<T>::isValid() const {
     return ref_.IsValid();
 }
-template<typename T> const T * ACRef<T>::get() const {
+template<class T> const T * ACRef<T>::get() const {
     if (!ref_.IsValid()) std::cerr << "Warning: reference is not valid!" << std::endl;
     return (const T*)(ref_.GetObject());
 }
-template<typename T> const T & ACRef<T>::operator*() const {
+template<class T> const T & ACRef<T>::operator*() const {
     return *get();
 }
-template<typename T> const T * ACRef<T>::operator->() const {
+template<class T> const T * ACRef<T>::operator->() const {
     return get();
 }
 

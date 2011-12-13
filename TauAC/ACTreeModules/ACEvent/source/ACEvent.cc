@@ -15,6 +15,7 @@ ACEvent::ACEvent() {
     fittedThreeProngParticles_ = 0;
     pfJets_ = 0;
     pfTaus_ = 0;
+    pileup_ = 0;
 }
 
 const ACEventInfo * ACEvent::eventInfo() const {
@@ -116,3 +117,12 @@ const std::vector<ACPFTau *>& ACEvent::pfTaus() const {
 std::vector<ACPFTau *> ** ACEvent::linkPFTaus() {
     return &pfTaus_;
 }
+
+const std::vector<ACPileupInfo *>& ACEvent::pileup() const {
+    checkContent(pileup_, "pileup");
+    return *pileup_;
+}
+std::vector<ACPileupInfo *> ** ACEvent::linkPileup() {
+    return &pileup_;
+}
+

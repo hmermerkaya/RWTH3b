@@ -41,8 +41,6 @@ private:
     std::vector<std::string> fileNames_;
     /// list of branch names to be read from file
     std::vector<std::string> branchNames_;
-//    /// list of branches to be read from file
-//    std::vector<TBranch> *evtBranches;
     /// final event, which is read from the branches of the file. It will be provided within the event loop.
     ACEvent event_;
 

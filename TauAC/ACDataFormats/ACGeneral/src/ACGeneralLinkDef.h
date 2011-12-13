@@ -45,13 +45,13 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 
 #pragma link C++ class ACCandidate+;
 #pragma link C++ class pACCandidate+;
-#pragma link C++ class std::vector<ACCandidate >;
-#pragma link C++ class std::vector<pACCandidate >;
+#pragma link C++ class std::vector<ACCandidate >+;
+#pragma link C++ class std::vector<pACCandidate >+;
 
 #pragma link C++ class ACPFTau+;
 #pragma link C++ class pACPFTau+;
-#pragma link C++ class std::vector<ACPFTau >;
-#pragma link C++ class std::vector<pACPFTau >;
+#pragma link C++ class std::vector<ACPFTau >+;
+#pragma link C++ class std::vector<pACPFTau >+;
 
 #pragma link C++ class ACEventGlobals+;
 #pragma link C++ class pACEventGlobals+;
@@ -61,16 +61,16 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 
 #pragma link C++ class ACGenParticle+;
 #pragma link C++ class pACGenParticle+;
-#pragma link C++ class std::vector<ACGenParticle >;
-#pragma link C++ class std::vector<pACGenParticle >;
+#pragma link C++ class std::vector<ACGenParticle >+;
+#pragma link C++ class std::vector<pACGenParticle >+;
 #pragma link C++ class ACParticle+;
 #pragma link C++ class pACParticle+;
-#pragma link C++ class std::vector<ACParticle >;
-#pragma link C++ class std::vector<pACParticle >;
+#pragma link C++ class std::vector<ACParticle >+;
+#pragma link C++ class std::vector<pACParticle >+;
 #pragma link C++ class ACFitParticle+;
 #pragma link C++ class pACFitParticle+;
-#pragma link C++ class std::vector<ACFitParticle >;
-#pragma link C++ class std::vector<pACFitParticle >;
+#pragma link C++ class std::vector<ACFitParticle >+;
+#pragma link C++ class std::vector<pACFitParticle >+;
 
 #pragma link C++ class std::pair<std::string, bool>+;
 
@@ -78,34 +78,37 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 #pragma link C++ class pACGenParticleDecayForLinkDefOnly+;
 #pragma link C++ class ACGenDecay+;
 #pragma link C++ class pACGenDecay+;
-#pragma link C++ class std::vector<ACGenDecay >;
-#pragma link C++ class std::vector<pACGenDecay >;
+#pragma link C++ class std::vector<ACGenDecay >+;
+#pragma link C++ class std::vector<pACGenDecay >+;
 #pragma link C++ class ACDecay+;
 #pragma link C++ class pACDecay+;
-#pragma link C++ class std::vector<ACDecay >;
-#pragma link C++ class std::vector<pACDecay >;
+#pragma link C++ class std::vector<ACDecay >+;
+#pragma link C++ class std::vector<pACDecay >+;
 #pragma link C++ class ACFitParticleDecayForLinkDefOnly+;
 #pragma link C++ class pACFitParticleDecayForLinkDefOnly+;
 #pragma link C++ class ACFittedDecay+;
 #pragma link C++ class pACFittedDecay+;
-#pragma link C++ class std::vector<ACFittedDecay >;
-#pragma link C++ class std::vector<pACFittedDecay >;
+#pragma link C++ class std::vector<ACFittedDecay >+;
+#pragma link C++ class std::vector<pACFittedDecay >+;
 #pragma link C++ class ACFittedThreeProngDecay+;
 #pragma link C++ class pACFittedThreeProngDecay+;
-#pragma link C++ class std::vector<ACFittedThreeProngDecay >;
-#pragma link C++ class std::vector<pACFittedThreeProngDecay >;
+#pragma link C++ class std::vector<ACFittedThreeProngDecay >+;
+#pragma link C++ class std::vector<pACFittedThreeProngDecay >+;
 
 #pragma link C++ class ACJet+;
 #pragma link C++ class pACJet+;
-#pragma link C++ class std::vector<ACJet >;
-#pragma link C++ class std::vector<pACJet >;
+#pragma link C++ class std::vector<ACJet >+;
+#pragma link C++ class std::vector<pACJet >+;
 
 #pragma link C++ class ACVertex+;
 #pragma link C++ class pACVertex+;
-#pragma link C++ class std::vector<ACVertex >;
-#pragma link C++ class std::vector<pACVertex >;
+#pragma link C++ class std::vector<ACVertex >+;
+#pragma link C++ class std::vector<pACVertex >+;
 
 #pragma link C++ class ACPileupInfo+;
+#pragma link C++ class pACPileupInfo+;
+#pragma link C++ class std::vector<ACPileupInfo >+;
+#pragma link C++ class std::vector<pACPileupInfo >+;
 
 #pragma link C++ class ACTrigger+;
 #pragma link C++ class pACTrigger+;

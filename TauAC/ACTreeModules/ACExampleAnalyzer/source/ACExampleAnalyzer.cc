@@ -4,10 +4,13 @@ ACExampleAnalyzer::ACExampleAnalyzer() {
 }
 
 int main(int argc, char* argv[]) {
+    
+    /// one will want to parse a config file here to define steering parameters
+    
     ACExampleAnalyzer anlzr;
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
-    filenames.push_back("tauSMBrFromZ_-1_7TeV.root");
+    filenames.push_back("/user/perchalla/output/TauAC/CMSSW_4_4_0/debug/tauSMBrFromZ_100_7TeV.root");
     loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
     loops.back()->loop(anlzr, -1);
 
@@ -70,6 +73,11 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
     for (std::vector<ACPFTau *>::const_iterator itau = event.pfTaus().begin(); itau != event.pfTaus().end(); ++itau) {
         printf("\t tau pt: %f, charged hadr signal cands: %i\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands());
     }
+    printf("number of pileup information: %lu\n", event.pileup().size());
+    for (std::vector<ACPileupInfo *>::const_iterator pileup = event.pileup().begin(); pileup != event.pileup().end(); ++pileup) {
+        printf("\t pileup: bunch crossing %i, number of pileup interactions %i\n", (*pileup)->getBunchCrossing(), (*pileup)->getPU_NumInteractions());
+    }
+    
     printf("\n");
 }
 void ACExampleAnalyzer::beginRun() {

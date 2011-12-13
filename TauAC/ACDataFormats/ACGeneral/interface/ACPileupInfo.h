@@ -1,7 +1,13 @@
 #ifndef ACPileupInfo_h
 #define ACPileupInfo_h
 /**
- Base class to store pileup information. Based on corresponding CMSSW class /SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h.
+ Container to store pileup information. One-to-one copy of the corresponding CMSSW class /SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h.
+
+ Note: In the Summer11 samples, the "true" number of pileup interactions that were overlaid on a given event is what is reported by getPU_NumInteractions().
+ Previously, the number of interactions per event could have been slightly under-reported because the calculation was based on the number of events that left some particle in the tracking volume.
+ With the expansion of the acceptance for forward physics simulation in the Summer11 samples, there are many more events with no visible tracks that can be included.
+ This means that the length of the vectors computed from the tracking quantities is less than or equal to the number of interactions in the crossing.
+ Use the size() function to figure out how many interactions were visible to the tracker.
 
  @author Lars Perchalla & Philip Sauerland
  @date 2011
@@ -12,7 +18,7 @@
 class ACPileupInfo : public ACCommon {
 public:
     virtual std::string classname() const { return "ACPileupInfo"; }
-    ACPileupInfo() {};
+    ACPileupInfo();
     ACPileupInfo(const int num_PU_vertices, std::vector<float>& zpositions, std::vector<float>& sumpT_lowpT, std::vector<float>& sumpT_highpT, std::vector<int>& ntrks_lowpT, std::vector<int>& ntrks_highpT);
     ACPileupInfo(const int num_PU_vertices, std::vector<float>& zpositions, std::vector<float>& sumpT_lowpT, std::vector<float>& sumpT_highpT, std::vector<int>& ntrks_lowpT, std::vector<int>& ntrks_highpT, int bunchCrossing);
     ACPileupInfo(const int num_PU_vertices, std::vector<float>& zpositions, std::vector<float>& sumpT_lowpT, std::vector<float>& sumpT_highpT, std::vector<int>& ntrks_lowpT, std::vector<int>& ntrks_highpT, int bunchCrossing, float TrueNumInteractions);
@@ -36,16 +42,8 @@ public:
 
     ClassDef(ACPileupInfo,1);
 
-private:
-    /*from
-     Note: In the Summer11 samples, the "true" number of pileup interactions that were overlaid on a given event is what is reported by getPU_NumInteractions().
-     Previously, the number of interactions per event could have been slightly under-reported because the calculation was based on the number of events that left some particle in the tracking volume.
-     With the expansion of the acceptance for forward physics simulation in the Summer11 samples, there are many more events with no visible tracks that can be included.
-     This means that the length of the vectors computed from the tracking quantities is less than or equal to the number of interactions in the crossing.
-     Use the size() function to figure out how many interactions were visible to the tracker.
-     */
-
-    /// for "standard" pileup: we have MC Truth information for these
+protected:
+    // for "standard" pileup: we have MC Truth information for these
 
     /// the number of pileup interactions that have been added to the event
     int num_PU_vertices_;
@@ -64,11 +62,13 @@ private:
     float TrueNumInteractions_;
 
 
-    /// for DataMixer pileup, we only have raw information:
+    // for DataMixer pileup, we only have raw information:
 
     std::vector<float> instLumi_;
 //    std::vector<edm::EventID> eventInfo_;
 
 };
+
+typedef ACPileupInfo* pACPileupInfo;
 
 #endif

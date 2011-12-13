@@ -34,6 +34,7 @@
 #include "ACDataFormats/ACConversion/interface/ACGenDecayConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACFittedThreeProngDecayConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACJetConverter.h"
+#include "ACDataFormats/ACConversion/interface/ACPileupConverter.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -78,7 +79,7 @@ private:
     /// insert branches in the main tree
     void storeEvent(const edm::Event& evt);
 
-    /// helper function to delete a pointer to a vector of pointers
+    /// helper function to delete pointers contained in a vector pointer
     template <class T> void deleteVectorOfPointers(T * inVectorOfPointers);
     /// save way to fill a collection from a inputtag into a given handle
     template <class T> bool loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle);
@@ -92,18 +93,35 @@ private:
     unsigned int evtCnt_, runCnt_;
     /// main event tree
     TTree * eventTree_;
-    /// list of objects to be stored in branches
-    ACEventGlobals * acEventGlobals_;
-    ACEventInfo * acEventInfo_;
-    ACTrigger * acTrigger_;
-    std::vector<ACVertex *> * offlinePV_, * reducedPV_;
-    std::vector<ACParticle *> * muons_, * electrons_;
-    std::vector<ACFitParticle *> * kinematicParticles_;
-    std::vector<ACFittedThreeProngDecay * > * kinematicDecays_;
-    std::vector<ACGenParticle * > * genParticles_;
-    std::vector<ACGenDecay * > * genTauDecays_;
-    std::vector<ACJet * > * pfJets_;
-    std::vector<ACPFTau * > * pfTaus_;
+    
+    /// branch content: basic event information
+    ACEventInfo * eventInfo_;
+    /// branch content: global event variables like MET
+    ACEventGlobals * eventGlobals_;
+    /// branch content: HLT trigger menu
+    ACTrigger * trigger_;
+    /// branch content: offline primary vertices
+    std::vector<ACVertex *> * offlinePV_;
+    /// branch content: primary vertices after removal of tracks assigned to tau daughters
+    std::vector<ACVertex *> * reducedPV_;
+    /// branch content: muon collection
+    std::vector<ACParticle *> * muons_;
+    /// branch content: electron collection (gsf)
+    std::vector<ACParticle *> * electrons_;
+    /// branch content: particle-flow jets
+    std::vector<ACJet *> * pfJets_;
+    /// branch content: particle-flow taus
+    std::vector<ACPFTau *> * pfTaus_;
+    /// branch content: fitted decay as result of the kinematic fit. reference to assigned particles available.
+    std::vector<ACFittedThreeProngDecay *> * tauDecays_;
+    /// branch content: fitted particles from the kinematic tau fit. they will be referenced from tauDecays_. no direct get function needed.
+    std::vector<ACFitParticle *> * fittedThreeProngParticles_;
+    /// branch content: selection of generator particles
+    std::vector<ACGenParticle *> * generator_;
+    /// branch content: generator tau decays. reference to assigned generator particles available. 
+    std::vector<ACGenDecay *> * genTauDecays_;
+    /// branch content: pileup information for each bunch crossing
+    std::vector<ACPileupInfo *> * pileup_;
 
     HLTConfigProvider HLTCP_;
     /// true if HLT menu has changed
@@ -114,3 +132,23 @@ private:
     /// logging of the association between PFTauRefs and ACPFTauRefs
     PFTauMatching * pfTauMatching_;
 };
+
+template <class T> void FinalTreeFiller::deleteVectorOfPointers(T * inVectorOfPointers) {
+    if (!inVectorOfPointers) {
+        return;
+    }
+    typename T::iterator i;
+    for (i = inVectorOfPointers->begin(); i < inVectorOfPointers->end(); ++i) {
+        if (!*i) continue;
+        delete * i;
+        *i = 0;
+    }
+}
+template <class T> bool FinalTreeFiller::loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle) {
+    iEvent.getByLabel(tag, handle);
+    if (!handle.isValid()) {
+        edm::LogError("FinalTreeFiller") << "No valid handle found for '" << tag << "'!";
+        return false;
+    }
+    return true;
+}

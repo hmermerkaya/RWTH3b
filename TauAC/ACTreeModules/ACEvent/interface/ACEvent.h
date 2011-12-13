@@ -65,7 +65,7 @@ public:
     /// set tau-decay collection
     std::vector<ACFittedThreeProngDecay *> ** linkTauDecays();
     
-    /// set the collection of fitted particles of the fit. will be referenced from tauDecays_. no direct get function needed.
+    /// set the collection of fitted particles of the fit. they will be referenced from tauDecays_. no direct get function needed.
     std::vector<ACFitParticle *> ** linkFittedThreeProngParticles();
     
     const std::vector<ACJet *>& pfJets() const;
@@ -75,24 +75,42 @@ public:
     const std::vector<ACPFTau *>& pfTaus() const;
     /// set pf tau collection
     std::vector<ACPFTau *> ** linkPFTaus();
-    
+
+    const std::vector<ACPileupInfo *>& pileup() const;
+    /// set pileup information
+    std::vector<ACPileupInfo *> ** linkPileup();
+
 protected:
-    /// main branch collections
+    /// branch content: basic event information
     ACEventInfo * eventInfo_;
+    /// branch content: global event variables like MET
     ACEventGlobals * eventGlobals_;
+    /// branch content: HLT trigger menu
     ACTrigger * trigger_;
-    std::vector<ACVertex *> * offlinePV_, * reducedPV_;
-    std::vector<ACGenParticle *> * generator_;
-    std::vector<ACGenDecay *> * genTauDecays_;
-    std::vector<ACParticle *> * muons_, * electrons_;
-    /// result of the kinematic fit
-    std::vector<ACFittedThreeProngDecay *> * tauDecays_;
-    /// stores the fitted particles of the fit. will be referenced from tauDecays_. no direct get function needed.
-    std::vector<ACFitParticle *> * fittedThreeProngParticles_;
+    /// branch content: offline primary vertices
+    std::vector<ACVertex *> * offlinePV_;
+    /// branch content: primary vertices after removal of tracks assigned to tau daughters
+    std::vector<ACVertex *> * reducedPV_;
+    /// branch content: muon collection
+    std::vector<ACParticle *> * muons_;
+    /// branch content: electron collection (gsf)
+    std::vector<ACParticle *> * electrons_;
+    /// branch content: particle-flow jets
     std::vector<ACJet *> * pfJets_;
+    /// branch content: particle-flow taus
     std::vector<ACPFTau *> * pfTaus_;
+    /// branch content: fitted decay as result of the kinematic fit. reference to assigned particles available.
+    std::vector<ACFittedThreeProngDecay *> * tauDecays_;
+    /// branch content: fitted particles from the kinematic tau fit. they will be referenced from tauDecays_. no direct get function needed.
+    std::vector<ACFitParticle *> * fittedThreeProngParticles_;
+    /// branch content: selection of generator particles
+    std::vector<ACGenParticle *> * generator_;
+    /// branch content: generator tau decays. reference to assigned generator particles available. 
+    std::vector<ACGenDecay *> * genTauDecays_;
+    /// branch content: pileup information for each bunch crossing
+    std::vector<ACPileupInfo *> * pileup_;
     
-    /// test the validity a branch content
+    /// tests the validity a branch content
     template<class T> void checkContent(const T * address, const std::string & label) const;
 };
 

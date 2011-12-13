@@ -1,7 +1,9 @@
 #ifndef ACDecayBase_h
 #define ACDecayBase_h
 /**
- Base class to store decay information. The template argument expects either T=ACParticle or T=ACFitParticle
+ Base class to store decay information. The template argument expects a particle class type like T=ACParticle or T=ACFitParticle.
+
+ @tparam T Class type of the contained particle (e.g. T=ACParticle).
 
  @author Lars Perchalla & Philip Sauerland
  @date 2011

@@ -18,19 +18,20 @@ pfTauDiscriminatorTags_(iConfig.getParameter<std::vector<edm::InputTag> >("pfTau
 {
     hltChanged_ = true;
     eventTree_ = 0;
-    acEventInfo_ = 0;
-    acEventGlobals_ = 0;
-    acTrigger_ = 0;
+    eventInfo_ = 0;
+    eventGlobals_ = 0;
+    trigger_ = 0;
     offlinePV_ = 0;
     reducedPV_ = 0;
     muons_ = 0;
     electrons_ = 0;
-    kinematicParticles_ = 0;
-    kinematicDecays_ = 0;
-    genParticles_ = 0;
+    fittedThreeProngParticles_ = 0;
+    tauDecays_ = 0;
+    generator_ = 0;
     genTauDecays_ = 0;
     pfJets_ = 0;
     pfTaus_ = 0;
+    pileup_ = 0;
 }
 FinalTreeFiller::~FinalTreeFiller() {}
 
@@ -51,12 +52,13 @@ void FinalTreeFiller::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     deleteVectorOfPointers(reducedPV_);
     deleteVectorOfPointers(muons_);
     deleteVectorOfPointers(electrons_);
-    deleteVectorOfPointers(kinematicParticles_);
-    deleteVectorOfPointers(kinematicDecays_);
-    deleteVectorOfPointers(genParticles_);
+    deleteVectorOfPointers(fittedThreeProngParticles_);
+    deleteVectorOfPointers(tauDecays_);
+    deleteVectorOfPointers(generator_);
     deleteVectorOfPointers(genTauDecays_);
     deleteVectorOfPointers(pfJets_);
     deleteVectorOfPointers(pfTaus_);
+    deleteVectorOfPointers(pileup_);
 }
 void FinalTreeFiller::beginJob() {
     evtCnt_ = 0;
@@ -68,62 +70,66 @@ void FinalTreeFiller::beginJob() {
     eventTree_ = fileService_->make<TTree>("TauACEvent", "TauAC tree filled each event");
     //runTree_ = fileService_->make<TTree>("TauACRun", "TauAC tree filled each run");
 
-    acEventInfo_ = new ACEventInfo();
-    eventTree_->Bronch("ACEventInfo", "ACEventInfo", &acEventInfo_, 32000, 0);
+    eventInfo_ = new ACEventInfo();
+    eventTree_->Branch("ACEventInfo", &eventInfo_, 32000, 0);
 
-    acEventGlobals_ = new ACEventGlobals();
-    eventTree_->Bronch("ACEventGlobals", "ACEventGlobals", &acEventGlobals_, 32000, 0);
+    eventGlobals_ = new ACEventGlobals();
+    eventTree_->Branch("ACEventGlobals", &eventGlobals_, 32000, 0);
 
-    acTrigger_ = new ACTrigger();
-    eventTree_->Bronch("ACTrigger", "ACTrigger", &acTrigger_, 32000, 0);
+    trigger_ = new ACTrigger();
+    eventTree_->Branch("ACTrigger", &trigger_, 32000, 0);
 
     offlinePV_ = new std::vector<ACVertex *>();
-    eventTree_->Bronch("offlinePV", "std::vector<ACVertex *>", &offlinePV_, 32000, 0);
+    eventTree_->Branch("offlinePV", &offlinePV_, 32000, 0);
     reducedPV_ = new std::vector<ACVertex *>();
-    eventTree_->Bronch("reducedPV", "std::vector<ACVertex *>", &reducedPV_, 32000, 0);
+    eventTree_->Branch("reducedPV", &reducedPV_, 32000, 0);
 
-    genParticles_ = new std::vector<ACGenParticle *>();
-    eventTree_->Bronch("generator", "std::vector<ACGenParticle *>", &genParticles_, 32000, 0);
+    generator_ = new std::vector<ACGenParticle *>();
+    eventTree_->Branch("generator", &generator_, 32000, 0);
 
     genTauDecays_ = new std::vector<ACGenDecay *>();
-    eventTree_->Bronch("genTauDecays", "std::vector<ACGenDecay *>", &genTauDecays_, 32000, 0);
+    eventTree_->Branch("genTauDecays", &genTauDecays_, 32000, 0);
 
     muons_ = new std::vector<ACParticle *>();
-    eventTree_->Bronch("Muons", "std::vector<ACParticle *>", &muons_, 32000, 0);
+    eventTree_->Branch("Muons", &muons_, 32000, 0);
 
     electrons_ = new std::vector<ACParticle *>();
-    eventTree_->Bronch("Electrons", "std::vector<ACParticle *>", &electrons_, 32000, 0);
+    eventTree_->Branch("Electrons", &electrons_, 32000, 0);
 
-    kinematicParticles_ = new std::vector<ACFitParticle *>();
-    eventTree_->Bronch("ACFittedThreeProngParticles", "std::vector<ACFitParticle *>", &kinematicParticles_, 32000, 0);
+    fittedThreeProngParticles_ = new std::vector<ACFitParticle *>();
+    eventTree_->Branch("ACFittedThreeProngParticles", &fittedThreeProngParticles_, 32000, 0);
 
-    kinematicDecays_ = new std::vector<ACFittedThreeProngDecay *>();
-    eventTree_->Bronch("ACFittedThreeProngDecays", "std::vector<ACFittedThreeProngDecay *>", &kinematicDecays_, 32000, 0);
+    tauDecays_ = new std::vector<ACFittedThreeProngDecay *>();
+    eventTree_->Branch("ACFittedThreeProngDecays", &tauDecays_, 32000, 0);
 
     pfJets_ = new std::vector<ACJet *>();
-    eventTree_->Bronch("PFJets", "std::vector<ACJet *>", &pfJets_, 32000, 0);
+    eventTree_->Branch("PFJets", &pfJets_, 32000, 0);
 
     pfTaus_ = new std::vector<ACPFTau *>();
-    eventTree_->Bronch("PFTaus", "std::vector<ACPFTau *>", &pfTaus_, 32000, 0);
+    eventTree_->Branch("PFTaus", &pfTaus_, 32000, 0);
+    
+    pileup_ = new std::vector<ACPileupInfo *>();
+    eventTree_->Branch("ACPileupInfo", &pileup_, 32000, 0);
 }
 void FinalTreeFiller::endJob() {
     kinematicParticleMatching_->printOutro();
 
     /// clear memory
     delete kinematicParticleMatching_;
-    delete acEventInfo_;
-    delete acEventGlobals_;
-    delete acTrigger_;
+    delete eventInfo_;
+    delete eventGlobals_;
+    delete trigger_;
     delete offlinePV_;
     delete reducedPV_;
     delete muons_;
     delete electrons_;
-    delete kinematicParticles_;
-    delete kinematicDecays_;
-    delete genParticles_;
+    delete fittedThreeProngParticles_;
+    delete tauDecays_;
+    delete generator_;
     delete genTauDecays_;
     delete pfJets_;
     delete pfTaus_;
+    delete pileup_;
 }
 void FinalTreeFiller::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
     /// initialize HLTConfigProvider
@@ -142,23 +148,23 @@ void FinalTreeFiller::endLuminosityBlock(edm::LuminosityBlock const& iLumi, edm:
 void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     kinematicParticleMatching_->nextEvt();
     pfTauMatching_->nextEvt();
-
+    
     /// set event information
     edm::Handle<reco::GenParticleCollection> genStatus;
     /// check whether generator information is present in the event
     if (evt.getByLabel(edm::InputTag("genParticles"), genStatus)) {
-        *acEventInfo_ = ACEventInfo(evt.id().event(), evt.id().luminosityBlock(), evt.id().run(), "MC");
+        *eventInfo_ = ACEventInfo(evt.id().event(), evt.id().luminosityBlock(), evt.id().run(), "MC");
     } else {
-        *acEventInfo_ = ACEventInfo(evt.id().event(), evt.id().luminosityBlock(), evt.id().run(), "data");
+        *eventInfo_ = ACEventInfo(evt.id().event(), evt.id().luminosityBlock(), evt.id().run(), "data");
     }
-
+    
     /// set event globals
     edm::Handle<reco::PFMETCollection> pfMET;
     edm::Handle<reco::METCollection> tcMET;
     if (loadCollection(evt, pfMETTag_, pfMET) && loadCollection(evt, tcMETTag_, tcMET)) {
-        *acEventGlobals_ = ACEventGlobals(TVector3(pfMET->begin()->px(), pfMET->begin()->py(), 0.0), TVector3(tcMET->begin()->px(), tcMET->begin()->py(), 0.0), pfMET->begin()->sumEt(), tcMET->begin()->sumEt());
+        *eventGlobals_ = ACEventGlobals(TVector3(pfMET->begin()->px(), pfMET->begin()->py(), 0.0), TVector3(tcMET->begin()->px(), tcMET->begin()->py(), 0.0), pfMET->begin()->sumEt(), tcMET->begin()->sumEt());
     }
-
+    
     /// set trigger results
     edm::Handle<edm::TriggerResults> HLTR;
     if (loadCollection(evt, triggerResultsTag_, HLTR)) {
@@ -169,10 +175,10 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             for (unsigned int i = 0; i != triggerNames.triggerNames().size(); ++i) {
                 hltPathMap[triggerNames.triggerName(i)] = HLTR->accept(i);
             }
-            *acTrigger_ = ACTrigger(HLTCP_.tableName(), hltPathMap);
+            *trigger_ = ACTrigger(HLTCP_.tableName(), hltPathMap);
         }
     }
-
+    
     /// set primary-vertex collection
     edm::Handle<reco::VertexCollection> offlinePrimaryVertices;
     if (loadCollection(evt, primVtxTag_, offlinePrimaryVertices)) {
@@ -184,7 +190,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             offlinePV_->push_back(tmpP);
         }
     }
-
+    
     /// set primary-vertex collection (recalculated w/o the tracks belonging to kinematic taus)
     edm::Handle<reco::VertexCollection> reducedPrimaryVertices;
     if (loadCollection(evt, reducedPrimVtxTag_, reducedPrimaryVertices)) {
@@ -196,11 +202,11 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             reducedPV_->push_back(tmpP);
         }
     }
-
+    
     /// set gerenator information
     edm::Handle<reco::GenParticleCollection> genCands;
     if (loadCollection(evt, genSignalTag_, genCands)) {
-        *genParticles_ = std::vector<ACGenParticle *>();
+        *generator_ = std::vector<ACGenParticle *>();
         *genTauDecays_ = std::vector<ACGenDecay *>();
         ACGenDecayRef latestGenDecayRef;
         unsigned int index = 0;
@@ -208,8 +214,8 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             ACGenParticleConverter tmp(*candidate);
             ACGenParticle * tmpP = new ACGenParticle();
             *tmpP = tmp;
-            genParticles_->push_back(tmpP);
-            ACGenParticleRef tmpRef(genParticles_->back());
+            generator_->push_back(tmpP);
+            ACGenParticleRef tmpRef(generator_->back());
             kinematicParticleMatching_->logConversion(reco::GenParticleRef(genCands, index), tmpRef);
             /// store every occuring tau decay, expect the tau to be followed by its daughters
             if (abs(candidate->pdgId())==15) {
@@ -228,13 +234,13 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
                 }
             }
             /// store the reference to the generator tau decay that contains the current particle
-            ACGenParticleConverter * tmpConverter = static_cast<ACGenParticleConverter*>(genParticles_->back());
+            ACGenParticleConverter * tmpConverter = static_cast<ACGenParticleConverter*>(generator_->back());
             if (tmpConverter) {
                 tmpConverter->setGenDecayRef(ACGenDecayRef(genTauDecays_->back()));
             }
         }
     }
-
+    
     /// set muon collection
     edm::Handle<reco::MuonCollection> muons;
     if (loadCollection(evt, muonTag_, muons)) {
@@ -246,7 +252,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             muons_->push_back(tmpP);
         }
     }
-
+    
     /// set electron collection
     edm::Handle<reco::GsfElectronCollection> electrons;
     if (loadCollection(evt, electronTag_, electrons)) {
@@ -258,7 +264,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             electrons_->push_back(tmpP);
         }
     }
-
+    
     /// set pf jet collection
     edm::Handle<reco::PFJetCollection> pfJets;
     if (loadCollection(evt, pfJetTag_, pfJets)) {
@@ -270,7 +276,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             pfJets_->push_back(tmpJet);
         }
     }
-
+    
     /// set pf tau collection
     edm::Handle<reco::PFTauCollection> pfTaus;
     if (loadCollection(evt, pfTauTag_, pfTaus)) {
@@ -285,38 +291,32 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             pfTauMatching_->logConversion(reco::PFTauRef(pfTaus, index), tmpRef);
         }
     }
-
+    
     /// set kinematic decays
     edm::Handle<SelectedKinematicDecayCollection> kinematicTaus;
     if (loadCollection(evt, kinematicTausTag_, kinematicTaus)) {
-        *kinematicDecays_ = std::vector<ACFittedThreeProngDecay *>();
-        *kinematicParticles_ = std::vector<ACFitParticle *>();
+        *tauDecays_ = std::vector<ACFittedThreeProngDecay *>();
+        *fittedThreeProngParticles_ = std::vector<ACFitParticle *>();
         for (SelectedKinematicDecayCollection::const_iterator decay = kinematicTaus->begin(); decay != kinematicTaus->end(); ++decay) {
-            ACFittedThreeProngDecayConverter tmp(evt, *decay, kinematicParticleMatching_, kinematicParticles_, pfTauMatching_);
+            ACFittedThreeProngDecayConverter tmp(evt, *decay, kinematicParticleMatching_, fittedThreeProngParticles_, pfTauMatching_);
             ACFittedThreeProngDecay * tmpP = new ACFittedThreeProngDecay();
             *tmpP = tmp;
-            kinematicDecays_->push_back(tmpP);
+            tauDecays_->push_back(tmpP);
         }
     }
-}
-
-template <class T> void FinalTreeFiller::deleteVectorOfPointers(T * inVectorOfPointers) {
-    if (!inVectorOfPointers) {
-        return;
+    
+    /// set pileup information
+    edm::Handle<std::vector<PileupSummaryInfo> > pileupInfo;
+    if (loadCollection(evt, pileupInfoTag_, pileupInfo)) {
+        *pileup_ = std::vector<ACPileupInfo *>();
+        /// one PileupSummaryInfo for each of the beam crossings (allows to retrieve information about the out-of-time pileup)
+        for (std::vector<PileupSummaryInfo>::const_iterator PVI = pileupInfo->begin(); PVI != pileupInfo->end(); ++PVI) {
+            ACPileupConverter tmp2(*PVI);
+            ACPileupInfo * tmpPileup = new ACPileupInfo();
+            *tmpPileup = tmp2;
+            pileup_->push_back(tmpPileup);
+        }
     }
-    typename T::iterator i;
-    for (i = inVectorOfPointers->begin(); i < inVectorOfPointers->end(); ++i) {
-        if (!*i) continue;
-        delete * i;
-    }
-}
-template <class T> bool FinalTreeFiller::loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle) {
-    iEvent.getByLabel(tag, handle);
-    if (!handle.isValid()) {
-        edm::LogError("FinalTreeFiller") << "No valid handle found for '" << tag << "'!";
-        return false;
-    }
-    return true;
 }
 
 //define this as a plug-in

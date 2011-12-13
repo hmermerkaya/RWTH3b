@@ -48,6 +48,7 @@ template <class T> void ACCommon::deleteVectorOfPointers(T * inVectorOfPointers)
     for (i = inVectorOfPointers->begin(); i < inVectorOfPointers->end(); ++i) {
         if (!*i) continue;
         delete * i;
+        *i = 0;
     }
 }
 

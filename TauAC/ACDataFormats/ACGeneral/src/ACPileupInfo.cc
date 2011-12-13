@@ -2,6 +2,17 @@
 
 ClassImp(ACPileupInfo)
 
+ACPileupInfo::ACPileupInfo() {
+    num_PU_vertices_ = -1;
+    zpositions_.clear();
+    sumpT_lowpT_.clear();
+    sumpT_highpT_.clear();
+    ntrks_lowpT_.clear();
+    ntrks_highpT_.clear();
+    bunchCrossing_ = -1000;
+    TrueNumInteractions_ = -1.;
+    instLumi_.clear();
+}
 ACPileupInfo::ACPileupInfo(const int num_PU_vertices, std::vector<float>& zpositions, std::vector<float>& sumpT_lowpT, std::vector<float>& sumpT_highpT, std::vector<int>&   ntrks_lowpT, std::vector<int>&   ntrks_highpT) {
     num_PU_vertices_ =  num_PU_vertices;
     zpositions_.clear();

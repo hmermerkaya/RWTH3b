@@ -15,17 +15,17 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     pfJets = cms.InputTag('ak5PFJets'),
     pfTaus = cms.InputTag('hpsPFTauProducer'),
     pfTauDiscriminators = cms.VInputTag(
-                                        cms.InputTag('hpsPFTauDiscriminationByDecayModeFinding'),
-                                        cms.InputTag('hpsPFTauDiscriminationByLooseElectronRejection'),
-                                        cms.InputTag('hpsPFTauDiscriminationByLooseIsolation'),
-                                        cms.InputTag('hpsPFTauDiscriminationByLooseMuonRejection'),
-                                        cms.InputTag('hpsPFTauDiscriminationByMediumElectronRejection'),
-                                        cms.InputTag('hpsPFTauDiscriminationByMediumIsolation'),
-                                        cms.InputTag('hpsPFTauDiscriminationByTightElectronRejection'),
-                                        cms.InputTag('hpsPFTauDiscriminationByTightIsolation'),
-                                        cms.InputTag('hpsPFTauDiscriminationByTightMuonRejection'),
-                                        cms.InputTag('hpsPFTauDiscriminationByVLooseIsolation'),
-    ),
+        cms.InputTag('hpsPFTauDiscriminationByDecayModeFinding'),
+        cms.InputTag('hpsPFTauDiscriminationByLooseElectronRejection'),
+        cms.InputTag('hpsPFTauDiscriminationByLooseIsolation'),
+        cms.InputTag('hpsPFTauDiscriminationByLooseMuonRejection'),
+        cms.InputTag('hpsPFTauDiscriminationByMediumElectronRejection'),
+        cms.InputTag('hpsPFTauDiscriminationByMediumIsolation'),
+        cms.InputTag('hpsPFTauDiscriminationByTightElectronRejection'),
+        cms.InputTag('hpsPFTauDiscriminationByTightIsolation'),
+        cms.InputTag('hpsPFTauDiscriminationByTightMuonRejection'),
+        cms.InputTag('hpsPFTauDiscriminationByVLooseIsolation'),
+    )
 )
 
 chargedTauDaughterTruth = cms.EDProducer("MCTruthDeltaRMatcherNew",#keep both collection as small as possible to prevent fake matches 

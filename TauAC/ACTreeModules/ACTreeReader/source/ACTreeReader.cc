@@ -138,6 +138,9 @@ void ACTreeReader::Init(TChain *chain) {
 
     status = fChain_->SetBranchAddress("PFTaus", event_.linkPFTaus());
     testBranch("PFTaus", status);
+
+    status = fChain_->SetBranchAddress("ACPileupInfo", event_.linkPileup());
+    testBranch("ACPileupInfo", status);
 }
 
 Long64_t ACTreeReader::LoadTree(Long64_t entry) {
