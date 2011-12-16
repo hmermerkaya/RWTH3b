@@ -38,7 +38,7 @@ bool TauDecay_CMSSW::AnalyzeTau(const reco::GenParticle *Tau,unsigned int &JAK_I
   
 void TauDecay_CMSSW::Analyze(const reco::GenParticle *Particle,unsigned int midx){
   unsigned int pdgid=abs(Particle->pdgId());
-  if(isTauFinalStateParticle(pdgid)){
+  if(isTauFinalStateParticle(pdgid) && Particle->status()==1){
     if(!isTauParticleCounter(pdgid)) std::cout << "TauDecay_CMSSW::Analyze WARNING: Unknow Final State Particle in Tau Decay... " << std::endl;
     TauDecayProducts.push_back(Particle);
     MotherIdx.push_back(midx);
@@ -94,9 +94,9 @@ void TauDecay_CMSSW::CheckForSignal(unsigned int &type,edm::Handle<reco::GenPart
 	    nprong2=nProng(TauBitMask);
 	  }
 	}
+	type=DMT.SignalCode(type,JAK_ID1,nprong1,JAK_ID2,nprong2);
+	break;
       }
-      type=DMT.SignalCode(type,JAK_ID1,nprong1,JAK_ID2,nprong2);
-      break;
     }
   }
 }
