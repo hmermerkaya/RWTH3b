@@ -4,9 +4,6 @@
 #include <iostream>
 #include <cstdlib>
 
-TString DataMCType::type="unknown";
-
-
 DataMCType::DataMCType(){
 }
 
@@ -15,7 +12,6 @@ DataMCType::~DataMCType(){
 
 unsigned int DataMCType::GetType(TString name){
   name.ToLower();
-  StoreType(name);
   if(name=="data")      return Data;
   if(name=="h_tautau")  return H_tautau;
   if(name=="hpm_taunu") return Hpm_taunu;
