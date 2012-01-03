@@ -31,6 +31,7 @@ TauNtuple::TauNtuple(const edm::ParameterSet& iConfig):
   gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
   GenEventInfo_(iConfig.getParameter<edm::InputTag>("GenEventInfo")),
   discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") ),
+  DataMC_Type_(iConfig.getUntrackedParameter<std::string>("DataMCType","")),
   ScaleFactor_(iConfig.getUntrackedParameter<std::string>("ScaleFactor")),
   PUInputFile_(iConfig.getUntrackedParameter<std::string>("PUInputFile")),
   PUInputHistoMC_(iConfig.getUntrackedParameter<std::string>("PUInputHistoMC")),
@@ -64,7 +65,7 @@ void TauNtuple::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace edm;
   iEvent_=&iEvent;
   DataMCType DMT;
-  DataMC_Type_idx=DMT.GetType();
+  DataMC_Type_idx=DMT.GetType(DataMC_Type_);
   if(iEvent.isRealData()){
     DataMC_Type_idx=DataMCType::Data;
   }
@@ -556,7 +557,7 @@ TauNtuple::fillPFJets(edm::Event& iEvent, const edm::EventSetup& iSetup,edm::Han
     PFJet_p4.push_back(iPFJet_p4);
     PFJet_numberOfDaughters.push_back(PFJet->numberOfDaughters());
     PFJet_chargedEmEnergyFraction.push_back(PFJet->chargedEmEnergyFraction());
-    PFJet_chargedHadronEnergyFraction.push_back(PFJet->chargedHadronEnergyFraction());
+    PFJet_HFHadronEnergyFraction.push_back(PFJet->HFHadronEnergyFraction());
     PFJet_neutralHadronEnergyFraction.push_back(PFJet->neutralHadronEnergyFraction());
     PFJet_PFJet_neutralEmEnergyFraction.push_back(PFJet->neutralEmEnergyFraction());
     PFJet_chargedEmEnergy.push_back(PFJet->chargedEmEnergy());
@@ -659,7 +660,7 @@ TauNtuple::beginJob()
 //   system(cmd4.Data());
 //-------------------------
   cnt_=0;
-  output = new TFile("TauNtuple.root","RECREATE");
+  output = new TFile("DATA_SkimmedTauNtuple.root","RECREATE");
   output_tree = new TTree("t","t");
 
   output_tree->Branch("DataMC_Type",&DataMC_Type_idx);
@@ -769,7 +770,7 @@ TauNtuple::beginJob()
   output_tree->Branch("PFJet_MatchedHPS_idx",&PFJet_MatchedHPS_idx);
   output_tree->Branch("PFJet_numberOfDaughters",&PFJet_numberOfDaughters);
   output_tree->Branch("PFJet_chargedEmEnergyFraction",&PFJet_chargedEmEnergyFraction);
-  output_tree->Branch("PFJet_chargedHadronEnergyFraction",&PFJet_chargedHadronEnergyFraction);
+  output_tree->Branch("PFJet_HFHadronEnergyFraction",&PFJet_HFHadronEnergyFraction);
   output_tree->Branch("PFJet_neutralHadronEnergyFraction",&PFJet_neutralHadronEnergyFraction);
   output_tree->Branch("PFJet_PFJet_neutralEmEnergyFraction",&PFJet_PFJet_neutralEmEnergyFraction);
 
@@ -1153,7 +1154,7 @@ TauNtuple::ClearEvent(){
 
    PFJet_numberOfDaughters.clear();
    PFJet_chargedEmEnergyFraction.clear();
-   PFJet_chargedHadronEnergyFraction.clear();
+   PFJet_HFHadronEnergyFraction.clear();
    PFJet_neutralHadronEnergyFraction.clear();
    PFJet_PFJet_neutralEmEnergyFraction.clear();
 
