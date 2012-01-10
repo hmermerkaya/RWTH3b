@@ -1,16 +1,7 @@
 #ifndef ACRef_h
 #define ACRef_h
-/**
- Class to store a reference to an object derived from ACCommon.
-
- @tparam T Class type of the referenced object (e.g. T=ACParticle).
-
- @author Lars Perchalla & Philip Sauerland
- @date 2011
- */
 
 #include "ACCommon.h"
-
 #include "TRef.h"
 
 // forward declarations
@@ -24,6 +15,16 @@ class ACVertex;
 template<class T> class ACDecayBase;
 class ACFittedDecay;
 class ACFittedThreeProngDecay;
+
+/**
+ Class to store a reference to an object derived from ACCommon.
+
+ @tparam T Class type of the referenced object (e.g. T=ACParticle).
+
+ @author Lars Perchalla & Philip Sauerland
+ @date 2011
+ */
+
 
 template<class T> class ACRef : public ACCommon {
 public:
