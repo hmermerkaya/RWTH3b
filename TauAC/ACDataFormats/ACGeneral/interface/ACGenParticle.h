@@ -22,7 +22,6 @@ public:
     virtual ~ACGenParticle() {};
 
     int status() const;
-    std::string name() const;
     int pdgId() const;
     const TVector3 & vertex() const;
     const ACGenDecayRef & genDecayRef() const;
@@ -48,8 +47,6 @@ public:
 protected:
     /// status code
     int status_;
-    /// particle name
-    std::string name_;
     /// PDG identifier (assumption in case of reco)
     int pdgId_;
     /// vertex position

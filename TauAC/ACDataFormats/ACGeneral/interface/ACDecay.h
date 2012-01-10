@@ -50,7 +50,7 @@ public:
     /// check for four vector conservation
     double conservation() const;
     /// assumes a tau decay and returns the decay mode according to the TauPOG definition: mode = 5 * (chargedDaughters - 1) + number of pi0's
-    int decayMode();
+    int decayMode() const;
 
     ClassDef(ACDecayBase,1);
 
@@ -157,7 +157,7 @@ template<class T> double ACDecayBase<T>::conservation() const {
 
     return sum.M() - mother.M();
 }
-template<class T> int ACDecayBase<T>::decayMode() {
+template<class T> int ACDecayBase<T>::decayMode() const {
     // decay mode = 5*(number of charged hadrons-1) + number of pi0's.
     int mode = 5 * (numberOfChargedDaughters() - 1) + numberOfPi0Daughters();
 

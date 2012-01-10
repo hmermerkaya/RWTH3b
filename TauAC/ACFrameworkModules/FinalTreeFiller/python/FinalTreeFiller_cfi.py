@@ -25,7 +25,9 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
         cms.InputTag('hpsPFTauDiscriminationByTightIsolation'),
         cms.InputTag('hpsPFTauDiscriminationByTightMuonRejection'),
         cms.InputTag('hpsPFTauDiscriminationByVLooseIsolation'),
-    )
+    ),
+    #to be done: replace this string by a scan of all executed modules and test whether it is a filter or not
+	flags = cms.vstring("GenSelector","PrimVtxSelector","InputTrackSelector","ThreeProngInputSelector","KinematicTauProducer")
 )
 
 chargedTauDaughterTruth = cms.EDProducer("MCTruthDeltaRMatcherNew",#keep both collection as small as possible to prevent fake matches 

@@ -8,6 +8,7 @@
  */
 
 #include "ACGenParticle.h"
+#include "ACVertex.h"
 #include "ACRef.h"
 
 class ACParticle : public ACGenParticle {
@@ -20,6 +21,8 @@ public:
     const TMatrixDSym & matrix() const;
     const ACGenParticleRef & genRef() const;
 
+    /// vertex including the corresponding covariance
+    const ACVertex vtx() const;//fixme: find better name (conflict with 3d point in ACCandidate)
     /// vertex part of the covariance matrix
     const TMatrixDSym vertexError() const;
     /// corresponding diagonal element of the covariance matrix
@@ -36,6 +39,10 @@ public:
     double spz() const;
     /// corresponding diagonal element of the covariance matrix
     double sm() const;
+    /// error on the transversal momentum
+    double spt() const;
+    /// error on the momentum magnitude
+    double sp() const;
 
     ClassDef(ACParticle,1);
 

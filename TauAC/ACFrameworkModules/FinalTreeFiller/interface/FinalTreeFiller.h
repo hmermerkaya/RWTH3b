@@ -82,13 +82,15 @@ private:
     /// helper function to delete pointers contained in a vector pointer
     template <class T> void deleteVectorOfPointers(T * inVectorOfPointers);
     /// save way to fill a collection from a inputtag into a given handle
-    template <class T> bool loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle);
+    template <class T> bool loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle, bool silent = false);
 
     /// framework file service
     edm::Service<TFileService> fileService_;
     /// input tags
     edm::InputTag genSignalTag_, chargedTauDaughterMatchMapTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, tcMETTag_, pfJetTag_, pfTauTag_;
     std::vector<edm::InputTag> pfTauDiscriminatorTags_;
+    std::vector<std::string> flags_;
+
     /// event and run counters
     unsigned int evtCnt_, runCnt_;
     /// main event tree
@@ -144,10 +146,10 @@ template <class T> void FinalTreeFiller::deleteVectorOfPointers(T * inVectorOfPo
         *i = 0;
     }
 }
-template <class T> bool FinalTreeFiller::loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle) {
+template <class T> bool FinalTreeFiller::loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle, bool silent) {
     iEvent.getByLabel(tag, handle);
     if (!handle.isValid()) {
-        edm::LogError("FinalTreeFiller") << "No valid handle found for '" << tag << "'!";
+        if(!silent) edm::LogError("FinalTreeFiller") << "No valid handle found for '" << tag << "'!";
         return false;
     }
     return true;

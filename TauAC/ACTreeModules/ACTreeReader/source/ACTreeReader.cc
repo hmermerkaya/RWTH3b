@@ -29,7 +29,7 @@ void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
     if (fChain_ == 0) return;
     Long64_t nentries = fChain_->GetEntriesFast();
     if (maxEvents!=-1 && maxEvents<nentries) {
-        printf("ACTreeReader::Loop: analyze only %d events from %d events", (int)maxEvents, (int)nentries);
+        printf("ACTreeReader::Loop: analyze only %d events of %d events.\n", (int)maxEvents, (int)nentries);
         nentries = maxEvents;
     } else {
         printf("ACTreeReader::Loop: analyze %d events.\n", (int)nentries);

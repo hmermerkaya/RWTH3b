@@ -21,7 +21,16 @@ const TVector3 & ACFitParticle::initialVertex() const { return initialVertex_; }
 const TMatrixDSym & ACFitParticle::initialMatrix() const { return initialMatrix_; }
 
 /// the following functions are meant to not directly access the data members to allow for easy scaling of the values
-const TMatrixDSym ACFitParticle::vertexError() const {
+const ACVertex ACFitParticle::initialVtx() const {
+    return ACVertex(initialVertex(), true, initialVertexError());
+}
+double ACFitParticle::pInitial() const { return initialP4().P(); }
+double ACFitParticle::pxInitial() const { return initialP4().Px(); }
+double ACFitParticle::pyInitial() const { return initialP4().Py(); }
+double ACFitParticle::pzInitial() const { return initialP4().Pz(); }
+double ACFitParticle::ptInitial() const { return initialP4().Pt(); }
+
+const TMatrixDSym ACFitParticle::initialVertexError() const {
     TMatrixDSym tmp(3);
     for (int i=0; i!=3; i++) for (int j=0; j!=3; j++) tmp(i,j) = initialMatrix()(i,j);
 
@@ -35,6 +44,14 @@ double ACFitParticle::spyInitial() const { if (initialMatrix()(4,4)<.0) return -
 double ACFitParticle::spzInitial() const { if (initialMatrix()(5,5)<.0) return -1.0; return sqrt(initialMatrix()(5,5)); }
 double ACFitParticle::smInitial() const { if (initialMatrix()(6,6)<.0) return -1.0; return sqrt(initialMatrix()(6,6)); }
 
+double ACFitParticle::sptInitial() const {
+    if(spxInitial()<.0 || spyInitial()<.0) return -1.0;
+    return sqrt(pow(pxInitial()*spxInitial(),2)+pow(pyInitial()*spyInitial(),2))/ptInitial();
+}
+double ACFitParticle::spInitial() const {
+    if(spxInitial()<.0 || spyInitial()<.0 || spzInitial()<.0) return -1.0;
+    return sqrt(pow(pxInitial()*spxInitial(),2)+pow(pyInitial()*spyInitial(),2)+pow(pzInitial()*spzInitial(),2))/pInitial();
+}
 double ACFitParticle::qoverpInitial() const {
     return charge()/initialP4().P();
 }

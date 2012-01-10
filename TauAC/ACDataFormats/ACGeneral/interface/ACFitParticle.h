@@ -12,7 +12,7 @@
 
 class ACFitParticle : public ACParticle {
 public:
-    const std::string classname() { return "ACFitParticle"; }
+    virtual std::string classname() const { return "ACFitParticle"; }
     ACFitParticle();
     ACFitParticle(int status, std::string name, int pdgId, float charge, const TLorentzVector & p4, const TVector3 & vertex, const TMatrixDSym & matrix, const TLorentzVector & initialP4, const TVector3 & initialVertex, const TMatrixDSym & initialMatrix, ACGenParticleRef genRef = ACGenParticleRef(), ACGenDecayRef genDecayRef = ACGenDecayRef());
     virtual ~ACFitParticle() {};
@@ -21,8 +21,20 @@ public:
     const TVector3 & initialVertex() const;
     const TMatrixDSym & initialMatrix() const;
 
+    /// initial vertex including the corresponding covariance
+    const ACVertex initialVtx() const;//fixme: find better name (conflict with 3d point in this class)
+    /// initial momentum magnitude
+    double pInitial() const;
+    /// initial momentum in x
+    double pxInitial() const;
+    /// initial momentum in y
+    double pyInitial() const;
+    /// initial momentum in z
+    double pzInitial() const;
+    /// initial transversal momentum
+    double ptInitial() const;
     /// vertex part of the initial covariance matrix
-    const TMatrixDSym vertexError() const;
+    const TMatrixDSym initialVertexError() const;
     /// corresponding diagonal element of the initial covariance matrix
     double svxInitial() const;
     /// corresponding diagonal element of the initial covariance matrix
@@ -37,7 +49,10 @@ public:
     double spzInitial() const;
     /// corresponding diagonal element of the initial covariance matrix
     double smInitial() const;
-
+    ///initial error on the transversal momentum
+    double sptInitial() const;
+    ///initial error on the momentum magnitude
+    double spInitial() const;
     /// q/p of the Helix parametrization
     double qoverpInitial() const;
     /// lambda of the Helix parametrization

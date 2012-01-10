@@ -20,7 +20,11 @@ public:
     int lumiID() const { return lumiID_; }
     int runID() const { return runID_; }
     const std::string& type() const { return type_; }
+    const std::vector<std::pair<std::string, int> > * filterResults() const { return &filterResults_; }
 
+    /// store the result of a framework filter module.
+    void storeEDMFilterResult(const std::string & name, int value);
+    
     ClassDef(ACEventInfo,1);
 
 protected:
@@ -32,6 +36,8 @@ protected:
     int runID_;
     /// event type like MC, data, etc.
     std::string type_;
+    /// results of CMSSW filter modules (no map, as ordering is required)
+    std::vector<std::pair<std::string, int> > filterResults_;
 };
 
 typedef ACEventInfo* pACEventInfo;

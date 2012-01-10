@@ -26,3 +26,25 @@ float ACVertex::chi2() const { return chi2_; }
 float ACVertex::ndof() const { return ndof_; }
 int ACVertex::trackSize() const { return trackSize_; }
 // double ptSum() const { return ptSum_; }
+double ACVertex::vtxDistanceSignificance(const ACVertex & vtx) const {
+	//distance between both vertices is calculated in units of their projected errorsum
+	TMatrixDSym matrix = error() + vtx.error();
+	TVector3 distance = vtx.position() - position();
+	double error = projectedError(distance, matrix);
+	double significance = -1.;
+	if(error!=0.) significance = distance.Mag()/error;
+	
+	return significance;
+}
+double ACVertex::projectedError(const TVector3 & axis, const TMatrixDSym & error) const {
+	//projects the error in direction of axis
+	if(axis.Mag()==0) return 0.0;
+	TVector3 unit = axis.Unit();//normalize the vect
+	TVectorD dist;
+	dist.ResizeTo(3);
+	for(unsigned int i=0; i!=3; i++) dist[i]= unit(i);
+	double similarity = error.Similarity(dist);
+	if(similarity<0.) similarity = 0.;//catch NaN
+	
+	return sqrt(similarity);
+}

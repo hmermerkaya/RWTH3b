@@ -22,6 +22,9 @@ float ACFittedThreeProngDecay::normalizedChi2() const {
     if (!testDecay()) return -1.;
     return (ndf()==0) ? -1 : (float)chi2() / (float)ndf();
 }
+float ACFittedThreeProngDecay::chi2Probability() const {
+    return TMath::Prob(chi2(), (int)ndf());
+}
 
 const ACFitParticle * ACFittedThreeProngDecay::tau() const { if (testDecay()) return particles()->at(0).get(); return 0; }
 const ACFitParticle * ACFittedThreeProngDecay::prong0() const { if (testDecay()) return particles()->at(1).get(); return 0; }

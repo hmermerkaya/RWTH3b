@@ -15,11 +15,12 @@ class ACCandidate : public ACCommon {
 public:
     virtual std::string classname() const { return "ACCandidate"; }
     ACCandidate();
-    ACCandidate(const TLorentzVector& p4, float charge_ = 0.0);
+    ACCandidate(const TLorentzVector & p4, float charge = 0.0, const std::string & name = "");
     virtual ~ACCandidate() {};
 
-    float charge() const;
     const TLorentzVector & p4() const;
+    float charge() const;
+    const std::string & name() const;
 
     double p() const;
     /// energy
@@ -52,6 +53,8 @@ protected:
     TLorentzVector p4_;
     /// charge
     float charge_;
+    /// candidate name
+    std::string name_;
 };
 
 typedef ACCandidate* pACCandidate;

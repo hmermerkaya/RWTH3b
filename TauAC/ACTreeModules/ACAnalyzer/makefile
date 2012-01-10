@@ -3,9 +3,6 @@ ARCH			:= $(shell $(ROOTSYS)/bin/root-config --arch)
 ifeq ($(ARCH),linuxx8664gcc)
 CXX				:= g++
 LIBRARYDIR		:= $(CMSSW_BASE)/lib/$(SCRAM_ARCH)
-ACLIBS			:= $(shell find $(LIBRARYDIR) -name 'libACDataFormats*' -prune -printf '%f ')
-ACLIBS			:= $(subst lib,-l,$(ACLIBS))
-ACLIBS			:= $(subst .so,,$(ACLIBS))
 endif
 
 ROOTCXXFLAGS	:= $(shell $(ROOTSYS)/bin/root-config --cflags) 

@@ -19,7 +19,11 @@ int main(int argc, char* argv[]) {
 
 void ACExampleAnalyzer::analyze(const ACEvent & event) {
     printf("Working on event %d, run %d, and lumi %d. Type is '%s'\n", event.eventInfo()->eventID(), event.eventInfo()->runID(), event.eventInfo()->lumiID(), event.eventInfo()->type().c_str());
-
+    printf("Filter results:");
+    for (std::vector<std::pair<std::string, int> >::const_iterator filter = event.eventInfo()->filterResults()->begin(); filter != event.eventInfo()->filterResults()->end(); ++filter) {
+        printf("\t%s=%i", filter->first.c_str(), filter->second);
+    }
+    printf("\n");
     printf("PFMET topology: %f\n", event.eventGlobals()->pfMETTopology());
 
     printf("trigger: %s\n", event.trigger()->tableName().c_str());

@@ -16,7 +16,7 @@ process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 ###############
 #steering parameters#
 inputPath, outputPath, jobName, isData, jsonFile = Steering.LoadUserParameters()
-numberOfEvents = 100
+numberOfEvents = -1
 ignoreFilter = True # but always ignore TauMotherProducer until its ready
 printEvents = 0	#print generator event
 triggerTag = "HLT"
@@ -42,7 +42,7 @@ if isData:
     process.source.lumisToProcess = cms.untracked.VLuminosityBlockRange(lumiString.split(','))
 
 if isData:
-    process.GlobalTag.globaltag = 'GR_P_V22::All'
+    process.GlobalTag.globaltag = 'GR_P_V27::All'
 else:
     process.GlobalTag.globaltag = 'START44_V7::All'
 

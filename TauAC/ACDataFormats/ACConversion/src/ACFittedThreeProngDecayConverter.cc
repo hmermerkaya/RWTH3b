@@ -25,13 +25,31 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
     std::vector<const SelectedKinematicParticle *> decayparticles;
     decay.particles(decayparticles);
     if (decayparticles.size() > 0) {
-        bool matchedAllChargedDaughters = true;
+		bool motherMissmatch = false;
+		const ACGenDecayRef * matchedGenDecay = 0;
         for (std::vector<const SelectedKinematicParticle *>::const_iterator particle=decayparticles.begin(); particle!=decayparticles.end(); ++particle) {
             const ACGenParticleRef * genRef = 0;
             /// try to match all charged daughters of a tau decay
             if ((*particle)->charge() != 0 && particle != decayparticles.begin()) {
                 genRef = kinematicParticleMatching->getMatching(evt, *particle);
-                if (!genRef) matchedAllChargedDaughters = false;
+                if (!genRef) matchedGenDecay = 0;
+                else {
+                    if (!motherMissmatch) {
+                        if (matchedGenDecay==0) {
+                            matchedGenDecay = &((*genRef)->genDecayRef());
+                            if (!matchedGenDecay->isValid()) {
+                                printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: Error! Bad generator-decay reference!\n");
+                                motherMissmatch = true;
+                            }
+                        } else {
+                            if (matchedGenDecay != &((*genRef)->genDecayRef())) {
+                                //printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: decays missmatched. gentau %s != gentau %s\n", (*genRef)->genDecayRef()->name().c_str(), (*matchedGenDecay)->name().c_str());
+                                matchedGenDecay = 0;
+                                motherMissmatch = true;
+                            }
+                        }
+                    }
+                }
             }
             ACFitParticleConverter tmp(**particle, (*(decayparticles.begin()))->charge(), genRef);
             ACFitParticle * tmpP = new ACFitParticle();
@@ -41,6 +59,13 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
             /// store reference to particle into decay
             particles_.push_back(ACFitParticleRef(kinematicParticles->back()));
         }
+        // Accept unambigious assignment also if decay modes mismatch. I.e., consider a decay as matched if at least one charged particle was matched.
+        if (matchedGenDecay != NULL) {
+            // test for same charge of the top particle
+            if (particles()->front()->charge() == (*matchedGenDecay)->particles()->front()->charge()) {
+                genDecayRef_ = *matchedGenDecay;
+            } //else printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: bad charge!\n");
+		}// else printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: no common decay found!\n");
     } else {
         printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: ERROR! No particles in SelectedKinematicDecay.\n");
     }

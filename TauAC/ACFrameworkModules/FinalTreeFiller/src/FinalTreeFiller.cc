@@ -14,7 +14,8 @@ pfMETTag_(iConfig.getParameter<edm::InputTag>("pfMET")),
 tcMETTag_(iConfig.getParameter<edm::InputTag>("tcMET")),
 pfJetTag_(iConfig.getParameter<edm::InputTag>("pfJets")),
 pfTauTag_(iConfig.getParameter<edm::InputTag>("pfTaus")),
-pfTauDiscriminatorTags_(iConfig.getParameter<std::vector<edm::InputTag> >("pfTauDiscriminators"))
+pfTauDiscriminatorTags_(iConfig.getParameter<std::vector<edm::InputTag> >("pfTauDiscriminators")),
+flags_(iConfig.getParameter< std::vector<std::string> >("flags"))
 {
     hltChanged_ = true;
     eventTree_ = 0;
@@ -157,6 +158,13 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     } else {
         *eventInfo_ = ACEventInfo(evt.id().event(), evt.id().luminosityBlock(), evt.id().run(), "data");
     }
+    for (std::vector<std::string>::iterator flag=flags_.begin(); flag!=flags_.end(); ++flag) {
+		edm::Handle<int> flagHandle;
+        if (loadCollection(evt, edm::InputTag(*flag, "flag"), flagHandle)) {
+            eventInfo_->storeEDMFilterResult(*flag, *flagHandle);
+        }
+	}
+
     
     /// set event globals
     edm::Handle<reco::PFMETCollection> pfMET;
@@ -205,7 +213,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     
     /// set gerenator information
     edm::Handle<reco::GenParticleCollection> genCands;
-    if (loadCollection(evt, genSignalTag_, genCands)) {
+    if (loadCollection(evt, genSignalTag_, genCands, true)) {
         *generator_ = std::vector<ACGenParticle *>();
         *genTauDecays_ = std::vector<ACGenDecay *>();
         ACGenDecayRef latestGenDecayRef;
@@ -307,7 +315,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     
     /// set pileup information
     edm::Handle<std::vector<PileupSummaryInfo> > pileupInfo;
-    if (loadCollection(evt, pileupInfoTag_, pileupInfo)) {
+    if (loadCollection(evt, pileupInfoTag_, pileupInfo, true)) {
         *pileup_ = std::vector<ACPileupInfo *>();
         /// one PileupSummaryInfo for each of the beam crossings (allows to retrieve information about the out-of-time pileup)
         for (std::vector<PileupSummaryInfo>::const_iterator PVI = pileupInfo->begin(); PVI != pileupInfo->end(); ++PVI) {

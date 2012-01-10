@@ -22,6 +22,8 @@ public:
     int ndf() const;
     /// normalized chi2 of the kinematic fit
     float normalizedChi2() const;
+    /// chi2 probability of the kinematic fit
+    float chi2Probability() const;
 
     const ACFitParticle * tau() const;
     const ACFitParticle * prong0() const;

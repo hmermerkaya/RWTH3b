@@ -18,6 +18,9 @@ const TMatrixDSym & ACParticle::matrix() const { return matrix_; }
 const ACGenParticleRef & ACParticle::genRef() const { return genRef_; }
 
 /// the following functions are meant to not directly access the data members to allow for easy scaling of the values
+const ACVertex ACParticle::vtx() const {
+    return ACVertex(vertex(), true, vertexError());
+}
 const TMatrixDSym ACParticle::vertexError() const {
     TMatrixDSym tmp(3);
     for (int i=0; i!=3; i++) for (int j=0; j!=3; j++) tmp(i,j) = matrix()(i,j);
@@ -32,4 +35,12 @@ double ACParticle::spy() const { if (matrix()(4,4)<.0) return -1.0; return sqrt(
 double ACParticle::spz() const { if (matrix()(5,5)<.0) return -1.0; return sqrt(matrix()(5,5)); }
 double ACParticle::sm() const { if (matrix()(6,6)<.0) return -1.0; return sqrt(matrix()(6,6)); }
 
+double ACParticle::spt() const {
+    if(spx()<.0 || spy()<.0) return -1.0;
+    return sqrt(pow(px()*spx(),2)+pow(py()*spy(),2))/pt();
+}
+double ACParticle::sp() const {
+    if(spx()<.0 || spy()<.0 || spz()<.0) return -1.0;
+    return sqrt(pow(px()*spx(),2)+pow(py()*spy(),2)+pow(pz()*spz(),2))/p();
+}
 /// todo: sqoverp, ...

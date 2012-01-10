@@ -5,7 +5,7 @@ candCollection_(iConfig.getParameter<edm::InputTag>("candCollection")),
 decayType_(iConfig.getUntrackedParameter("decayType",std::string("VBFH"))),
 motherPdgID_(iConfig.getUntrackedParameter("motherPdgID", 0))
 {
-    produces<int>("flag");//0=invalid, 1=valid //or save filter return value and more: 0=false, 1=VBFH, 2=background1, ...?
+    produces<int>("flag");//0=invalid, 1=valid
 
     produces<reco::GenParticleCollection>("genSignalDecay");//whole signal decay, fixed size and order: (0)higgs, (1)tauM, (2..4)piM, (5)nuM, (6)tauP, (7..9)piP, (10)nuP, (11..12)quarks = 13 particles
     produces<reco::GenParticleRefVector>("genSignalDecayRef");//store refs to input list to access signal particles in matchMap

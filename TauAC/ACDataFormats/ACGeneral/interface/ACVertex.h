@@ -8,6 +8,7 @@
  */
 
 #include <TVector3.h>
+#include <TVectorD.h>
 #include <TMatrixDSym.h>
 
 #include "ACCommon.h"
@@ -27,7 +28,11 @@ public:
     float ndof() const;
     int trackSize() const;
 //    double ptSum() const;
-
+    /// distance from vtx in units of their projected errorsum
+    double vtxDistanceSignificance(const ACVertex & vtx) const;
+	/// project error in direction of axis
+    double projectedError(const TVector3 & axis, const TMatrixDSym & error) const;
+    
     ClassDef(ACVertex,1);
 
 protected:
