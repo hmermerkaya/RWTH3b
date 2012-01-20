@@ -13,7 +13,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: KinematicTauAdvancedProducer.h,v 1.5 2010/08/13 12:29:00 perchall Exp $
+// $Id: KinematicTauAdvancedProducer.h,v 1.6 2010/08/13 14:22:54 perchall Exp $
 //
 //
 
@@ -41,6 +41,9 @@
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 
+#include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
+#include "CommonTools/Statistics/interface/ChiSquared.h"
+
 
 class KinematicTauAdvancedProducer : public edm::EDFilter {
 public:
@@ -54,9 +57,10 @@ private:
 	
 	bool select(SelectedKinematicDecayCollection & refitDecays, reco::PFTauRefVector & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::Vertex & primaryVtx);
 	void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
-	int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::PFTauRef & tauRef);
+        int saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const std::vector<double> qualityCuts, const reco::PFTauRef & tauRef);
 	void correctReferences(SelectedKinematicDecayCollection & selected, edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
 	void storePFTauDiscriminators(const reco::PFTauRef & tauRef, std::map<std::string, bool> & tauDiscriminators);
+        std::vector<double> CalculateQualityCriteria(const KinematicTauCreator *kinTauCrtr, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
 	
 	const edm::ParameterSet fitParameters_;
 	edm::Event * iEvent_;

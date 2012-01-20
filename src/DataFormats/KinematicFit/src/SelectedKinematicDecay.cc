@@ -10,15 +10,27 @@ SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollecti
     particles_ = particles;
 	signalPFChargedHadrCands_ = -1;
 	signalPFNeutrHadrCands_ = -1;
+	fraction_ = -1;	       
+        RefitMass_ = -1;	       
+        Chi2_ = -1;		       
+        ModPV_PV_significance_ = -1;
+	SV_PV_significance_ = -1;   
 	discriminators_.clear();
 	PFTauRef_.clear();
 }
-SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands, const std::map<std::string, bool> & discriminators)
+SelectedKinematicDecay::SelectedKinematicDecay(SelectedKinematicParticleCollection particles, const int & signalPFChargedHadrCands, const int & signalPFNeutrHadrCands, 
+					       const double & fraction, const double & RefitMass, const double & Chi2, const double & ModPV_PV_significance,const double & SV_PV_significance, const std::map<std::string, bool> & discriminators)
 {
     particles_ = particles;
 	signalPFChargedHadrCands_ = signalPFChargedHadrCands;
 	signalPFNeutrHadrCands_   = signalPFNeutrHadrCands;
 	discriminators_ = discriminators;
+	fraction_ = fraction;	       
+        RefitMass_ = RefitMass;	       
+        Chi2_ = Chi2;		       
+        ModPV_PV_significance_ = ModPV_PV_significance;
+	SV_PV_significance_ = SV_PV_significance;   
+
 	PFTauRef_.clear();
 }
 
@@ -60,6 +72,32 @@ int SelectedKinematicDecay::signalPFChargedHadrCands() const {
 int SelectedKinematicDecay::signalPFNeutrHadrCands() const {
 	return signalPFNeutrHadrCands_;
 }
+
+double SelectedKinematicDecay::TauEnergyFraction() const {
+  return fraction_;
+}
+double SelectedKinematicDecay::RefitVisibleMass() const {
+  return RefitMass_;
+}
+
+double SelectedKinematicDecay::Chi2() const {
+return Chi2_;
+}
+
+double SelectedKinematicDecay::ModPV_PV_significance() const {
+  return ModPV_PV_significance_;
+}
+
+double SelectedKinematicDecay::PV_SV_significance() const {
+  return SV_PV_significance_;
+}
+
+
+
+
+
+
+
 std::map<std::string, bool> SelectedKinematicDecay::discriminators() const
 {
 	return discriminators_;

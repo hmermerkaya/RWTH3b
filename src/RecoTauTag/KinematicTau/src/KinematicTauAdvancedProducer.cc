@@ -92,10 +92,14 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
 			//		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedDaughters();
 
 			//fitting debug only:
+			//save values of the quality criteria: 
+
+
+			//
 			std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
 			reco::PFTauRef tauRef = usedTaus->at(index);
 			saveSelectedTracks(usedTracks, daughterCollection);
-			saveKinParticles(kinTauCrtr, refitDecays, tauRef);
+			saveKinParticles(kinTauCrtr, refitDecays, CalculateQualityCriteria(kinTauCrtr, tauRef, primaryVtx), tauRef);
 			//save tau ref
 			PFTauRefCollection.push_back(tauRef);
 		}
@@ -134,7 +138,7 @@ void KinematicTauAdvancedProducer::saveSelectedTracks(const std::vector<reco::Tr
 		daughterCollection.push_back(tmpCand);
 	}
 }
-int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, const reco::PFTauRef & tauRef){
+int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCrtr, SelectedKinematicDecayCollection &refitDecays,  const std::vector<double> qualityCuts, const reco::PFTauRef & tauRef){
 	RefCountedKinematicTree tree = kinTauCrtr->getKinematicTree();
 	KinematicConstrainedVertexFitter *kcvFitter = kinTauCrtr->getFitter();
 	try{
@@ -179,7 +183,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(KinematicTauCreator *kinTauCr
 	
 	if(refitTauDecay.size() != 5) LogTrace("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
 	else{
-		refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(), tauDiscriminators) );
+	  refitDecays.push_back( SelectedKinematicDecay(refitTauDecay, tauRef->signalPFChargedHadrCands().size(), tauRef->signalPFNeutrHadrCands().size(),qualityCuts.at(0),qualityCuts.at(1),qualityCuts.at(2),qualityCuts.at(3),qualityCuts.at(4), tauDiscriminators) );
 		refitDecays.back().addPFTauRef(tauRef);
 	}
 	
@@ -228,5 +232,40 @@ void KinematicTauAdvancedProducer::storePFTauDiscriminators(const reco::PFTauRef
 		tauDiscriminators.insert( std::make_pair( *discr, (*tmpHandle)[tauRef] ) );
 	}
 }
+
+std::vector<double> KinematicTauAdvancedProducer::CalculateQualityCriteria(const KinematicTauCreator *kinTauCrtr, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx){
+  std::vector<double> CutValues;
+  reco::PFTau refitPFTau = kinTauCrtr->getPFTau();//this is only the visible part of the refitted tau momentum!
+  refitPFTau.setalternatLorentzVect(kinTauCrtr->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
+  std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCrtr->getRefittedChargedDaughters();
+  std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCrtr->getRefittedNeutralDaughters();
+  reco::Vertex modifiedPV = kinTauCrtr->getModifiedPrimaryVertex();
+  VertexState secVtx(kinTauCrtr->getKinematicTree()->currentDecayVertex()->position(), kinTauCrtr->getKinematicTree()->currentDecayVertex()->error());
+  VertexDistance3D vtxdist;
+
+  //energy fraction
+  double fraction = refitPFTau.alternatLorentzVect().Et();
+  if( fraction == 0.){
+    fraction = -1;
+  }	
+  fraction = tauRef->et()/fraction;
+  CutValues.push_back(fraction);
+  
+  //a1 mass
+  CutValues.push_back(refitPFTau.mass());
+  //chi2prob
+  ChiSquared chiSquared(kinTauCrtr->chi2(), kinTauCrtr->ndf());
+  CutValues.push_back(chiSquared.probability());
+  
+  //vertex significance between modified and initial primary vertex
+  CutValues.push_back(vtxdist.distance(modifiedPV, primaryVtx).significance());
+  
+  //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
+  CutValues.push_back(vtxdist.distance(modifiedPV, secVtx).significance());
+
+  return CutValues;
+}
+
+
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauAdvancedProducer);
