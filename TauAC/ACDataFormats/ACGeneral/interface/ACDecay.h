@@ -29,21 +29,25 @@ public:
 
     /// the first entry of the particle collection (assuming mother particle)
     const T* topParticle() const;
-    /// all daughters (ignoring the top particle)
+    /// all stable daughters (ignoring the top particle)
     void daughters(std::vector<const T*>& daughters) const;
-    /// all charged daughters (ignoring the top particle and neutrals)
+    /// all unstable daughters (ignoring the top particle)
+    void unstableDaughters(std::vector<const T*>& daughters) const;
+    /// all charged and stable daughters (ignoring the top particle and neutrals)
     void chargedDaughters(std::vector<const T*>& chargedDaughters) const;
-    /// all neutral daughters (ignoring the top particle and charged ones)
+    /// all neutral and stable daughters (ignoring the top particle and charged ones)
     void neutralDaughters(std::vector<const T*>& neutralDaughters) const;
     /// all pi0 involved in the decay
     void pi0Daughters(std::vector<const T*>& pi0Daughters) const;
     /// number of particles assigned to this decay
     int numberOfParticles() const;
-    /// number of daughters (ignoring the top particle)
+    /// number of stable daughters (ignoring the top particle)
     int numberOfDaughters() const;
-    /// number of charged daughters (ignoring the top particle and neutrals)
+    /// number of unstable daughters (ignoring the top particle)
+    int numberOfUnstableDaughters() const;
+    /// number of charged and stable daughters (ignoring the top particle and neutrals)
     int numberOfChargedDaughters() const;
-    /// number of neutral daughters (ignoring the top particle and charged ones)
+    /// number of neutral and stable daughters (ignoring the top particle and charged ones)
     int numberOfNeutralDaughters() const;
     /// number of pi0s
     int numberOfPi0Daughters() const;
@@ -97,6 +101,15 @@ template<class T> const T* ACDecayBase<T>::topParticle() const {
 template<class T> void ACDecayBase<T>::daughters(std::vector<const T*>& daughters) const {
     daughters.clear();
     for (typename std::vector<ACRef<T> >::const_iterator iter = particles()->begin(); iter != particles()->end(); ++iter) {
+        if ((*iter)->status() != 1) continue; //skip unstable daughters
+        if (iter == particles()->begin()) continue;
+        daughters.push_back(iter->get());
+    }
+}
+template<class T> void ACDecayBase<T>::unstableDaughters(std::vector<const T*>& daughters) const {
+    daughters.clear();
+    for (typename std::vector<ACRef<T> >::const_iterator iter = particles()->begin(); iter != particles()->end(); ++iter) {
+        if ((*iter)->status() == 1) continue; //skip stable daughters
         if (iter == particles()->begin()) continue;
         daughters.push_back(iter->get());
     }
@@ -104,6 +117,7 @@ template<class T> void ACDecayBase<T>::daughters(std::vector<const T*>& daughter
 template<class T> void ACDecayBase<T>::chargedDaughters(std::vector<const T*>& chargedDaughters) const {
     chargedDaughters.clear();
     for (typename std::vector<ACRef<T> >::const_iterator iter = particles()->begin(); iter != particles()->end(); ++iter) {
+        if ((*iter)->status() != 1) continue; //skip unstable daughters
         if (iter == particles()->begin() || (iter->get())->charge() == 0.0) continue;
         chargedDaughters.push_back(iter->get());
     }
@@ -111,6 +125,7 @@ template<class T> void ACDecayBase<T>::chargedDaughters(std::vector<const T*>& c
 template<class T> void ACDecayBase<T>::neutralDaughters(std::vector<const T*>& neutralDaughters) const {
     neutralDaughters.clear();
     for (typename std::vector<ACRef<T> >::const_iterator iter = particles()->begin(); iter != particles()->end(); ++iter) {
+        if ((*iter)->status() != 1) continue; //skip unstable daughters
         if (iter == particles()->begin() || (iter->get())->charge() != 0.0) continue;
         neutralDaughters.push_back(iter->get());
     }
@@ -126,6 +141,11 @@ template<class T> int ACDecayBase<T>::numberOfParticles() const { return particl
 template<class T> int ACDecayBase<T>::numberOfDaughters() const {
     std::vector<const T*> tmp;
     daughters(tmp);
+    return tmp.size();
+}
+template<class T> int ACDecayBase<T>::numberOfUnstableDaughters() const {
+    std::vector<const T*> tmp;
+    unstableDaughters(tmp);
     return tmp.size();
 }
 template<class T> int ACDecayBase<T>::numberOfChargedDaughters() const {

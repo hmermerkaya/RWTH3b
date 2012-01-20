@@ -9,19 +9,25 @@ ACCandidate() {
     charge_ = -1000.;
     vertex_.SetXYZ(-1000,-1000,-1000);
     genDecayRef_ = ACGenDecayRef();
+    mother_ = ACGenParticleRef();
+    daughters_.clear();
 }
-ACGenParticle::ACGenParticle(int status, std::string name, int pdgId, float charge, const TLorentzVector & p4, const TVector3 & vertex, const ACGenDecayRef & genDecayRef):
+ACGenParticle::ACGenParticle(int status, std::string name, int pdgId, float charge, const TLorentzVector & p4, const TVector3 & vertex, const ACGenDecayRef & genDecayRef, const ACGenParticleRef & mother, const std::vector<ACGenParticleRef> & daughters):
 ACCandidate(p4, charge) {
     status_ = status;
     pdgId_ = pdgId;
     vertex_ = vertex;
     genDecayRef_ = genDecayRef;
+    mother_ = mother;
+    daughters_ = daughters;
 }
 
 int ACGenParticle::status() const { return status_; }
 int ACGenParticle::pdgId() const { return pdgId_; }
 const TVector3 & ACGenParticle::vertex() const { return vertex_; }
 const ACGenDecayRef & ACGenParticle::genDecayRef() const { return genDecayRef_; }
+const ACGenParticleRef & ACGenParticle::mother() const { return mother_;}
+const std::vector<ACGenParticleRef> & ACGenParticle::daughters() const { return daughters_;}
 
 /// the following functions are meant to not directly access the data members to allow for easy scaling of the values
 double ACGenParticle::vx() const { return vertex().X(); }

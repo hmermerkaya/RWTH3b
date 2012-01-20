@@ -1,3 +1,5 @@
+#ifndef MCTruthMatching_h
+#define MCTruthMatching_h
 /**
  Test for MCTruthMatching.
 
@@ -44,3 +46,5 @@ private:
     bool testDuplicate(const reco::GenParticleRef & ref);
 
 };
+
+#endif

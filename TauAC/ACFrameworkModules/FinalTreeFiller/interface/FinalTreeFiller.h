@@ -20,6 +20,7 @@
 
 #include "ACDataFormats/ACGeneral/interface/ACEventGlobals.h"
 #include "ACDataFormats/ACGeneral/interface/ACEventInfo.h"
+#include "ACDataFormats/ACGeneral/interface/ACEventWeight.h"
 #include "ACDataFormats/ACGeneral/interface/ACTrigger.h"
 #include "ACDataFormats/ACGeneral/interface/ACVertex.h"
 #include "ACDataFormats/ACGeneral/interface/ACGenParticle.h"
@@ -62,6 +63,8 @@
 
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
+#include "PhysicsTools/Utilities/interface/Lumi3DReWeighting.h"
+
 class FinalTreeFiller : public edm::EDAnalyzer {
 public:
     explicit FinalTreeFiller(const edm::ParameterSet&);
@@ -87,9 +90,10 @@ private:
     /// framework file service
     edm::Service<TFileService> fileService_;
     /// input tags
-    edm::InputTag genSignalTag_, chargedTauDaughterMatchMapTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, tcMETTag_, pfJetTag_, pfTauTag_;
+    edm::InputTag genSignalTag_, genSignalRefTag_, chargedTauDaughterMatchMapTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, tcMETTag_, pfJetTag_, pfTauTag_;
     std::vector<edm::InputTag> pfTauDiscriminatorTags_;
     std::vector<std::string> flags_;
+    std::string pileUpDistributionFileMC_, pileUpDistributionHistMC_, pileUpDistributionFileData_, pileUpDistributionHistData_;
 
     /// event and run counters
     unsigned int evtCnt_, runCnt_;
@@ -98,6 +102,8 @@ private:
     
     /// branch content: basic event information
     ACEventInfo * eventInfo_;
+    /// branch content: event-weight information
+    ACEventWeight * eventWeight_;
     /// branch content: global event variables like MET
     ACEventGlobals * eventGlobals_;
     /// branch content: HLT trigger menu
@@ -131,8 +137,12 @@ private:
 
     /// provide the association between particles from the kinematic fit and the generated particles
     MCTruthMatching * kinematicParticleMatching_;
-    /// logging of the association between PFTauRefs and ACPFTauRefs
-    PFTauMatching * pfTauMatching_;
+    /// logging of the association between CMSSW PFTauRefs and ACPFTauRefs
+    PFTauConversionLog * conversionLogPFTau_;
+    /// logging of the association between CMSSW JetRefs and ACJetRefs
+    PFJetConversionLog * conversionLogPFJet_;
+    
+    edm::Lumi3DReWeighting * lumiWeights_; 
 };
 
 template <class T> void FinalTreeFiller::deleteVectorOfPointers(T * inVectorOfPointers) {

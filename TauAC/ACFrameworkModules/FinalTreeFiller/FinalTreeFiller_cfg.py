@@ -2,11 +2,13 @@ import FWCore.ParameterSet.Config as cms
 import os
 import ACFrameworkModules.Common.Tools as Tools
 import ACFrameworkModules.FinalTreeFiller.Steering as Steering
+import ACFrameworkModules.FinalTreeFiller.PileUpReweighting as PileUpReweighting
 
 #parse lumi regions
 from FWCore.PythonUtilities.LumiList import LumiList
 
 process = cms.Process("FinalTreeFiller")
+#process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck")
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("ACFrameworkModules.Common.MessageLogger_cfi")
@@ -21,6 +23,8 @@ ignoreFilter = True # but always ignore TauMotherProducer until its ready
 printEvents = 0	#print generator event
 triggerTag = "HLT"
 minTau = 1 #minimum of selected taus
+doPileUpReweighting = True
+pileUpDistributionMC = "MCPileUpDistMaker/PU_S3_and_PU_S4_InTime"
 ###############
 
 ### scan all files located in inputPath
@@ -34,9 +38,12 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
+if doPileUpReweighting:
+    dataPileUpFilename = PileUpReweighting.createDataPileUpFile(jsonFile)
+
 ### select runs from JSON file
 if isData:
-    print 'Dicriminate lumisections from', jsonFile
+    print 'Discriminate lumisections from', jsonFile
     jsonList = LumiList(jsonFile)
     lumiString = jsonList.getCMSSWString()#convert into compact format needed by CMSSW
     process.source.lumisToProcess = cms.untracked.VLuminosityBlockRange(lumiString.split(','))
@@ -85,6 +92,12 @@ process.KinematicTauProducer.inputTracks = cms.InputTag("ThreeProngInputSelector
 process.load("ACFrameworkModules.FinalTreeFiller.FinalTreeFiller_cfi")
 process.FinalTreeFiller.triggerResults = cms.InputTag("TriggerResults","",triggerTag)
 process.FinalTreeFiller.decayType = cms.untracked.string(decayType)
+
+if doPileUpReweighting:
+    process.FinalTreeFiller.pileUpDistributionFileMC = cms.untracked.string("MCPileUpDistributions.root")
+    process.FinalTreeFiller.pileUpDistributionHistMC = cms.untracked.string(pileUpDistributionMC)
+    process.FinalTreeFiller.pileUpDistributionFileData = cms.untracked.string(dataPileUpFilename)
+    process.FinalTreeFiller.pileUpDistributionHistData = cms.untracked.string("pileup")
 
 #ignore filter
 process.ignorePath = cms.Path(

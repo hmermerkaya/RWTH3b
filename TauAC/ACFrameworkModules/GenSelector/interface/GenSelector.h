@@ -28,14 +28,8 @@ private:
 
     /// decides which signal to extract from generator event.
     bool storeEvent(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef);
-    /// searches for motherPdgID and stores its decay into tau pairs
-    bool storeTauPairEvt(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef, const int & motherPdgID);
-    /// searches for motherPdgID and stores its decay into a tau
-    bool storeEventSingleTau(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef);
-    /// store each tau followed by its stable daughters. WARNING: no mother at the beginning!
-    bool storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef);
-    /// searches for the decay VBF(qqH->tautau) and stores it
-    bool storeEventVBFH(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef);
+    /// store each tau followed by its stable daughters. if motherPdgID defined, only taus from this mother are kept. in case of VBF Higgs, also the quarks are stored.
+    bool storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef, int motherPdgID = 0);
     /// obtain all daughters of a particle
     void findDescendents(const reco::GenParticleRef& base, std::vector<reco::GenParticleRef> & descendents, int status, int pdgId=0);
     /// store quarks (from VBF) seperately for JetAnalysis

@@ -11,6 +11,7 @@
 
 class ACFittedThreeProngDecay : public ACFittedDecay {
 public:
+    virtual std::string classname() const { return "ACFittedThreeProngDecay"; }
     ACFittedThreeProngDecay();
     ACFittedThreeProngDecay(std::vector<ACRef<ACFitParticle> > particles, std::string name, int iterations, float csum, int maxiterations, float mincsum, float chi2, ACPFTauRef PFTauRef, int constraints);
     virtual ~ACFittedThreeProngDecay() {};

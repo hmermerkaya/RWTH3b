@@ -4,6 +4,7 @@
 #include "../interface/ACCandidate.h"
 #include "../interface/ACEventGlobals.h"
 #include "../interface/ACEventInfo.h"
+#include "../interface/ACEventWeight.h"
 #include "../interface/ACGenParticle.h"
 #include "../interface/ACJet.h"
 #include "../interface/ACPFTau.h"
@@ -58,6 +59,8 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 
 #pragma link C++ class ACEventInfo+;
 #pragma link C++ class pACEventInfo+;
+#pragma link C++ class ACEventWeight+;
+#pragma link C++ class pACEventWeight+;
 
 #pragma link C++ class ACGenParticle+;
 #pragma link C++ class pACGenParticle+;

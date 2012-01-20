@@ -51,3 +51,9 @@ ACGenParticleConverter::ACGenParticleConverter(const reco::GenParticle& particle
 void ACGenParticleConverter::setGenDecayRef(const ACGenDecayRef & genDecayRef) {
     genDecayRef_ = genDecayRef;
 }
+void ACGenParticleConverter::setMother(const ACGenParticleRef & motherRef){
+    mother_ = motherRef;
+}
+void ACGenParticleConverter::addDaughter(const ACGenParticleRef & daughterRef){
+    daughters_.push_back(daughterRef);
+}

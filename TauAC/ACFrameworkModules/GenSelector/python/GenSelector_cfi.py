@@ -2,8 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 GenSelector = cms.EDFilter("GenSelector",#creates reco::CandidateRefVector containing refs to selected genParticles
 	candCollection = cms.InputTag("genParticles"),#genParticleCandidates #needs same collection as MCTruthDeltaRMatcherNew
-	decayType = cms.untracked.string('VBFH'),#tauGun,Ztautau,...
-    motherPdgID = cms.untracked.int32(0)#search for taus within a decay of a mother with given pdgID
+	decayType = cms.untracked.string(''),#tauGun,Ztautau,...
+    motherPdgID = cms.untracked.int32(0)#search for taus within a decay of a mother with given pdgID, 0 ignores the mother
 )
 
 printTree = cms.EDAnalyzer("ParticleListDrawer",

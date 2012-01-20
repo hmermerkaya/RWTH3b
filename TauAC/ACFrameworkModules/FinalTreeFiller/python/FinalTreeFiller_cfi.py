@@ -2,6 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     genSignal = cms.InputTag('GenSelector','genSignalDecay'),
+    genSignalRef = cms.InputTag('GenSelector','genSignalDecayRef'), #same length/content as genSignalDecay, but originals not copied objects
     chargedTauDaughterMatchMap = cms.InputTag("chargedTauDaughterTruth"),
 	primVtx = cms.InputTag('offlinePrimaryVertices'), #this is the PV from the standard reco
 	reducedPrimVtx = cms.InputTag('ThreeProngInputSelector','primVtx'), #this is the vertex obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!!)
@@ -27,14 +28,18 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
         cms.InputTag('hpsPFTauDiscriminationByVLooseIsolation'),
     ),
     #to be done: replace this string by a scan of all executed modules and test whether it is a filter or not
-	flags = cms.vstring("GenSelector","PrimVtxSelector","InputTrackSelector","ThreeProngInputSelector","KinematicTauProducer")
+	flags = cms.vstring("GenSelector","PrimVtxSelector","InputTrackSelector","ThreeProngInputSelector","KinematicTauProducer"),
+    pileUpDistributionFileMC = cms.untracked.string(""),
+    pileUpDistributionHistMC = cms.untracked.string("pileup"),
+    pileUpDistributionFileData = cms.untracked.string(""),
+    pileUpDistributionHistData = cms.untracked.string("pileup"),
 )
 
 chargedTauDaughterTruth = cms.EDProducer("MCTruthDeltaRMatcherNew",#keep both collection as small as possible to prevent fake matches 
     src = cms.InputTag("KinematicTauProducer","selectedTauDaughters"),
     distMin = cms.double(0.01),	#dR=0.1
-    matched = FinalTreeFiller.genSignal
-    #matchPDGId = cms.vint32(211)	#match only pions. prevent from matching neutrals(neutrinos)
+    matched = FinalTreeFiller.genSignal,
+    matchPDGId = cms.vint32(11,13,211),
 )
 
 matchingSeq = cms.Sequence(chargedTauDaughterTruth)

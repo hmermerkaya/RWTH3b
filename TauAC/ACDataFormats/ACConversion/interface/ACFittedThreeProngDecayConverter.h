@@ -9,16 +9,16 @@
 
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 #include "ACFrameworkModules/Common/interface/MCTruthMatching.h"
-#include "ACFrameworkModules/Common/interface/PFTauMatching.h"
-#include "../../ACGeneral/interface/ACFitParticle.h"
-#include "../../ACGeneral/interface/ACFittedThreeProngDecay.h"
+#include "ACFrameworkModules/Common/interface/ConversionLog.h"
+#include "ACDataFormats/ACGeneral/interface/ACFitParticle.h"
+#include "ACDataFormats/ACGeneral/interface/ACFittedThreeProngDecay.h"
 #include "ACFitParticleConverter.h"
 
 class ACFittedThreeProngDecayConverter : public ACFittedThreeProngDecay {
 public:
     virtual std::string classname() const { return "ACFittedThreeProngDecayConverter"; }
     /// constructor from SelectedKinematicDecay to initiate a ACFittedThreeProngDecay
-    ACFittedThreeProngDecayConverter(const edm::Event& evt, const SelectedKinematicDecay & decay, MCTruthMatching * kinematicParticleMatching, std::vector<ACFitParticle *> * kinematicParticles,  PFTauMatching * pfTauMatching);
+    ACFittedThreeProngDecayConverter(const edm::Event& evt, const SelectedKinematicDecay & decay, MCTruthMatching * kinematicParticleMatching, std::vector<ACFitParticle *> * kinematicParticles,  PFTauConversionLog * conversionLogPFTau);
     virtual ~ACFittedThreeProngDecayConverter() {};
 
 };

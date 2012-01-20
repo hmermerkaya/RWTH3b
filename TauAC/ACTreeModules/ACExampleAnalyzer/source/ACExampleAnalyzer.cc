@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     ACExampleAnalyzer anlzr;
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
-    filenames.push_back("/user/perchalla/output/TauAC/CMSSW_4_4_0/debug/tauSMBrFromZ_100_7TeV.root");
+    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_0/TauACIntegration/tauSMBrFromZ_100_7TeV.root");
     loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
     loops.back()->loop(anlzr, -1);
 
@@ -32,15 +32,16 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
 
     printf("number of generator particles: %lu\n", event.generator().size());
     for (std::vector<ACGenParticle *>::const_iterator ip = event.generator().begin(); ip != event.generator().end(); ++ip) {
-        printf("\t gen particle name=%s, pdgID=%d, pt %f\n", (*ip)->name().c_str(), (*ip)->pdgId(), (*ip)->pt());
+        printf("\t gen particle name=%s, pdgID=%d, status=%i, pt %f", (*ip)->name().c_str(), (*ip)->pdgId(), (*ip)->status(), (*ip)->pt());
+        if ((*ip)->mother().isValid()) printf("\t mother: gen particle name=%s, pdgID %i, pt %f", (*ip)->mother()->name().c_str(), (*ip)->mother()->pdgId(), (*ip)->mother()->pt());
+        printf("\t daughters: %lu\n", (*ip)->daughters().size());
         if ((*ip)->genDecayRef().isValid()) printf("\t gen tau decay ref name=%s\n", (*ip)->genDecayRef()->name().c_str());
-        else printf("\t no gen tau decay ref\n");
     }
     printf("number of generator tau decays: %lu\n", event.genTauDecays().size());
     for (std::vector<ACGenDecay *>::const_iterator decay = event.genTauDecays().begin(); decay != event.genTauDecays().end(); ++decay) {
         printf("gen tau decay name=%s\n", (*decay)->name().c_str());
         if ((*decay)->particles()->size()>0) {
-            printf("gen decay stores %lu particles.\n", (*decay)->particles()->size());
+            printf("gen decay stores %lu particles. There are %i stable and %i unstable daughters.\n", (*decay)->particles()->size(), (*decay)->numberOfDaughters(), (*decay)->numberOfUnstableDaughters());
             for (std::vector<ACGenParticleRef>::const_iterator ip = (*decay)->particles()->begin(); ip != (*decay)->particles()->end(); ++ip) {
                 printf("\t pdgID %i, pt %f\n", (*ip)->pdgId(), (*ip)->pt());
             }
@@ -75,7 +76,11 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
     }
     printf("number of pf taus: %lu\n", event.pfTaus().size());
     for (std::vector<ACPFTau *>::const_iterator itau = event.pfTaus().begin(); itau != event.pfTaus().end(); ++itau) {
-        printf("\t tau pt: %f, charged hadr signal cands: %i\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands());
+        if ((*itau)->jetRef().isValid()) {
+            printf("\t tau pt: %f, charged hadr signal cands: %i, pi0 signal cands: %i, jetRef pt: %f\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands(), (*itau)->signalPiZeroCands(), (*itau)->jetRef()->pt());
+        } else {
+            printf("\t tau pt: %f, charged hadr signal cands: %i, pi0 signal cands: %i\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands(), (*itau)->signalPiZeroCands());        
+        }
     }
     printf("number of pileup information: %lu\n", event.pileup().size());
     for (std::vector<ACPileupInfo *>::const_iterator pileup = event.pileup().begin(); pileup != event.pileup().end(); ++pileup) {

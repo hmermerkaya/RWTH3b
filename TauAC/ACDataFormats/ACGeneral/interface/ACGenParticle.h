@@ -1,7 +1,7 @@
 #ifndef ACGenParticle_h
 #define ACGenParticle_h
 /**
- Base class to store particle information.
+ Base class to store generator-particle information. Mother/daughter relations are maintained.
 
  @author Lars Perchalla & Philip Sauerland
  @date 2011
@@ -18,13 +18,15 @@ class ACGenParticle : public ACCandidate {
 public:
     virtual std::string classname() const { return "ACGenParticle"; }
     ACGenParticle();
-    ACGenParticle(int status, std::string name, int pdgId, float charge, const TLorentzVector & p4, const TVector3 & vertex = TVector3(-1000,-1000,-1000), const ACGenDecayRef & genDecayRef = ACGenDecayRef());
+    ACGenParticle(int status, std::string name, int pdgId, float charge, const TLorentzVector & p4, const TVector3 & vertex = TVector3(-1000,-1000,-1000), const ACGenDecayRef & genDecayRef = ACGenDecayRef(), const ACGenParticleRef & mother = ACGenParticleRef(), const std::vector<ACGenParticleRef> & daughters = std::vector<ACGenParticleRef>());
     virtual ~ACGenParticle() {};
 
     int status() const;
     int pdgId() const;
     const TVector3 & vertex() const;
     const ACGenDecayRef & genDecayRef() const;
+    const ACGenParticleRef & mother() const;
+    const std::vector<ACGenParticleRef> & daughters() const;
 
     /// x coordinate of vertex position
     double vx() const;
@@ -53,6 +55,10 @@ protected:
     TVector3 vertex_;
     /// reference to the generator tau decay that contains this particle (invalid ref if not contained in any)
     ACGenDecayRef genDecayRef_;
+    /// reference to the mother particle (if any)
+    ACGenParticleRef mother_;
+    /// reference to daughter particles (if any)
+    std::vector<ACGenParticleRef> daughters_;
 };
 
 typedef ACGenParticle* pACGenParticle;

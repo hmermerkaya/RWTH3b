@@ -21,6 +21,10 @@ public:
 
     /// store the reference to the generator tau decay that contains the current particle
     void setGenDecayRef(const ACGenDecayRef & genDecayRef);
+    /// store the reference to the generated mother particle (if stored)
+    void setMother(const ACGenParticleRef & motherRef);
+    /// store the reference to a generated daughter particle (if stored)
+    void addDaughter(const ACGenParticleRef & daughterRef);
 };
 
 #endif

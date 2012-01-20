@@ -3,6 +3,7 @@
 ACEvent::ACEvent() {
     /// pointers to branch content have to be set to 0 to prevent from root crash
     eventInfo_ = 0;
+    eventWeight_ = 0;
     eventGlobals_ = 0;
     trigger_ = 0;
     offlinePV_ = 0;
@@ -24,6 +25,14 @@ const ACEventInfo * ACEvent::eventInfo() const {
 }
 ACEventInfo ** ACEvent::linkEventInfo() {
     return &eventInfo_;
+}
+
+const ACEventWeight * ACEvent::eventWeight() const {
+    checkContent(eventWeight_, "eventWeight");
+    return eventWeight_;
+}
+ACEventWeight ** ACEvent::linkEventWeight() {
+    return &eventWeight_;
 }
 
 const ACEventGlobals * ACEvent::eventGlobals() const {

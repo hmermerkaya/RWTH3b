@@ -104,6 +104,9 @@ void ACTreeReader::Init(TChain *chain) {
     status = fChain_->SetBranchAddress("ACEventInfo", event_.linkEventInfo());
     testBranch("ACEventInfo", status);
 
+    status = fChain_->SetBranchAddress("ACEventWeight", event_.linkEventWeight());
+    testBranch("ACEventWeight", status);
+    
     status = fChain_->SetBranchAddress("ACEventGlobals", event_.linkEventGlobals());
     testBranch("ACEventGlobals", status);
 

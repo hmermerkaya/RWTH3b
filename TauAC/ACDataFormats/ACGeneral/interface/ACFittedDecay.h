@@ -14,6 +14,7 @@
 
 class ACFittedDecay : public ACDecayBase<ACFitParticle> {
 public:
+    virtual std::string classname() const { return "ACFittedDecay"; }
     ACFittedDecay();
     ACFittedDecay(std::vector<ACFitParticleRef> particles, std::string name, int iterations, float csum, int maxiterations, float mincsum, float chi2, ACPFTauRef PFTauRef);
     virtual ~ACFittedDecay() {};

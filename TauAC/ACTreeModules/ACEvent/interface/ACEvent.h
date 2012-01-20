@@ -10,6 +10,7 @@
 #include "../../../ACDataFormats/ACGeneral/interface/ACDecay.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACEventGlobals.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACEventInfo.h"
+#include "../../../ACDataFormats/ACGeneral/interface/ACEventWeight.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACFitParticle.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACGenDecay.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACFittedDecay.h"
@@ -28,6 +29,10 @@ public:
     const ACEventInfo * eventInfo() const;
     /// set event info
     ACEventInfo ** linkEventInfo();
+
+    const ACEventWeight * eventWeight() const;
+    /// set event weight
+    ACEventWeight ** linkEventWeight();
     
     const ACEventGlobals * eventGlobals() const;
     /// set event globals
@@ -83,6 +88,8 @@ public:
 protected:
     /// branch content: basic event information
     ACEventInfo * eventInfo_;
+    /// branch content: event weight
+    ACEventWeight * eventWeight_;
     /// branch content: global event variables like MET
     ACEventGlobals * eventGlobals_;
     /// branch content: HLT trigger menu

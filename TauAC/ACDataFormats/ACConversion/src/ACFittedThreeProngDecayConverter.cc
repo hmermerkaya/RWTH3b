@@ -1,6 +1,6 @@
 #include "../interface/ACFittedThreeProngDecayConverter.h"
 
-ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Event& evt, const SelectedKinematicDecay & decay, MCTruthMatching * kinematicParticleMatching, std::vector<ACFitParticle *> * kinematicParticles, PFTauMatching * pfTauMatching) {
+ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Event& evt, const SelectedKinematicDecay & decay, MCTruthMatching * kinematicParticleMatching, std::vector<ACFitParticle *> * kinematicParticles, PFTauConversionLog * conversionLogPFTau) {
     if (!decay.topParticle()) {
         printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: ERROR! Invalid top particle! Cannot call the constructor.\n");
         return;
@@ -14,8 +14,9 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
 
     const ACPFTauRef * pfTauRef = 0;
     if (decay.PFTauRef().size() > 0) {
-        pfTauRef = pfTauMatching->getConverted(decay.PFTauRef().front());
+        pfTauRef = conversionLogPFTau->getConverted(decay.PFTauRef().front());
     }
+    // reference might be missing
     if (pfTauRef == 0) {
         PFTauRef_ = ACPFTauRef();
     } else {

@@ -7,7 +7,8 @@
  @date 2011
  */
 
-#include "../../ACGeneral/interface/ACPFTau.h"
+#include "ACDataFormats/ACGeneral/interface/ACPFTau.h"
+#include "ACFrameworkModules/Common/interface/ConversionLog.h"
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Utilities/interface/InputTag.h"
@@ -21,7 +22,7 @@ class ACPFTauConverter : public ACPFTau {
 public:
     virtual std::string classname() const { return "ACPFTauConverter"; }
     /// constructor from PFTau to initiate a ACPFTau
-    ACPFTauConverter(const edm::Event& evt, const reco::PFTauRef& tau, const std::vector<edm::InputTag> & tauDiscriminators);
+    ACPFTauConverter(const edm::Event& evt, const reco::PFTauRef& tau, const std::vector<edm::InputTag> & tauDiscriminators, const PFJetConversionLog * conversionLogPFJet);
     virtual ~ACPFTauConverter() {};
 };
 
