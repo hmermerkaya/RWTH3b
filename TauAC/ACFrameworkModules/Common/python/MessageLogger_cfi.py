@@ -29,7 +29,7 @@ if enableStatistics:
 #to enable debugging messages use:
 #scram b USER_CXXFLAGS="-DEDM_ML_DEBUG"
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-MessageLogger.debugModules = cms.untracked.vstring('HLTSelector','KinematicTauProducer','KinematicTauAdvancedProducer','InputTrackSelector','ThreeProngInputSelector','TauMotherProducer','GenSelector','GenJetSelector')#name of the modules which may deliver messages
+MessageLogger.debugModules = cms.untracked.vstring('HLTSelector','KinematicTauProducer','KinematicTauAdvancedProducer','InputTrackSelector','ThreeProngInputSelector','GenSelector','GenJetSelector')#name of the modules which may deliver messages
 #categories for all severity levels are defined in the log message: LogDebug("category")<<... One needs to append a category to listen to it
 MessageLogger.categories.append('HLTSelector')
 MessageLogger.categories.append('KinematicTauCreator')
@@ -37,7 +37,6 @@ MessageLogger.categories.append('ThreeProngInputSelector')
 MessageLogger.categories.append('InputTrackSelector')
 MessageLogger.categories.append('KinematicTauAdvancedProducer')
 MessageLogger.categories.append('ThreeProngTauCreator')
-MessageLogger.categories.append('TauMother')
 MessageLogger.categories.append('KinematicConstrainedVertexFitter')
 MessageLogger.categories.append('KinematicConstrainedVertexUpdator')
 MessageLogger.categories.append('ConstrainedTreeBuilder')
@@ -62,10 +61,8 @@ if useDEBUG:
       #DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),#disable DEBUG in general
       #HLTSelector = cms.untracked.PSet(limit = cms.untracked.int32(0)),#listen only to specific module(s)
 	)
-#tmp disable "TauMotherCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand"
 #print '-->FinalTreeFiller.MessageLogger_cfi::Warning: Some messages will be partially suppressed if like "ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid."'
 MessageLogger.cerr.ThreeProngTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(1))#reduce reoccurence (after limit is reached reports are shown exponentially)
-#MessageLogger.cerr.TauMother = cms.untracked.PSet(limit = cms.untracked.int32(1))
 MessageLogger.cerr.MCCollectionNotFound = cms.untracked.PSet(limit = cms.untracked.int32(1))
 
 if enableStatistics:
