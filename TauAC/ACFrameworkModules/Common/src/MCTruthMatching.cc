@@ -33,11 +33,11 @@ const ACGenParticleRef * MCTruthMatching::getMatching(const edm::Event& evt, con
         return 0;
     }
     if (ref->charge() != kinparticle->candRef()->charge()) {
-        printf("evt %d MCTruthMatching::getMatching: Bad charge! reco (charge, pt): %i, %f. gen (charge, pt, pdgID) %i, %f, %d.\n", evt.id().event(), kinparticle->candRef()->charge(), kinparticle->candRef()->pt(), ref->charge(), ref->pt(), ref->pdgId());
+        //printf("evt %d MCTruthMatching::getMatching: Bad charge! reco (charge, pt): %i, %f. gen (charge, pt, pdgID) %i, %f, %d.\n", evt.id().event(), kinparticle->candRef()->charge(), kinparticle->candRef()->pt(), ref->charge(), ref->pt(), ref->pdgId());
         return 0;
     }
     if (fabs(ref->pt() - kinparticle->candRef()->pt()) > .1*kinparticle->candRef()->pt()) {
-        printf("evt %d MCTruthMatching::getMatching: Bad momentum! reco (charge, pt): %i, %f. gen (charge, pt, pdgID) %i, %f, %d.\n", evt.id().event(), kinparticle->candRef()->charge(), kinparticle->candRef()->pt(), ref->charge(), ref->pt(), ref->pdgId());
+        //printf("evt %d MCTruthMatching::getMatching: Bad momentum! reco (charge, pt): %i, %f. gen (charge, pt, pdgID) %i, %f, %d.\n", evt.id().event(), kinparticle->candRef()->charge(), kinparticle->candRef()->pt(), ref->charge(), ref->pt(), ref->pdgId());
         return 0;
     }
     if (kinparticle->ambiguity() != 2) { //particles from ambiguity are already tested
