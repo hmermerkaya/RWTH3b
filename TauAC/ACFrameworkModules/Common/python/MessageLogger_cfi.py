@@ -10,7 +10,7 @@ from FWCore.MessageLogger.MessageLogger_cfi import *
 #print 'cout:',MessageLogger.cout
 #print 'cerr_stats',MessageLogger.cerr_stats
 
-useDEBUG = True
+useDEBUG = False
 enableStatistics = False
 
 severity = 'INFO'
