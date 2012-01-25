@@ -16,7 +16,7 @@ namespace {
 		
 		std::vector<reco::TrackRefVector> vvr2;
 		edm::Wrapper<std::vector<reco::TrackRefVector> > wvvr2;
-		edm::Wrapper<reco::PFTauRefVector> wvr3;
+		edm::Wrapper<reco::PFTauRef> wvr3;
         
         SelectedKinematicDecay d1;
         std::vector< SelectedKinematicDecay > vd1;
