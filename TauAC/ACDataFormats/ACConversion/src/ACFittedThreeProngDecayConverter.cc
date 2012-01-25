@@ -1,21 +1,15 @@
 #include "../interface/ACFittedThreeProngDecayConverter.h"
 
 ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Event& evt, const SelectedKinematicDecay & decay, MCTruthMatching * kinematicParticleMatching, std::vector<ACFitParticle *> * kinematicParticles, PFTauConversionLog * conversionLogPFTau) {
-    if (!decay.topParticle()) {
-        printf("ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter: ERROR! Invalid top particle! Cannot call the constructor.\n");
-        return;
-    }
-    iterations_ = decay.topParticle()->iterations();
-    csum_ = decay.topParticle()->csum();
-    maxiterations_ = decay.topParticle()->maxiterations();
-    mincsum_ = decay.topParticle()->mincsum();
-    chi2_ = decay.topParticle()->chi2();
-    constraints_ = decay.topParticle()->ndf();
+    iterations_ = decay.iterations();
+    csum_ = decay.csum();
+    maxiterations_ = decay.maxiterations();
+    mincsum_ = decay.mincsum();
+    chi2_ = decay.chi2();
+    constraints_ = decay.constraints();
+    ndf_ = decay.ndf();
 
-    const ACPFTauRef * pfTauRef = 0;
-    if (decay.PFTauRef().size() > 0) {
-        pfTauRef = conversionLogPFTau->getConverted(decay.PFTauRef().front());
-    }
+    const ACPFTauRef * pfTauRef = conversionLogPFTau->getConverted(decay.PFTauRef());
     // reference might be missing
     if (pfTauRef == 0) {
         PFTauRef_ = ACPFTauRef();
@@ -23,16 +17,15 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
         PFTauRef_ = *pfTauRef;
     }
 
-    std::vector<const SelectedKinematicParticle *> decayparticles;
-    decay.particles(decayparticles);
+    SelectedKinematicParticleCollection decayparticles = decay.particles();
     if (decayparticles.size() > 0) {
 		bool motherMissmatch = false;
 		const ACGenDecayRef * matchedGenDecay = 0;
-        for (std::vector<const SelectedKinematicParticle *>::const_iterator particle=decayparticles.begin(); particle!=decayparticles.end(); ++particle) {
+        for (SelectedKinematicParticleCollection::const_iterator particle=decayparticles.begin(); particle!=decayparticles.end(); ++particle) {
             const ACGenParticleRef * genRef = 0;
             /// try to match all charged daughters of a tau decay
-            if ((*particle)->charge() != 0 && particle != decayparticles.begin()) {
-                genRef = kinematicParticleMatching->getMatching(evt, *particle);
+            if (particle->charge() != 0 && particle != decayparticles.begin()) {
+                genRef = kinematicParticleMatching->getMatching(evt, &*particle);
                 if (!genRef) matchedGenDecay = 0;
                 else {
                     if (!motherMissmatch) {
@@ -52,7 +45,7 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
                     }
                 }
             }
-            ACFitParticleConverter tmp(**particle, (*(decayparticles.begin()))->charge(), genRef);
+            ACFitParticleConverter tmp(*particle, decayparticles.begin()->charge(), genRef);
             ACFitParticle * tmpP = new ACFitParticle();
             *tmpP = tmp;
             /// store particles of a kinematic fit into a branch
@@ -77,4 +70,10 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
             name_ = std::string("Tau+");
         }
     }
+    
+    /// store quality discriminators that cannot directly be calculated from stored members only (e.g. conversion into reco::Vertex format would be needed). FIXME: replace this by  a dynamic calculation (depending on the decay mode)
+    vtxSignPVRotSV_ = decay.vtxSignPVRotSV();
+    vtxSignPVRotPVRed_ = decay.vtxSignPVRotPVRed();
+    a1Mass_ = decay.a1Mass();
+    energyTFraction_ = decay.energyTFraction();
 }
