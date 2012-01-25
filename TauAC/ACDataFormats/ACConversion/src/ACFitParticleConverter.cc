@@ -16,6 +16,8 @@ ACFitParticleConverter::ACFitParticleConverter(const SelectedKinematicParticle &
 
     initialP4_.SetVectM(TVector3(selPart.input_parameters()[3],selPart.input_parameters()[4],selPart.input_parameters()[5]), selPart.input_parameters()[6]);
     initialVertex_.SetXYZ(selPart.input_parameters()[0],selPart.input_parameters()[1],selPart.input_parameters()[2]);
+    initialMatrix_.ResizeTo(TMatrixDSym(7));
+    initialMatrix_ = selPart.input_matrix();
 }
 
 int ACFitParticleConverter::getPdgId(const std::string name, const int charge) const {

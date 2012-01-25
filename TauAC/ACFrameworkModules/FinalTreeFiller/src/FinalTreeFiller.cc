@@ -189,7 +189,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     
     /// calculate and store event weights
     double eventWeight = 1.0;
-    if (eventInfo_->type() == "MC") {
+    if (eventInfo_->type() == "MC" && lumiWeights_ != 0) {
         const edm::EventBase* iEventB = dynamic_cast<const edm::EventBase*>(&evt);
         eventWeight = lumiWeights_->weight3D(*iEventB);
     }
