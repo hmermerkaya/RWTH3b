@@ -11,7 +11,6 @@
  @date 2009
  */
 
-
 // system include files
 #include <memory>
 #include <fstream>

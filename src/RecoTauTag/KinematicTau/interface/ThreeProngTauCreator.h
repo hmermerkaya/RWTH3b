@@ -4,18 +4,12 @@
 // Class:      ThreeProngTauCreator
 // 
 /**
- * This class creates a kinemtic tau from the 3prong decay suggestion.
- * Part of the KinematicTau package.
- *
- * @author Lars Perchalla, Philip Sauerland
- * @date 2009
+ This class creates a kinemtic tau from the 3prong decay suggestion.
+ Part of the KinematicTau package.
+
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
  */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.12 2010/08/13 14:22:54 perchall Exp $
-//
-//
 
 #include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"

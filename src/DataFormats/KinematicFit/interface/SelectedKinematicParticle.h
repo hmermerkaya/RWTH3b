@@ -6,17 +6,11 @@
 // Class:      SelectedKinematicParticle
 // 
 /**
- * This class stores the results from kinematically refitted particles.
- * @author Lars Perchalla, Philip Sauerland
- * @date 2009
+ This class stores the results from kinematically refitted particles.
+
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
  */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Dec  17 12:27:34 CEST 2009
-// $Id: SelectedKinematicParticle.h,v 1.8 2010/08/13 14:47:22 perchall Exp $
-//
-
-
 
 #include <memory>
 #include <algorithm>

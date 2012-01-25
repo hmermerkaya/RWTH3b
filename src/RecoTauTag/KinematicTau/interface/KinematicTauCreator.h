@@ -4,22 +4,12 @@
 // Class:      KinematicTauCreator
 // 
 /**
- * This is a pure abstract class providing the interface to the KinematicFit. Use derived classes e.g. ThreeProngTauCreator to implement the create() function.
- * Part of the KinematicTau package.
- *
- * @author Lars Perchalla, Philip Sauerland
- * @date 2010
+ This is a pure abstract class providing the interface to the KinematicFit. Use derived classes e.g. ThreeProngTauCreator to implement the create() function.
+ Part of the KinematicTau package.
+
+ @author Lars Perchalla, Philip Sauerland
+ @date 2010
  */
-//
-// $Id: KinematicTauCreator.h,v 1.19 2010/11/25 09:21:27 perchall Exp $
-//
-//
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Tue Jan 12 15:13:30 CET 2010
-// $Id: KinematicTauCreator.h,v 1.19 2010/11/25 09:21:27 perchall Exp $
-//
-//
 
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
