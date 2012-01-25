@@ -73,6 +73,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	
 	double theta0;
 	TVector3 tauFlghtDir;
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: initial PV ("<<primVtx.x()<<","<<primVtx.y()<<","<<primVtx.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-primVtx.position().y())/(secVtx.position().x()-primVtx.position().x()));
 	double significance = vtxC.rotatePV(primVtx, secVtx, theta0, tauFlghtDir);//rotation is forced to reach thetaMax
 	if(significance > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
 	
@@ -89,6 +90,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: thetaGJ = "<<theta0<<" but replaced by thetaMax = "<<thetaMax;
 		theta0 = thetaMax;
 	}
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<primVtx.x()<<","<<primVtx.y()<<","<<primVtx.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-primVtx.position().y())/(secVtx.position().x()-primVtx.position().x()))<<", theta "<<theta0;
 
 	std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),ThreeProngTauCreator::tauMass,theta0);//use a pair to prepare for ambiguities
 	LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: tau solutions = "<<tauSolutions.first<<", "<<tauSolutions.second;
@@ -138,8 +140,10 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	delete pointing_c;
 	delete tauMass_c;
 	
-	if(kinTree_->isValid()) return true;
-	else{
+	if (kinTree_->isValid()) {
+        LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
+        return true;
+    } else {
 //		edm::LogInfo("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
 		edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
 		return false;
@@ -258,27 +262,37 @@ std::pair<double,double> ThreeProngTauCreator::getTauMomentumMagnitudes(double m
 	double tauMomentumMagnitude1 = (numerator - root) / denominator,
 	tauMomentumMagnitude2 = (numerator + root)	/ denominator;
 	
-	if(!(tauMomentumMagnitude1>0)) tauMomentumMagnitude1 = numerator / denominator; //catch 'nan' and replace by pseudo mean value
-	if(!(tauMomentumMagnitude2>0)) tauMomentumMagnitude2 = tauMomentumMagnitude1;
-	
-	if(!(tauMomentumMagnitude1>0)) tauMomentumMagnitude1 = 0; //catch 'nan'
-	if(!(tauMomentumMagnitude2>0)) tauMomentumMagnitude2 = 0;
+	if(!(tauMomentumMagnitude1>0.)) {
+        LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Bad tau magnitude1 of "<<tauMomentumMagnitude1<<" replaced by "<<numerator / denominator;        
+        tauMomentumMagnitude1 = numerator / denominator; //catch negatives and 'nan' and replace by pseudo mean value
+    }
+	if(!(tauMomentumMagnitude2>0.)) {
+        LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Bad tau magnitude2 of "<<tauMomentumMagnitude2<<" replaced by "<<numerator / denominator;        
+        tauMomentumMagnitude2 = numerator / denominator; //catch negatives and 'nan' and replace by pseudo mean value
+    }
+
+	if(!(tauMomentumMagnitude1>0.)) {
+        LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Still bad tau magnitude1 of "<<tauMomentumMagnitude1<<" replaced by "<<0.;        
+        tauMomentumMagnitude1 = 0.; //catch negatives and 'nan' and replace by pseudo mean value
+    }
+	if(!(tauMomentumMagnitude2>0.)) {
+        LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Still bad tau magnitude2 of "<<tauMomentumMagnitude2<<" replaced by "<<0.;        
+        tauMomentumMagnitude2 = 0.; //catch negatives and 'nan' and replace by pseudo mean value
+    }
 	
 	return std::make_pair(tauMomentumMagnitude1,tauMomentumMagnitude2);
 }
 RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx){
-	GlobalVector nuImpGuess(1,1,1);
-	
 	TLorentzVector nuGuess = tauGuess-a1;
-	LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::unknownNu: nuGuess (vx, vy, vz, px,py,pz,m) "<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<","<<nuGuess.Px()<<","<<nuGuess.Py()<<","<<nuGuess.Pz()<<","<<nuGuess.M();
-	if(tauGuess.P()==0)  nuGuess.SetXYZM(1,1,1,0);
-	nuImpGuess = GlobalVector(nuGuess.X(),nuGuess.Y(),nuGuess.Z());
-	return virtualKinematicParticle(secVtx, nuImpGuess);
+	LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::unknownNu: nuGuess (vx, vy, vz, px,py,pz,m) "<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<","<<nuGuess.Px()<<","<<nuGuess.Py()<<","<<nuGuess.Pz()<<","<<nuGuess.M()<<", phi: "<<nuGuess.Phi();
+	if(tauGuess.P()==0.)  nuGuess.SetXYZM(1,1,1,0);
+	GlobalVector nuMomentumGuess(nuGuess.X(),nuGuess.Y(),nuGuess.Z());
+	return virtualKinematicParticle(secVtx, nuMomentumGuess);
 }
-RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess){
+RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector momentumGuess){
 	VirtualKinematicParticleFactory factory;
 	//(x,y,z,p_x,p_y,p_z,m)
-	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),impulsGuess.x(),impulsGuess.y(),impulsGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
+	const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),momentumGuess.x(),momentumGuess.y(),momentumGuess.z(),pow(10.,-10.)));//Use MET as initial guess for pt?
 	ROOT::Math::SVector<double,28> svector28;
 	for(unsigned int i=1; i!=22; i++) svector28(i-1) = 0.0;
 	for(unsigned int i=22; i!=28; i++) svector28(i-1) = 0.0;//correlation between mass and momentum/vertex
@@ -292,18 +306,18 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(Trans
     svector28[ 4] = vtxGuess.positionError().czy();
     svector28[ 5] = vtxGuess.positionError().czz();
     
-    if (std::abs(impulsGuess.x()) >= 5.0) {
-        svector28[ 9] = pow(impulsGuess.x(), 2); //assume an error of 100% of the neutrino momentum component
+    if (std::abs(momentumGuess.x()) >= 5.0) {
+        svector28[ 9] = pow(momentumGuess.x(), 2); //assume an error of 100% of the neutrino momentum component
     } else {
         svector28[ 9] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
     }
-    if (std::abs(impulsGuess.y()) >= 5.0) {
-        svector28[14] = pow(impulsGuess.y(), 2); //assume an error of 100% of the neutrino momentum component
+    if (std::abs(momentumGuess.y()) >= 5.0) {
+        svector28[14] = pow(momentumGuess.y(), 2); //assume an error of 100% of the neutrino momentum component
     } else {
         svector28[14] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
     }
-    if (std::abs(impulsGuess.z()) >= 5.0) {
-        svector28[20] = pow(impulsGuess.z(), 2); //assume an error of 100% of the neutrino momentum component
+    if (std::abs(momentumGuess.z()) >= 5.0) {
+        svector28[20] = pow(momentumGuess.z(), 2); //assume an error of 100% of the neutrino momentum component
     } else {
         svector28[20] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
     }
