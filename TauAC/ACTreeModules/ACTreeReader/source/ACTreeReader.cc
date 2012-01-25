@@ -25,16 +25,18 @@ fileNames_(fileNames)
 //{
 //}
 
+bool ACTreeReader::verbosity_ = false; 
+
 void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
     if (fChain_ == 0) return;
     Long64_t nentries = fChain_->GetEntriesFast();
     if (maxEvents!=-1 && maxEvents<nentries) {
-        printf("ACTreeReader::Loop: analyze only %d events of %d events.\n", (int)maxEvents, (int)nentries);
+        if (verbosity_) printf("ACTreeReader::Loop: analyze only %d events of %d events.\n", (int)maxEvents, (int)nentries);
         nentries = maxEvents;
     } else {
-        printf("ACTreeReader::Loop: analyze %d events.\n", (int)nentries);
+        if (verbosity_) printf("ACTreeReader::Loop: analyze %d events.\n", (int)nentries);
     }
-
+        
     Long64_t nbytes = 0, nb = 0;
     int run = -1;
     int lumi = -1;
@@ -60,6 +62,7 @@ void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
         int ilumi = event_.eventInfo()->lumiID();
 
         if (jentry == 0) {
+            if (verbosity_) printTreeStatistics();
             analyzer.beginJob();
             run = irun;
             analyzer.beginRun();
@@ -174,4 +177,17 @@ bool ACTreeReader::testBranch(std::string branchname, int status) const {
         return false;
     }
     return true;
+}
+void ACTreeReader::printTreeStatistics() {
+    float totBytes = fChain_->GetTree()->GetTotBytes();
+    float zipBytes = fChain_->GetTree()->GetZipBytes();
+    printf("ACTreeReader::printTreeStatistics:\n total size of tree '%s' (raw/compressed) in MB: %.1f / %.1f\n", fChain_->GetTree()->GetName(), totBytes/1024.0/1024.0, zipBytes/1024.0/1024.0);
+    unsigned int numberOfBranches = fChain_->GetTree()->GetListOfBranches()->GetEntriesFast();
+    
+    for (unsigned int i = 0; i < numberOfBranches; i++) {
+        TBranch * thisBranch = (TBranch*)(fChain_->GetTree()->GetListOfBranches()->At(i));
+        float thisTotBytes = thisBranch->GetTotBytes();
+        float thisZipBytes = thisBranch->GetZipBytes();
+        printf("  branch '%s': size (raw/compressed) in MB: %.1f / %.1f --> %.1f%% / %.1f%%\n", thisBranch->GetName(), thisTotBytes/1024.0/1024.0, thisZipBytes/1024.0/1024.0, thisTotBytes/totBytes*100.0, thisZipBytes/zipBytes*100.0);
+    }
 }

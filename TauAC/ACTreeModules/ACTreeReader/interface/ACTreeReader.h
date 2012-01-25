@@ -35,7 +35,10 @@ public:
     void loop(ACAnalyzer & analyzer, int maxEvents = -1); // WARNING!!! analyzer not const!!!
     /// number of entries in the chain
     int nentries() { return fChain_->GetEntriesFast(); }
-
+    
+    inline static bool GetVerbosity() { return verbosity_; }
+    inline static void SetVerbosity(bool verbosity) { verbosity_ = verbosity; }
+    
 private:
     /// list of filenames expected to contain the tree
     std::vector<std::string> fileNames_;
@@ -47,11 +50,16 @@ private:
     TChain *fChain_; //! pointer to the analyzed TChain
     Int_t fCurrent_; //! current Tree number in a TChain
 
+    ///static verbosity switch
+    static bool verbosity_;
+    
     void Init(TChain *chain);
     Long64_t LoadTree(Long64_t entry);
     Bool_t Notify();
     /// test the validity of the branch
     bool testBranch(std::string branchname, int status) const;
+    /// print storage information
+    void printTreeStatistics();
 };
 
 #endif
