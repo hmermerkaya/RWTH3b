@@ -33,6 +33,19 @@ public:
 	/// project error in direction of axis
     double projectedError(const TVector3 & axis, const TMatrixDSym & error) const;
     
+    /// position component
+    const double vx() const;
+    /// position component
+    const double vy() const;
+    /// position component
+    const double vz() const;
+    /// corresponding diagonal element of the covariance matrix
+    double svx() const;
+    /// corresponding diagonal element of the covariance matrix
+    double svy() const;
+    /// corresponding diagonal element of the covariance matrix
+    double svz() const;
+    
     ClassDef(ACVertex,1);
 
 protected:

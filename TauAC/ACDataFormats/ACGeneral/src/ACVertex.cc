@@ -48,3 +48,11 @@ double ACVertex::projectedError(const TVector3 & axis, const TMatrixDSym & error
 	
 	return sqrt(similarity);
 }
+
+// some shortcuts:
+const double ACVertex::vx() const { return position().X(); }
+const double ACVertex::vy() const { return position().Y(); }
+const double ACVertex::vz() const { return position().Z(); }
+double ACVertex::svx() const { if (error()(0,0)<.0) return -1.0; return sqrt(error()(0,0)); }
+double ACVertex::svy() const { if (error()(1,1)<.0) return -1.0; return sqrt(error()(1,1)); }
+double ACVertex::svz() const { if (error()(2,2)<.0) return -1.0; return sqrt(error()(2,2)); }
