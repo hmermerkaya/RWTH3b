@@ -135,7 +135,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(const KinematicTauC
 	
 	//WARNING!!!
 	//from now one we assume a tau decay into three pions and neutrino
-	//other channels need their one discriminators
+	//other channels need their own discriminators
 	//!!!
 	if(chargedDaughters.size()!=3 || neutralDaughters.size()!=1){
 		edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::dicriminatorByKinematicFitQuality:WARNING!!! KinematicTauProducer assumes a tau decay into three pions and neutrino but recieved "<<chargedDaughters.size()<<" charged and "<<neutralDaughters.size()<<" neutral daughters!";
