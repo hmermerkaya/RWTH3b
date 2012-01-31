@@ -5,7 +5,7 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     genSignalRef = cms.InputTag('GenSelector','genSignalDecayRef'), #same length/content as genSignalDecay, but originals not copied objects
     chargedTauDaughterMatchMap = cms.InputTag("chargedTauDaughterTruth"),
 	primVtx = cms.InputTag('offlinePrimaryVertices'), #this is the PV from the standard reco
-	reducedPrimVtx = cms.InputTag('ThreeProngInputSelector','primVtx'), #this is the vertex obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!!)
+	reducedPrimVtx = cms.InputTag('ThreeProngInputSelectorStep2','primVtx'), #this is the vertex obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!!)
     pileupInfo = cms.InputTag('addPileupInfo'),
     triggerResults = cms.InputTag('TriggerResults','','HLT'),
     muons = cms.InputTag('muons'),
@@ -28,7 +28,7 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
         cms.InputTag('hpsPFTauDiscriminationByVLooseIsolation'),
     ),
     #to be done: replace this string by a scan of all executed modules and test whether it is a filter or not
-	flags = cms.vstring("GenSelector","PrimVtxSelector","InputTrackSelector","ThreeProngInputSelector","KinematicTauProducer"),
+	flags = cms.vstring("GenSelector","PrimVtxSelector","InputTrackSelector","ThreeProngInputSelectorStep1","ThreeProngInputSelectorStep2","KinematicTauProducer"),
     pileUpDistributionFileMC = cms.untracked.string(""),
     pileUpDistributionHistMC = cms.untracked.string("pileup"),
     pileUpDistributionFileData = cms.untracked.string(""),
