@@ -51,7 +51,7 @@ private:
 	bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
 	std::pair<double,double> getTauMomentumMagnitudes(double ma1,double pa1,double M,double theta);
 	RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx);
-	RefCountedKinematicParticle virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess);	
+	RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
 	template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
 	
 	template <typename T> double getInvariantMass(const T& tracks, const double mass = ThreeProngTauCreator::piMass){ //if second argument empty default pion is supposed
