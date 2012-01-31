@@ -51,20 +51,20 @@ bool PrimVtxSelector::checkPrimVtx(reco::VertexCollection & primaryVertex){
 	iEvent_->getByLabel( primVtx_, primVtxs);
 	
 	std::vector<const reco::Vertex*> vtx;
-	LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<", lum "<<iEvent_->id().luminosityBlock()<<", run "<<iEvent_->id().run()<<" InputTrackSelector::checkPrimVtx: no. of primVtx = "<<primVtxs->size();
+	LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<", lum "<<iEvent_->id().luminosityBlock()<<", run "<<iEvent_->id().run()<<" PrimVtxSelector::checkPrimVtx: no. of primVtx = "<<primVtxs->size();
 	for(reco::VertexCollection::const_iterator v = primVtxs->begin(); v != primVtxs->end(); ++v){		
 		if(v->tracksSize() >= minTracks_ && v->normalizedChi2() <= maxChi2ndf_) vtx.push_back(&*v);
-		if(primVtxs->size() > 0) LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::checkPrimVtx: #trks "<<v->tracksSize()<<", chi2 "<<v->chi2()<<", ndf "<<v->ndof()<<", ("<<v->x()<<", "<<v->y()<<", "<<v->z()<<")+-("<<v->xError()<<", "<<v->yError()<<", "<<v->zError()<<")";
+		if(primVtxs->size() > 0) LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<" PrimVtxSelector::checkPrimVtx: #trks "<<v->tracksSize()<<", chi2 "<<v->chi2()<<", ndf "<<v->ndof()<<", ("<<v->x()<<", "<<v->y()<<", "<<v->z()<<")+-("<<v->xError()<<", "<<v->yError()<<", "<<v->zError()<<")";
 	}
 	
 	if(vtx.size()<1){
-		LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::checkPrimVtx: No valid primary vertex found. Skip event.";
+		LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<" PrimVtxSelector::checkPrimVtx: No valid primary vertex found. Skip event.";
 		return false;
 	}
-	if(vtx.size()>1){
-		sort(vtx.begin(), vtx.end(), cmpNormalizedChi2<const reco::Vertex*>);
-		LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::checkPrimVtx: More than one ("<<vtx.size()<<") primary vertex found. Select best chi2ndf of "<<vtx.at(0)->normalizedChi2()<<".";
-	}
+//	if(vtx.size()>1){
+//		sort(vtx.begin(), vtx.end(), cmpNormalizedChi2<const reco::Vertex*>);
+//		LogTrace("PrimVtxSelector")<<"evt "<<iEvent_->id().event()<<" PrimVtxSelector::checkPrimVtx: More than one ("<<vtx.size()<<") primary vertex found. Select best chi2ndf of "<<vtx.at(0)->normalizedChi2()<<".";
+//	}
 	cntFound++;
 	primaryVertex.push_back(*(vtx.front()));
 	return true;
