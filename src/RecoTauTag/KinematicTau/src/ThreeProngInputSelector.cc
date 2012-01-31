@@ -167,6 +167,7 @@ bool ThreeProngInputSelector::createNewPrimVtx(reco::VertexCollection & primaryV
     edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
     iEvent_->getByLabel(beamSpotLabel,recoBeamSpotHandle);
     if (recoBeamSpotHandle.isValid()) {
+        LogTrace("ThreeProngInputSelector") << "ThreeProngInputSelector::createNewPrimVtx: beam spot at "<<recoBeamSpotHandle->x(0)<<","<<recoBeamSpotHandle->y(0);
         vertexBeamSpot = *recoBeamSpotHandle;
     }else{
         edm::LogError("ThreeProngInputSelector") << "ThreeProngInputSelector::createNewPrimVtx: No beam spot available from EventSetup";
@@ -338,10 +339,7 @@ bool ThreeProngInputSelector::choose3bestTracks(std::vector<reco::TrackRefVector
     
 	return true;
 }
-bool ThreeProngInputSelector::removeDuplicateTriplets(const std::vector<reco::TrackRef> & duplicateTracks, 
-													  std::vector<std::vector<std::vector<reco::TrackRef> > > & threeProngCombis, 
-													  std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator & candidates, 
-													  std::vector<std::vector<reco::TrackRef> > ::iterator & triplets) {
+bool ThreeProngInputSelector::removeDuplicateTriplets(const std::vector<reco::TrackRef> & duplicateTracks, std::vector<std::vector<std::vector<reco::TrackRef> > > & threeProngCombis, std::vector<std::vector<std::vector<reco::TrackRef> > >::iterator & candidates, std::vector<std::vector<reco::TrackRef> > ::iterator & triplets) {
 	//check on all already tested combis if all three tracks of this duplicate triplet belong to one COMMON other triplet
 	//so that the whole triplet is equal
 	//do not delete triplet if tracks belong to different other combis!
