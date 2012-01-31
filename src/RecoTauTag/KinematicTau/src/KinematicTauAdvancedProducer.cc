@@ -73,7 +73,7 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
 	edm::Handle<reco::PFTauRefVector> usedTaus;
 	iEvent_->getByLabel(selectedTauCandidatesTag_, usedTaus);
 	if(inputCollection->size() != usedTaus->size()){
-        edm::LogError("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.label()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.label()<<"("<<usedTaus->size()<<")";
+        edm::LogError("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select: Bad input collections. Size mismatch between "<<inputCollectionTag_.encode()<<"("<<inputCollection->size()<<") and "<<selectedTauCandidatesTag_.encode()<<"("<<usedTaus->size()<<")";
 		return false;
 	}
 	unsigned int index = 0;
