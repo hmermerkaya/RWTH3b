@@ -22,6 +22,7 @@ public:
     float charge() const;
     const std::string & name() const;
 
+    /// momentum magnitude
     double p() const;
     /// energy
     double energy() const;
