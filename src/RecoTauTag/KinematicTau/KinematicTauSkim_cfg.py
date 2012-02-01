@@ -52,7 +52,7 @@ process.maxEvents = cms.untracked.PSet(
 
 process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
-process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cfi")
+process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cff")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
 
