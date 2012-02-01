@@ -7,13 +7,6 @@
  
  Description: Skim events containing at least one kinematic tau which passed the required quality discriminator
  */
-//
-// Original Author:  Lars Perchalla
-//         Created:  Wed Nov 24 10:27:57 CET 2010
-// $Id: KinematicTauSkim.h,v 1.1 2010/11/25 09:28:38 perchall Exp $
-//
-//
-
 
 #include <memory>
 

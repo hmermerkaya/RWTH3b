@@ -12,7 +12,7 @@ KinematicTauBasicProducer = cms.EDFilter("KinematicTauProducer",#creates reco::C
 		maxReducedChiSq = cms.double(225.),
 		minChiSqImprovement = cms.double(50.)
 	),
-	primVtx = cms.InputTag("ThreeProngInputSelector","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack, use the reduced vertex from ThreeProngInputSelector here
-	selectedTauCandidates = cms.InputTag("ThreeProngInputSelector","InputTauRefs"),
-	inputTracks = cms.InputTag("ThreeProngInputSelector","InputTracks")#selected tracks from PFTaus (daughters of selectedTauCandidates)
+	primVtx = cms.InputTag("ThreeProngInputSelectorStep2","primVtx"),#selected offlinePrimaryVerticesFromCTFTrack, use the reduced vertex from ThreeProngInputSelector here
+	selectedTauCandidates = cms.InputTag("ThreeProngInputSelectorStep2","InputTauRefs"),
+	inputTracks = cms.InputTag("ThreeProngInputSelectorStep2","InputTracks")#selected tracks from PFTaus (daughters of selectedTauCandidates)
 )

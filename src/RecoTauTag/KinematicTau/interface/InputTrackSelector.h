@@ -4,22 +4,15 @@
 // Class:      InputTrackSelector
 // 
 /**
- * The InputTrackSelector selects tracks from within a PFTaus signal cone and stores combinations of these according to the required number of tracks defined by the user.
- *
- * This framework module returns a boolean whether the minimum number of taus was found with enough daughters.
- * For convenience a reference to the taus is also stored in case of success.
- * Part of the KinematicTau package.
- *
- * @author Lars Perchalla, Philip Sauerland
- * @date 2009
+ The InputTrackSelector selects tracks from within a PFTaus signal cone and stores combinations of these according to the required number of tracks defined by the user.
+ 
+ This framework module returns a boolean whether the minimum number of taus was found with enough daughters.
+ For convenience a reference to the taus is also stored in case of success.
+ Part of the KinematicTau package.
+ 
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
  */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Dec  15 19:21:54 CEST 2009
-// $Id: InputTrackSelector.h,v 1.10 2010/08/13 12:29:00 perchall Exp $
-//
-//
-
 
 // system include files
 #include <memory>
