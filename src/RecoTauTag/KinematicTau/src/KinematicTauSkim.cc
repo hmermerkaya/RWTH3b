@@ -42,8 +42,8 @@ bool KinematicTauSkim::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if(passed) validTaus++;
 	}
 	
-	if(validTaus > minTau_){
-		cntFound_++;//found at least 1 refit tau
+	if(validTaus >= minTau_){
+		cntFound_++;//found at least minTau_ refitted tau(s)
 		filterValue = true;
 	}
 	

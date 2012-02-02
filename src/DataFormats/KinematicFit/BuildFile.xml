@@ -4,6 +4,7 @@
 <use   name="DataFormats/TrackReco"/>
 <use   name="DataFormats/TauReco"/>
 <use   name="RecoVertex/KinematicFitPrimitives"/>
+<use   name="CommonTools/Statistics"/>
 <export>
   <lib   name="1"/>
 </export>

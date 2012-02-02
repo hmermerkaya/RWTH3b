@@ -4,19 +4,13 @@
 // Class:      VertexRotation
 // 
 /**
- * This class should only be called from within the KinematicTau package.
- * It tries to rotate the vertex link to fit into the kinematically allowed bounds of the GJ angle.
- * Part of the KinematicTau package.
- *
- * @author Lars Perchalla, Philip Sauerland
- * @date 2009
+ This class should only be called from within the KinematicTau package.
+ It tries to rotate the vertex link to fit into the kinematically allowed bounds of the GJ angle.
+ Part of the KinematicTau package.
+
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
  */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: VertexRotation.h,v 1.11 2010/08/13 12:29:01 perchall Exp $
-//
-//
 
 // system include files
 #include <memory>

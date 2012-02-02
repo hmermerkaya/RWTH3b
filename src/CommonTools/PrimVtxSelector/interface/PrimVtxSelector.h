@@ -10,13 +10,6 @@
  Implementation:
      <Notes on implementation>
 */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Nov 12 14:10:26 CET 2009
-// $Id: PrimVtxSelector.h,v 1.5 2010/04/21 14:23:35 perchall Exp $
-//
-//
-
 
 // system include files
 #include <memory>

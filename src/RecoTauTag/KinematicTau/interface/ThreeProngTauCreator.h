@@ -4,18 +4,12 @@
 // Class:      ThreeProngTauCreator
 // 
 /**
- * This class creates a kinemtic tau from the 3prong decay suggestion.
- * Part of the KinematicTau package.
- *
- * @author Lars Perchalla, Philip Sauerland
- * @date 2009
+ This class creates a kinemtic tau from the 3prong decay suggestion.
+ Part of the KinematicTau package.
+
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
  */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Dec  16 11:12:54 CEST 2009
-// $Id: ThreeProngTauCreator.h,v 1.12 2010/08/13 14:22:54 perchall Exp $
-//
-//
 
 #include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
@@ -57,7 +51,7 @@ private:
 	bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
 	std::pair<double,double> getTauMomentumMagnitudes(double ma1,double pa1,double M,double theta);
 	RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx);
-	RefCountedKinematicParticle virtualKinematicParticle(TransientVertex & vtxGuess, GlobalVector impulsGuess);	
+	RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
 	template <typename T> std::vector<std::vector<T> > permuteCombinations(const std::vector<T> &vect);
 	
 	template <typename T> double getInvariantMass(const T& tracks, const double mass = ThreeProngTauCreator::piMass){ //if second argument empty default pion is supposed
