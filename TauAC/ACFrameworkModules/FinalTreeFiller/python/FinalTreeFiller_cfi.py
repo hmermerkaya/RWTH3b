@@ -3,9 +3,10 @@ import FWCore.ParameterSet.Config as cms
 FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     genSignal = cms.InputTag('GenSelector','genSignalDecay'),
     genSignalRef = cms.InputTag('GenSelector','genSignalDecayRef'), #same length/content as genSignalDecay, but originals not copied objects
-    chargedTauDaughterMatchMap = cms.InputTag("chargedTauDaughterTruth"),
+    chargedTauDaughterMatchMap = cms.InputTag('chargedTauDaughterTruth'),
 	primVtx = cms.InputTag('offlinePrimaryVertices'), #this is the PV from the standard reco
-	reducedPrimVtx = cms.InputTag('ThreeProngInputSelectorStep2','primVtx'), #this is the vertex obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!!)
+#	reducedPrimVtx = cms.InputTag('ThreeProngInputSelectorStep2','primVtx'), #this is the vertex obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!!)
+	reducedPrimVtx = cms.InputTag('reducedPrimaryVertices'), #this is the FULL vertex collection obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!! possibly not all of them entered the fit)
     pileupInfo = cms.InputTag('addPileupInfo'),
     triggerResults = cms.InputTag('TriggerResults','','HLT'),
     muons = cms.InputTag('muons'),
@@ -13,7 +14,7 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     kinematicTaus = cms.InputTag('KinematicTauProducer','SelectedKinematicDecays'),
     pfMET = cms.InputTag('pfMet'),
     tcMET = cms.InputTag('tcMet'),
-    pfJets = cms.InputTag('ak5PFJets'),
+    pfJets = cms.InputTag('MultiCandidateSelector','ak5PFJets'),
     pfTaus = cms.InputTag('hpsPFTauProducer'),
     pfTauDiscriminators = cms.VInputTag(
         cms.InputTag('hpsPFTauDiscriminationByDecayModeFinding'),

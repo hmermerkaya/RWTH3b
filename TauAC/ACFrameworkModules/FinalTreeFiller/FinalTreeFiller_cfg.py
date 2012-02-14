@@ -7,6 +7,9 @@ import ACFrameworkModules.FinalTreeFiller.PileUpReweighting as PileUpReweighting
 #parse lumi regions
 from FWCore.PythonUtilities.LumiList import LumiList
 
+#relative path to $CMSSW_BASE/src. needed for crab and to run from arbitrary paths
+baseDir = os.path.relpath(os.environ.get('CMSSW_BASE')+"/src")
+
 process = cms.Process("FinalTreeFiller")
 #process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck")
 
@@ -18,18 +21,24 @@ process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 ###############
 #steering parameters#
 inputPath, outputPath, jobName, globaltag, isData, jsonFile, pileUpDistributionMC = Steering.LoadUserParameters()
-numberOfEvents = -1
+numberOfEvents = 100000
 ignoreFilter = True # but always ignore TauMotherProducer until its ready
 printEvents = 0	#print generator event
 triggerTag = "HLT"
 minTau = 1 #minimum of selected taus
-doPileUpReweighting = False
-pileUpReweightingType = "observed" #(true or observed) choose according to https://twiki.cern.ch/twiki/bin/view/CMS/PileupMCReweightingUtilities
+doPileUpReweighting = True
+pileUpReweightingType = "true" #(true or observed) choose according to https://twiki.cern.ch/twiki/bin/view/CMS/PileupMCReweightingUtilities
+runFromCrab = False
 ###############
 
-### scan all files located in inputPath
-files = Tools.scanDir(inputPath)
-sourceString = Tools.buildPoolSource(files)
+if not runFromCrab:
+    ### when executed locally scan all files located in inputPath
+    files = Tools.scanDir(inputPath)
+    sourceString = Tools.buildPoolSource(files)
+else:
+    ### in grid mode define input via crab.cfg. python will be send precompiled, for the c++ part baseDir needs to be the absolute path (starting from the from the CMSSW_BASE)
+    sourceString = ""
+    baseDir = 'src'
 
 process.source = cms.Source("PoolSource",
 	fileNames = cms.untracked.vstring(sourceString)
@@ -40,11 +49,7 @@ process.maxEvents = cms.untracked.PSet(
 
 dataPileUpFilename = ''
 if doPileUpReweighting:
-    dataPileUpFilenameTrue, dataPileUpFilenameObs = PileUpReweighting.createDataPileUpFile(jsonFile)
-    if pileUpReweightingType == "true":
-        dataPileUpFilename = dataPileUpFilenameTrue
-    elif pileUpReweightingType == "observed":
-        dataPileUpFilename = dataPileUpFilenameObs
+    dataPileUpFilename = baseDir + PileUpReweighting.createDataPileUpFile(jsonFile, pileUpReweightingType)
 
 ### select runs from JSON file
 if isData:
@@ -68,6 +73,8 @@ process.TFileService = cms.Service("TFileService",
     fileName = cms.string('file://'+outputPath+jobName+'_'+str(numberOfEvents)+'_7TeV.root'), #+date.today().strftime('%Y%m%d')+'.root'),
     closeFileFast = cms.untracked.bool(True)
 )
+if runFromCrab:
+    process.TFileService.fileName = cms.string(jobName+'_'+str(numberOfEvents)+'_7TeV.root')
 
 ### generator workflow
 process.load("ACFrameworkModules.GenSelector.GenSelector_cfi")
@@ -89,17 +96,28 @@ process.KinematicTauProducer.minKinTau = cms.untracked.uint32(minTau)
 process.KinematicTauProducer.primVtx = cms.InputTag("ThreeProngInputSelectorStep2", "primVtx")
 process.KinematicTauProducer.selectedTauCandidates = cms.InputTag("ThreeProngInputSelectorStep2", "InputTauRefs")
 process.KinematicTauProducer.inputTracks = cms.InputTag("ThreeProngInputSelectorStep2", "InputTracks")
+process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
+process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
 
 ### event storage
 process.load("ACFrameworkModules.FinalTreeFiller.FinalTreeFiller_cfi")
 process.FinalTreeFiller.triggerResults = cms.InputTag("TriggerResults","",triggerTag)
 process.FinalTreeFiller.decayType = cms.untracked.string(decayType)
 
-if doPileUpReweighting:
-    process.FinalTreeFiller.pileUpDistributionFileMC = cms.untracked.string("MCPileUpDistributions.root")
+if doPileUpReweighting and not isData:
+    process.FinalTreeFiller.pileUpDistributionFileMC = cms.untracked.string(baseDir+"/data/MCPileUpDistributions.root")
     process.FinalTreeFiller.pileUpDistributionHistMC = cms.untracked.string(pileUpDistributionMC)
     process.FinalTreeFiller.pileUpDistributionFileData = cms.untracked.string(dataPileUpFilename)
     process.FinalTreeFiller.pileUpDistributionHistData = cms.untracked.string("pileup")
+
+### candidate selectors
+process.load("ACFrameworkModules.MultiCandidateSelector.MultiCandidateSelector_cfi")
+
+#process.debugOutput = cms.OutputModule("PoolOutputModule",
+#    outputCommands = cms.untracked.vstring('keep *'),
+#    fileName = cms.untracked.string('debugOutput.root'),
+#)
+#process.out_step = cms.EndPath(process.debugOutput)
 
 #ignore filter
 process.ignorePath = cms.Path(
@@ -110,6 +128,7 @@ process.ignorePath = cms.Path(
     *process.ignoreThreeProngInputSelector
     *cms.ignore(process.KinematicTauProducer)
     *process.matchingSeq
+    *process.MultiCandidateSelector
     *process.FinalTreeFiller
 )
 #cumulative
@@ -120,7 +139,10 @@ process.cumulativePath = cms.Path(
     *process.InputTrackSelector
     *process.ThreeProngInputSelector
     *process.KinematicTauProducer
+    #*process.KinematicTauBasicProducer
+    #*process.KinematicTauSkim
     *process.matchingSeq
+    *process.MultiCandidateSelector
     *process.FinalTreeFiller
 )
 
@@ -129,3 +151,5 @@ if ignoreFilter:
 	process.schedule = cms.Schedule(process.ignorePath)
 else:
 	process.schedule = cms.Schedule(process.cumulativePath)
+
+#process.schedule.append(process.out_step)
