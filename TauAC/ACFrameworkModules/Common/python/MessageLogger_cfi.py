@@ -29,7 +29,7 @@ if enableStatistics:
 #to enable debugging messages use:
 #scram b USER_CXXFLAGS="-DEDM_ML_DEBUG"
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-MessageLogger.debugModules = cms.untracked.vstring('HLTSelector','KinematicTauProducer','KinematicTauAdvancedProducer','InputTrackSelector','ThreeProngInputSelector','ThreeProngInputSelector_Step1','ThreeProngInputSelector_Step2','GenSelector','GenJetSelector')#name of the modules which may deliver messages
+MessageLogger.debugModules = cms.untracked.vstring('HLTSelector','KinematicTauProducer','KinematicTauAdvancedProducer','KinematicTauSkim','InputTrackSelector','ThreeProngInputSelector','ThreeProngInputSelector_Step1','ThreeProngInputSelector_Step2','GenSelector','GenJetSelector')#name of the modules which may deliver messages
 #categories for all severity levels are defined in the log message: LogDebug("category")<<... One needs to append a category to listen to it
 MessageLogger.categories.append('HLTSelector')
 MessageLogger.categories.append('KinematicTauCreator')
@@ -38,6 +38,7 @@ MessageLogger.categories.append('ThreeProngInputSelector_Step1')
 MessageLogger.categories.append('ThreeProngInputSelector_Step2')
 MessageLogger.categories.append('InputTrackSelector')
 MessageLogger.categories.append('KinematicTauAdvancedProducer')
+MessageLogger.categories.append('KinematicTauSkim')
 MessageLogger.categories.append('ThreeProngTauCreator')
 MessageLogger.categories.append('KinematicConstrainedVertexFitter')
 MessageLogger.categories.append('KinematicConstrainedVertexUpdator')
