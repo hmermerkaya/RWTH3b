@@ -9,5 +9,5 @@ ACPileupConverter::ACPileupConverter(const PileupSummaryInfo & pileup) {
     ntrks_highpT_ = pileup.getPU_ntrks_highpT();
     bunchCrossing_ = pileup.getBunchCrossing();
     TrueNumInteractions_ = pileup.getTrueNumInteractions();
-    instLumi_.clear();//not filled yet
+    instLumi_ = pileup.getPU_instLumi();
 }

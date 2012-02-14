@@ -37,9 +37,19 @@ public:
     const std::vector<int>& getPU_ntrks_highpT() const { return ntrks_highpT_; }
     const std::vector<float>& getPU_instLumi() const { return instLumi_; }
 //    const std::vector<edm::EventID>& getPU_EventID() const { return eventInfo_; }
-    const int getBunchCrossing() const { return bunchCrossing_;}
-    const float getTrueNumInteractions() const { return TrueNumInteractions_;}
-
+    const int getBunchCrossing() const {
+        if (isnan(bunchCrossing_)) {
+            return -1000.0;
+        }
+        return bunchCrossing_;
+    }
+    const float getTrueNumInteractions() const { 
+        if (isnan(TrueNumInteractions_)) {
+            return -1.0;
+        }
+        return TrueNumInteractions_;
+    }
+    
     ClassDef(ACPileupInfo,1);
 
 protected:
@@ -59,6 +69,7 @@ protected:
     std::vector<int> ntrks_highpT_;
     /// to which bunch crossing does this interaction belong?0=in-time crossing, negative ones are early, positive ones are late
     int bunchCrossing_;
+    ///  true number of interactions for each event
     float TrueNumInteractions_;
 
 
