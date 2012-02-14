@@ -6,5 +6,5 @@ ACEventWeight::ACEventWeight(double weight) {
     weight_ = weight;
 }
 ACEventWeight::ACEventWeight() {
-    weight_ = -1.0;
+    weight_ = -1000.;
 }

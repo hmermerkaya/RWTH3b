@@ -1,7 +1,7 @@
 #ifndef ACEventWeight_h
 #define ACEventWeight_h
 /**
- Class containing the event weight.
+ Class containing event weights.
 
  @author Lars Perchalla & Philip Sauerland
  @date 2012
@@ -16,13 +16,14 @@ public:
     ACEventWeight();
     virtual ~ACEventWeight() {};
 
-    double weight() const { return weight_; }
+    const double & weight() const { return weight_; }
     
     ClassDef(ACEventWeight,1);
 
 protected:
-    /// event weight
+    /// event weight derived from pileup reweighting
     double weight_;
+    //fixme: rename member once additional weights are needed
 };
 
 typedef ACEventWeight* pACEventWeight;
