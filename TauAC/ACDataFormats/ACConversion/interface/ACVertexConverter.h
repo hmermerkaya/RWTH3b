@@ -11,6 +11,7 @@
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "RecoVertex/PrimaryVertexProducer/interface/VertexHigherPtSquared.h"
 
 class ACVertexConverter : public ACVertex {
 public:

@@ -8,4 +8,6 @@ ACVertexConverter::ACVertexConverter(const reco::Vertex& vertex) {
     chi2_ = vertex.chi2();
     ndof_ = vertex.ndof();
     trackSize_ = vertex.tracksSize();
+    struct VertexHigherPtSquared vtxPtCalculation;
+    ptSum_ = vtxPtCalculation.sumPtSquared(vertex);
 }

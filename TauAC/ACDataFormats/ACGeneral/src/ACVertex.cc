@@ -9,23 +9,22 @@ ACVertex::ACVertex() {
     valid_ = false;
     chi2_ = -1000.;
     ndof_ = -1000.;
-    trackSize_ = -1000;
-//    ptSum_ = -1000.;
+    trackSize_ = -1000.;
+    ptSum_ = -1000.;
 }
-ACVertex::ACVertex(const TVector3 & position, bool valid, const TMatrixDSym & error, float chi2, float ndof, int trackSize)://double ptSum
-position_(position), valid_(valid), chi2_(chi2), ndof_(ndof), trackSize_(trackSize)
-// , ptSum_(ptSum)
+ACVertex::ACVertex(const TVector3 & position, bool valid, const TMatrixDSym & error, float chi2, float ndof, const double & trackSize, const double & ptSum):
+position_(position), valid_(valid), chi2_(chi2), ndof_(ndof), trackSize_(trackSize), ptSum_(ptSum)
 {
     error_.ResizeTo(TMatrixDSym(3));
     error_ = error;
 }
-TVector3 ACVertex::position() const { return position_; }
+const TVector3 & ACVertex::position() const { return position_; }
 bool ACVertex::valid() const { return valid_; }
-TMatrixDSym ACVertex::error() const { return error_; }
+const TMatrixDSym & ACVertex::error() const { return error_; }
 float ACVertex::chi2() const { return chi2_; }
 float ACVertex::ndof() const { return ndof_; }
-int ACVertex::trackSize() const { return trackSize_; }
-// double ptSum() const { return ptSum_; }
+double ACVertex::trackSize() const { return trackSize_; }
+double ACVertex::ptSum() const { return ptSum_; }
 double ACVertex::vtxDistanceSignificance(const ACVertex & vtx) const {
 	//distance between both vertices is calculated in units of their projected errorsum
 	TMatrixDSym matrix = error() + vtx.error();

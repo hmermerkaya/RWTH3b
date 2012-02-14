@@ -18,16 +18,16 @@ class ACVertex : public ACCommon {
 public:
     virtual std::string classname() const { return "ACVertex"; }
     ACVertex();
-    ACVertex(const TVector3 & position, bool valid, const TMatrixDSym & error = TMatrixDSym(3), float chi2 = -1000., float ndof = -1000., int trackSize = -1000); //double ptSum = -1000.
+    ACVertex(const TVector3 & position, bool valid, const TMatrixDSym & error = TMatrixDSym(3), float chi2 = -1000., float ndof = -1000., const double & trackSize = -1000., const double & ptSum = -1000.);
     virtual ~ACVertex() {};
 
-    TVector3 position() const;
+    const TVector3 & position() const;
     bool valid() const;
-    TMatrixDSym error() const;
+    const TMatrixDSym & error() const;
     float chi2() const;
     float ndof() const;
-    int trackSize() const;
-//    double ptSum() const;
+    double trackSize() const;
+    double ptSum() const;
     /// distance from vtx in units of their projected errorsum
     double vtxDistanceSignificance(const ACVertex & vtx) const;
 	/// project error in direction of axis
@@ -61,8 +61,8 @@ protected:
     float ndof_;
     /// size of all assigned tracks
     double trackSize_;
-//    /// ptsum of all assigned tracks
-//    double ptSum_;
+    /// ptsum of all assigned tracks (according to the official PV sorting at VertexHigherPtSquared, ignore tracks with errors larger than pt)
+    double ptSum_;
 };
 
 typedef ACVertex* pACVertex;
