@@ -10,7 +10,7 @@ def LoadUserParameters():
 #    jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_PromptReco_Collisions11_JSON.txt"
     jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_ReRecoNov08_Collisions11_JSON.txt"
 
-    jobName = 'tauSMBrFromZ'
+    jobName = 'TauPlusX08Nov2011'
 
     inputPath = ''
     globaltag = ''
@@ -40,9 +40,7 @@ def LoadUserParameters():
         inputPath = 'Run2011A/TauPlusX/AOD/PromptReco-v6/'
         globaltag = 'GR_P_V27::All'
     elif jobName == 'TauPlusX08Nov2011':
-        ##/TauPlusX/Run2011A-PromptReco-v6/AOD   globaltag='GR_P_V22::All', HLT: /online/collisions/2011/5e32/v6.2/HLT/V4
-        #inputPath = 'Run2011A/TauPlusX/AOD/PromptReco-v6/'
-        ##/TauPlusX/Run2011A-08Nov2011-v1/AOD   globaltag='FT_R_44_V9::All'
+        ##/TauPlusX/Run2011A-08Nov2011-v1/AOD
         inputPath = 'Run2011A/TauPlusX/AOD/08Nov2011-v1/'
         globaltag = 'FT_R_44_V9::All'
     elif jobName == 'MinimumBias':
