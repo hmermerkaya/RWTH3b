@@ -1,21 +1,9 @@
-// -*- C++ -*-
-//
-// Package:    KinematicTauAnalyzer
-// Class:      KinematicTauAnalyzer
-// 
 /**
- *
- * Description: Test the KinematicTau package
- *
- * Implementation:
- * <Notes on implementation>
+ Test the KinematicTau package
+
+ @author Lars Perchalla & Philip Sauerland
+ @date 2010
  */
-//
-// Original Author:  Lars Perchalla
-//         Created:  Thu Jun 10 10:45:54 CEST 2010
-// $Id: KinematicTauAnalyzer.cc,v 1.2 2010/06/24 12:18:15 perchall Exp $
-//
-//
 
 
 // system include files
