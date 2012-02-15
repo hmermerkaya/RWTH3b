@@ -1,5 +1,5 @@
 /**
- CMSSW analyzer to store offline information.
+ CMSSW analyzer searching for generator decays.
 
  @author Lars Perchalla & Philip Sauerland
  @date 2011
@@ -28,7 +28,7 @@ private:
 
     /// decides which signal to extract from generator event.
     bool storeEvent(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef);
-    /// store each tau followed by its stable daughters. if motherPdgID defined, only taus from this mother are kept. in case of VBF Higgs, also the quarks are stored.
+    /// store each tau followed by its stable daughters. if motherPdgID defined, only taus from this mother are kept. taus from different mother particles are ignored. in case of VBF Higgs, also the quarks are stored.
     bool storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef, int motherPdgID = 0);
     /// obtain all daughters of a particle
     void findDescendents(const reco::GenParticleRef& base, std::vector<reco::GenParticleRef> & descendents, int status, int pdgId=0);

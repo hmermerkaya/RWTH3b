@@ -34,7 +34,7 @@ bool GenSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (iEvent.getByLabel(candCollection_, genCandidate_)) {//"genParticleCandidates"
         filterValue = storeEvent(iEvent, genSignal, genSignalRef);
     } else {
-        LogTrace("MCCollectionNotFound")<<"GenSelector::filter: Desired MC collection "<<candCollection_.label()<<" not found. Assuming to run on data and continue.";
+        LogTrace("GenSelector")<<"GenSelector::filter: Desired MC collection "<<candCollection_.label()<<" not found. Assuming to run on data and continue.";
         // place an empty collection into the event stream in case there is no generator information (as in data)
         // printf("no MC collection found\n");
     }
@@ -64,16 +64,14 @@ void GenSelector::beginJob() {
 void GenSelector::endJob() {
     float ratio = 0.0;
     if (cnt_!=0) ratio=(float)cntFound_/cnt_;
-    if (decayType_=="TauPair") printf("--> [GenSelector] found at least two opp. charged taus from %d. Efficiency: %d/%d = %.2f%%\n", motherPdgID_, cntFound_, cnt_, ratio*100.0);
-    else if (decayType_!="unknown") printf("--> [GenSelector] found at least two opp. charged taus from %s. Efficiency: %d/%d = %.2f%%\n", decayType_.c_str(), cntFound_, cnt_, ratio*100.0);
-    else printf("--> [GenSelector] found at least one unknown tau decay. Efficiency: %d/%d = %.2f%%\n", cntFound_, cnt_, ratio*100.0);
+    edm::LogVerbatim("GenSelector")<<"--> [GenSelector] found at least one charged tau from "<<motherPdgID_<<". Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<ratio*100.0;
 }
 
 bool GenSelector::storeEvent(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef) {
     return storeEventAllTau(iEvent, collection, collectionRef, motherPdgID_);//store each tau followed by its stable daughters. if motherPdgID defined, only taus from this mother are kept. in case of VBF Higgs, also the quarks are stored.
 
     // place new generator selectors here
-    std::cout<<"The decay type "<<decayType_<<" (motherPdgID "<<motherPdgID_<<") is not implemented yet."<<std::endl;
+    edm::LogError("GenSelector")<<"GenSelector::storeEvent: The decay type "<<decayType_<<" (motherPdgID "<<motherPdgID_<<") is not implemented yet."<<std::endl;
     return false;
 }
 bool GenSelector::storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef, int motherPdgID) {
@@ -87,7 +85,7 @@ bool GenSelector::storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollecti
         if (motherPdgID != 0) {
             if (abs(candIter->pdgId())==motherPdgID && candIter->numberOfDaughters()==3) {//i.e. Z->tautau(Z)
                 if (particlesRef.size() != 0) {
-                    printf("GenSelector::storeEventAllTau:ERROR! More than one mother found. Skip it.\n");
+                    edm::LogWarning("GenSelector")<<"GenSelector::storeEventAllTau:ERROR! More than one mother found. Skip it.";
                     continue;
                 }                
                 reco::GenParticleRef ref(genCandidate_, index);
@@ -116,11 +114,11 @@ bool GenSelector::storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollecti
             if (!genMother) continue;
             if (motherPdgID != 0) {
                 if (particlesRef.size() < 1) {
-                    printf("GenSelector::storeEventAllTau:ERROR! Mother was not found before occurance of a tau. Skip this tau.\n");
+                    LogTrace("GenSelector")<<"GenSelector::storeEventAllTau:ERROR! Mother was not found before occurance of a tau. Skip this tau.";
                     continue;
                 }
                 if (genMother != particlesRef.at(0).get()) {
-                    std::cout<<"GenSelector::storeEventAllTau: Skipping tau not from "<<motherPdgID<<" but from "<<genMother->pdgId()<<"."<<std::endl;
+                    LogTrace("GenSelector")<<"GenSelector::storeEventAllTau: Skipping tau not from "<<motherPdgID<<" but from "<<genMother->pdgId()<<".";
                     continue;
                 }
             }
