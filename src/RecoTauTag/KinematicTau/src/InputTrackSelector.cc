@@ -3,7 +3,8 @@
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
 tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "shrinkingCone") ),
 minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
-minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) )//filter returns true if more/equal than minTau_ taus were selected
+minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),//filter returns true if more/equal than minTau_ taus were selected
+trkCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauDaughterTracks" ) )//restrict tau daughters to origin from a certain track collection
 {
 	produces<int>("flag");//0=invalid, 1=valid
 	produces<std::vector<reco::TrackRefVector> >("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
@@ -57,22 +58,27 @@ bool InputTrackSelector::select(std::vector<reco::TrackRefVector> & selected, re
 	
 	edm::Handle<reco::PFTauCollection> inputCollection;
 	iEvent_->getByLabel(tauType_+"PFTauProducer", inputCollection);
-	LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: no. of PFTaus in event = "<<inputCollection->size();
+	//LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: no. of PFTaus in event = "<<inputCollection->size();
+    
+    edm::Handle<reco::TrackCollection> trkCollection;
+	iEvent_->getByLabel(trkCollectionTag_, trkCollection);
+    trkCollectionID_ = trkCollection.id();
+
 	for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
 		reco::PFTauRef thePFTau(inputCollection, iPFTau);
-		LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: test tau "<<iPFTau;
+		//LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: test tau "<<iPFTau;
 		reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
 		if(tauDaughters.size()>=minTracks_){
 			selected.push_back(tauDaughters);
 			PFTauRef.push_back(thePFTau);
-		}else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: only "<<tauDaughters.size()<<" tau daughter(s) found. Skip tau candidate.";
+		}//else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: only "<<tauDaughters.size()<<" tau daughter(s) found. Skip tau candidate.";
 	}
 	
 	if(selected.size() >= minTau_){
 		cntFound_++;
 		found = true;
 		LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: "<<selected.size()<<" tau candidate(s) reconstructed.";
-	}else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select:Warning: only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Evt.";
+	}//else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: Only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Evt.";
 
 	return found;
 }
@@ -81,8 +87,16 @@ reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau
 	const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands(); //candidates in signal cone 
 	//isolationPFChargedHadrCands stores tracks in isolation/veto cone
 	for (reco::PFCandidateRefVector::const_iterator iter = cands.begin(); iter!=cands.end(); ++iter) {
-		LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::getPFTauDaughters: PFTau daughter pt "<<iter->get()->pt()<<", eta "<<iter->get()->eta()<<", vtx("<<iter->get()->vx()<<","<<iter->get()->vy()<<","<<iter->get()->vz()<<")";
-		if(iter->get()->trackRef().isNonnull()) trkVct.push_back( (*iter)->trackRef() );
+		//LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::getPFTauDaughters: PFTau daughter pt "<<iter->get()->pt()<<", eta "<<iter->get()->eta()<<", vtx("<<iter->get()->vx()<<","<<iter->get()->vy()<<","<<iter->get()->vz()<<")";
+		if(iter->get()->trackRef().isNonnull()) {
+            if ((*iter)->trackRef().id() != trkCollectionID_) {
+                // ignore tracks that do not origin from the desired track collection (e.g. ignore conversionStepTracks) for now
+                const edm::Provenance & prov = iEvent_->getProvenance((*iter)->trackRef().id());
+                edm::LogInfo("InputTrackSelector")<<"InputTrackSelector::getPFTauDaughters: Skip PFTau daughter from collection "<<prov.moduleLabel();
+                continue;
+            }
+            trkVct.push_back( (*iter)->trackRef() );
+        }
 	}
 	
 	return trkVct;
