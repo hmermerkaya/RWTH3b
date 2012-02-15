@@ -32,6 +32,7 @@ if enableStatistics:
 MessageLogger.debugModules = cms.untracked.vstring('HLTSelector','KinematicTauProducer','KinematicTauAdvancedProducer','KinematicTauSkim','InputTrackSelector','ThreeProngInputSelector','ThreeProngInputSelector_Step1','ThreeProngInputSelector_Step2','GenSelector','GenJetSelector')#name of the modules which may deliver messages
 #categories for all severity levels are defined in the log message: LogDebug("category")<<... One needs to append a category to listen to it
 MessageLogger.categories.append('HLTSelector')
+MessageLogger.categories.append('GenSelector')
 MessageLogger.categories.append('KinematicTauCreator')
 MessageLogger.categories.append('ThreeProngInputSelector')
 MessageLogger.categories.append('ThreeProngInputSelector_Step1')
