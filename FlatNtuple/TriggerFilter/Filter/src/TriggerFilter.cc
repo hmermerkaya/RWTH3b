@@ -1,86 +1,19 @@
-// -*- C++ -*-
-//
-// Package:    Filter
-// Class:      Filter
-// 
-/**\class Filter Filter.cc TriggerFilter/Filter/src/Filter.cc
-
- Description: [one line class summary]
-
- Implementation:
-     [Notes on implementation]
-*/
-//
-// Original Author:  Vladimir Cherepanov
-//         Created:  Wed Nov 23 16:24:12 CET 2011
-// $Id: Filter.cc,v 1.1 2011/12/18 15:12:01 cherepan Exp $
-//
-//
+#include "TriggerFilter/Filter/interface/TriggerFilter.h"
 
 
-// system include files
-#include <memory>
-
-// user include files
-#include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDFilter.h"
-
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "DataFormats/Common/interface/TriggerResults.h"
-#include <FWCore/Common/interface/TriggerNames.h>
-#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
-
-//
-// class declaration
-//
-
-class Filter : public edm::EDFilter {
-   public:
-      explicit Filter(const edm::ParameterSet&);
-      ~Filter();
-
-      static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
-   private:
-      virtual void beginJob() ;
-      virtual bool filter(edm::Event&, const edm::EventSetup&);
-      virtual void endJob() ;
-      
-      virtual bool beginRun(edm::Run&, edm::EventSetup const&);
-      virtual bool endRun(edm::Run&, edm::EventSetup const&);
-      virtual bool beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
-      virtual bool endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
-
-      // ----------member data ---------------------------
-  edm::Event * iEvent_;
-  std::string processName_; // process name of (HLT) process for which to get HLT configuration
-  HLTConfigProvider hltConfig_;/// The instance of the HLTConfigProvider as a data member
-  int cnt_;
-  int cntFound_;
-};
-
-//
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
-Filter::Filter(const edm::ParameterSet& iConfig)
+TriggerFilter::TriggerFilter(const edm::ParameterSet& iConfig) :
+  MyTriggerHelper(),
+  doTauplusXTrigger_(iConfig.getUntrackedParameter("doTauplusXTrigger",(bool)(true))), // set as default to keep consistent with orig. version
+  doMuonTrigger_(iConfig.getUntrackedParameter("doMuonTrigger",(bool)(false))),
+  doElectronTrigger_(iConfig.getUntrackedParameter("doElectronTrigger",(bool)(false))),
+  doTauplusMETTrigger_(iConfig.getUntrackedParameter("doTauplusMETTrigger",(bool)(false)))
 {
    //now do what ever initialization is needed
 
 }
 
 
-Filter::~Filter()
+TriggerFilter::~TriggerFilter()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -95,9 +28,19 @@ Filter::~Filter()
 
 // ------------ method called on each new Event  ------------
 bool
-Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
+TriggerFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
+  MyTriggerHelper.Reset();
+  bool TauplusXTrigger(false),MuonTrigger(false),ElectronTrigger(false),TauplusMETTrigger(false);
+  if(doTauplusXTrigger_)   TauplusXTrigger= FilteronTauplusXTrigger(iEvent);
+  if(doMuonTrigger_)       MuonTrigger=FilteronMuonTrigger(iEvent);
+  if(doElectronTrigger_)   ElectronTrigger=FilteronElectronTrigger(iEvent);
+  if(doTauplusMETTrigger_) TauplusMETTrigger=FilteronTauplusMETTrigger(iEvent);
+  if(TauplusXTrigger || MuonTrigger || ElectronTrigger || TauplusMETTrigger ) return true;
+  return false;
+}
 
+bool TriggerFilter::FilteronTauplusXTrigger(edm::Event& iEvent){
+  // Vladimir Cherepanov original TriggerFilter
   bool accept = false;
   bool Muon_Tau = false;
   bool Muon_Eta_Tau = false;
@@ -199,14 +142,26 @@ Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
 
   if(accept) cntFound_++;
-  
+  // Store Trigger name for Trigger Helper
+  MyTriggerHelper.AddTrigger(passedTriggerName);
   return accept;
-  
 }
+
+bool TriggerFilter::FilteronMuonTrigger(edm::Event& iEvent){
+  return false;
+}
+bool TriggerFilter::FilteronElectronTrigger(edm::Event& iEvent){
+  return false;
+}
+bool TriggerFilter::FilteronTauplusMETTrigger(edm::Event& iEvent){
+  return false;
+}
+
+
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-Filter::beginJob()
+TriggerFilter::beginJob()
 {
   cnt_=0;
   cntFound_=0;
@@ -214,10 +169,10 @@ Filter::beginJob()
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-Filter::endJob() {
+TriggerFilter::endJob() {
   float ratio = 0.0;
   if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-  printf("-> [Filter] Trigger efficiency %d/%d = %.2f%%\n", cntFound_, cnt_, ratio*100.0);
+  printf("-> [TriggerFilter] Trigger efficiency %d/%d = %.2f%%\n", cntFound_, cnt_, ratio*100.0);
 
 
 }
@@ -225,7 +180,7 @@ Filter::endJob() {
 
 // ------------ method called when starting to processes a run  ------------
 bool 
-Filter::beginRun(edm::Run& iRun, edm::EventSetup const& iSetup){ 
+TriggerFilter::beginRun(edm::Run& iRun, edm::EventSetup const& iSetup){ 
   std::string processName = "HLT";
   bool changed(true);
   if (hltConfig_.init(iRun,iSetup,processName,changed)) {
@@ -234,7 +189,7 @@ Filter::beginRun(edm::Run& iRun, edm::EventSetup const& iSetup){
     if (changed) {
       const std::string &  DSName = hltConfig_.datasetName(1);
       std::cout << DSName << std::endl;
-      const std::vector< std::vector< std::string > > & AllDSName=hltConfig_.datasetContents(); 
+      //const std::vector< std::vector< std::string > > & AllDSName=hltConfig_.datasetContents(); 
       const std::vector< std::string > & TriggNames=hltConfig_.triggerNames();
 
 
@@ -259,33 +214,33 @@ Filter::beginRun(edm::Run& iRun, edm::EventSetup const& iSetup){
 
 // ------------ method called when ending the processing of a run  ------------
 bool 
-Filter::endRun(edm::Run&, edm::EventSetup const&)
+TriggerFilter::endRun(edm::Run&, edm::EventSetup const&)
 {
   return true;
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 bool 
-Filter::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+TriggerFilter::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
   return true;
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 bool 
-Filter::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+TriggerFilter::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
   return true;
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-Filter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+TriggerFilter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
-//define this as a plug-in
-DEFINE_FWK_MODULE(Filter);
+
+
