@@ -15,7 +15,10 @@ void TriggerFilterInfoProducer::beginJob(){
 
 void TriggerFilterInfoProducer::produce( edm::Event& e, const edm::EventSetup& iSetup){
   std::auto_ptr<std::vector<std::string> > TriggerFilterInfoList(new std::vector<std::string>());
-  *TriggerFilterInfoList = MyTriggerHelper.GetTriggerList();    
+  std::vector<std::string> TriggerList=MyTriggerHelper.GetTriggerList();
+  for(unsigned int i=0; i<TriggerList.size();i++){
+    TriggerFilterInfoList->push_back(TriggerList.at(i));
+  }
   e.put(TriggerFilterInfoList,"TriggerFilterInfoList");  
   return ;
 }  
