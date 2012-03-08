@@ -57,7 +57,6 @@ bool TriggerFilter::FilteronTauplusXTrigger(edm::Event& iEvent){
   
   edm::InputTag trigResultsTag("TriggerResults","","HLT");
   
-  
   edm::Handle<edm::TriggerResults > TriggerResults_;
   iEvent_->getByLabel(trigResultsTag, TriggerResults_);
   
@@ -146,6 +145,7 @@ bool TriggerFilter::FilteronTauplusXTrigger(edm::Event& iEvent){
   MyTriggerHelper.AddTrigger(passedTriggerName);
   return accept;
 }
+
 
 bool TriggerFilter::FilteronMuonTrigger(edm::Event& iEvent){
   return false;
