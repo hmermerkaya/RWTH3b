@@ -2,8 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 TrigFilter = cms.EDFilter("TriggerFilter",
                           HLTResults = cms.InputTag( "TriggerResults" ),
-                          doTauplusXTrigger = cms.untracked.bool(True),
-                          doMuonTrigger = cms.untracked.bool(False),
+                          doTauplusXTrigger = cms.untracked.bool(False),
+                          doMuonTrigger = cms.untracked.bool(True),
                           doElectronTrigger = cms.untracked.bool(False),
                           doTauplusMETTrigger = cms.untracked.bool(False)
                           )

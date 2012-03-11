@@ -3,8 +3,8 @@
 
 TriggerFilter::TriggerFilter(const edm::ParameterSet& iConfig) :
   MyTriggerHelper(),
-  doTauplusXTrigger_(iConfig.getUntrackedParameter("doTauplusXTrigger",(bool)(true))), // set as default to keep consistent with orig. version
-  doMuonTrigger_(iConfig.getUntrackedParameter("doMuonTrigger",(bool)(false))),
+  doTauplusXTrigger_(iConfig.getUntrackedParameter("doTauplusXTrigger",(bool)(false))), // set as default to keep consistent with orig. version
+  doMuonTrigger_(iConfig.getUntrackedParameter("doMuonTrigger",(bool)(true))),
   doElectronTrigger_(iConfig.getUntrackedParameter("doElectronTrigger",(bool)(false))),
   doTauplusMETTrigger_(iConfig.getUntrackedParameter("doTauplusMETTrigger",(bool)(false)))
 {
@@ -49,10 +49,6 @@ bool TriggerFilter::FilteronTauplusXTrigger(edm::Event& iEvent){
 
   iEvent_ = &iEvent;
   cnt_++;
-  
-  //   char TrigerTemplate[28];
-  //   sprintf(TrigerTemplate,"HLT_IsoMu%d_LooseIsoPFTau%d",15,15);
-  
   
   
   edm::InputTag trigResultsTag("TriggerResults","","HLT");
@@ -148,7 +144,43 @@ bool TriggerFilter::FilteronTauplusXTrigger(edm::Event& iEvent){
 
 
 bool TriggerFilter::FilteronMuonTrigger(edm::Event& iEvent){
-  return false;
+
+  bool accept = false;
+  bool Muon = false;
+
+  iEvent_ = &iEvent;
+  cnt_++;
+  
+  
+  edm::InputTag trigResultsTag("TriggerResults","","HLT");
+  edm::Handle<edm::TriggerResults > TriggerResults_;
+  iEvent_->getByLabel(trigResultsTag, TriggerResults_);
+  
+  
+  const edm::TriggerNames& trigNames = iEvent.triggerNames(*TriggerResults_);   
+  std::string passedTriggerName;
+  if (TriggerResults_.isValid()) {
+    std::string checkMuon = "HLT_IsoMu24_v";
+    int ntrigs=TriggerResults_->size();
+    for (int itrig = 0; itrig < ntrigs; ++itrig) {
+      //std::cout << trigNames.triggerName(itrig) << std::endl;
+      std::string Muon;
+      Muon = trigNames.triggerName(itrig).substr(0,13);
+      if(Muon == checkMuon && trigNames.triggerName(itrig).size() < 20){
+	accept = (*TriggerResults_).accept(itrig);
+	std::cout<<"HLT_IsoMu24  FOUND!  " <<Muon <<"   " <<"  " <<trigNames.triggerName(itrig) <<std::endl;
+	passedTriggerName = trigNames.triggerName(itrig);
+      }
+    }
+  }
+  
+  
+  if(accept) cntFound_++;
+  // Store Trigger name for Trigger Helper
+  MyTriggerHelper.AddTrigger(passedTriggerName);
+  return accept;
+
+
 }
 bool TriggerFilter::FilteronElectronTrigger(edm::Event& iEvent){
   return false;
