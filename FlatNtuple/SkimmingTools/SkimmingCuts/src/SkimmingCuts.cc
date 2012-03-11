@@ -68,6 +68,7 @@ class SkimmingCuts : public edm::EDFilter {
 
   double MuonPtCut_;
   bool MuonIsGlo_;
+  double NMuons_;
   double MuonEtaCut_;
   double PFTauPtCut_;
   double PFTauEtaCut_;
@@ -99,6 +100,7 @@ SkimmingCuts::SkimmingCuts(const edm::ParameterSet& iConfig):
 hpsTauProducer_( iConfig.getParameter<edm::InputTag>( "hpsTauProducer" ) ),
 MuonPtCut_( iConfig.getParameter<double>("MuonPtCut") ),
 MuonIsGlo_( iConfig.getParameter<bool>("MuonIsGlobal") ),
+NMuons_( iConfig.getParameter<double>("NMuons") ),
 MuonEtaCut_( iConfig.getParameter<double>("MuonEtaCut") ),
 PFTauPtCut_( iConfig.getParameter<double>("PFTauPtCut") ),
 PFTauEtaCut_( iConfig.getParameter<double>("PFTauEtaCut") )
@@ -141,6 +143,8 @@ SkimmingCuts::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 bool 
 SkimmingCuts::MuonsCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
   bool pass = false;
+  bool nMuonsCut = false;
+  bool MuonPtCut = false;
   edm::Handle< reco::MuonCollection > muonCollection;
   iEvent_->getByLabel("muons",  muonCollection);
 
@@ -159,14 +163,19 @@ SkimmingCuts::MuonsCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
     if(HighestPtMuonRef->p4().Pt() > MuonPtCut_){
       if(fabs(HighestPtMuonRef->p4().Eta()) < MuonEtaCut_){
 	if(HighestPtMuonRef->isGlobalMuon() == MuonIsGlo_){
-	  pass = true;
+	  MuonPtCut = true;
 	  nMuonPass_++;
 	  //  std::cout<<"Muon:  "<<"Pt: " <<HighestPtMuonRef->p4().Pt() << "   global: " << HighestPtMuonRef->isGlobalMuon()  << "   eta: " << HighestPtMuonRef->p4().Eta()<<std::endl;
 	}
       }
     }
   }
-  
+   if(nMuonPass_ == NMuons_){
+     nMuonsCut = true;
+   }
+
+  pass = nMuonsCut*nMuonsCut;
+
   return pass;
 }
 
