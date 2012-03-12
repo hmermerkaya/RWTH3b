@@ -168,7 +168,7 @@ bool TriggerFilter::FilteronMuonTrigger(edm::Event& iEvent){
       Muon = trigNames.triggerName(itrig).substr(0,13);
       if(Muon == checkMuon && trigNames.triggerName(itrig).size() < 20){
 	accept = (*TriggerResults_).accept(itrig);
-	std::cout<<"HLT_IsoMu24  FOUND!  " <<Muon <<"   " <<"  " <<trigNames.triggerName(itrig) <<std::endl;
+	//	std::cout<<"HLT_IsoMu24  FOUND!  " <<Muon <<"   " <<"  " <<trigNames.triggerName(itrig) <<std::endl;
 	passedTriggerName = trigNames.triggerName(itrig);
       }
     }
