@@ -1,4 +1,4 @@
-TARGETS		= ACAnalyzer ACEvent ACTreeReader ACExampleAnalyzer
+TARGETS		= ACAnalyzer ACEvent ACHarvester ACTreeReader ACExampleAnalyzer ACExampleHarvester
 OBJ			= $(addsuffix .dir, $(TARGETS))
 
 %.dir:

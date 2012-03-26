@@ -10,7 +10,7 @@ def LoadUserParameters():
 #    jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_PromptReco_Collisions11_JSON.txt"
     jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_ReRecoNov08_Collisions11_JSON.txt"
 
-    jobName = 'TauPlusX08Nov2011'
+    jobName = 'TauNov2011'
 
     inputPath = ''
     globaltag = ''
@@ -31,18 +31,14 @@ def LoadUserParameters():
         ##/QCD_Pt-30to80_EMEnriched_TuneZ2_7TeV-pythia/Fall11-PU_S6-START44_V5-v1/AODSIM
         inputPath = 'Fall11/QCD_Pt-30to80_EMEnriched_TuneZ2_7TeV-pythia/AODSIM/PU_S6-START44_V5-v1/'
         globaltag = 'START44_V12::All'
-    elif jobName == 'Tau':
-        ##/Tau/Run2011A-PromptReco-v6/AOD   globaltag='GR_P_V22::All'
-        inputPath = 'Run2011A/Tau/AOD/PromptReco-v6/'
-        globaltag = 'GR_P_V27::All'
-    elif jobName == 'TauPlusX':
-        ##/TauPlusX/Run2011A-PromptReco-v6/AOD   globaltag='GR_P_V22::All', HLT: /online/collisions/2011/5e32/v6.2/HLT/V4
-        inputPath = 'Run2011A/TauPlusX/AOD/PromptReco-v6/'
-        globaltag = 'GR_P_V27::All'
-    elif jobName == 'TauPlusX08Nov2011':
+    elif jobName == 'TauNov2011':
+        ##/Tau/Run2011A-08Nov2011-v1/AOD
+        inputPath = 'Run2011A/Tau/AOD/08Nov2011-v1/'
+        globaltag = 'GR_R_44_V14::All'
+    elif jobName == 'TauPlusXNov2011':
         ##/TauPlusX/Run2011A-08Nov2011-v1/AOD
         inputPath = 'Run2011A/TauPlusX/AOD/08Nov2011-v1/'
-        globaltag = 'FT_R_44_V9::All'
+        globaltag = 'GR_R_44_V14::All'
     elif jobName == 'MinimumBias':
         ##/MinimumBias/Run2011A-PromptReco-v6/AOD   globaltag='GR_P_V22::All'
         inputPath = 'Run2011A/MinimumBias/AOD/PromptReco-v6/'

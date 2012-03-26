@@ -9,6 +9,7 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
 	reducedPrimVtx = cms.InputTag('reducedPrimaryVertices'), #this is the FULL vertex collection obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!! possibly not all of them entered the fit)
     pileupInfo = cms.InputTag('addPileupInfo'),
     triggerResults = cms.InputTag('TriggerResults','','HLT'),
+    tracks = cms.InputTag('MultiCandidateSelector','generalTracks'),
     muons = cms.InputTag('muons'),
     electrons = cms.InputTag('gsfElectrons'),
     kinematicTaus = cms.InputTag('KinematicTauProducer','SelectedKinematicDecays'),

@@ -36,6 +36,7 @@
 #include "ACDataFormats/ACConversion/interface/ACFittedThreeProngDecayConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACJetConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACPileupConverter.h"
+#include "ACDataFormats/ACConversion/interface/ACTrackConverter.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -71,9 +72,9 @@ public:
     ~FinalTreeFiller();
 
 private:
+    virtual void analyze(const edm::Event&, const edm::EventSetup&);
     virtual void beginJob();
     virtual void endJob();
-    virtual void analyze(const edm::Event&, const edm::EventSetup&);
     virtual void beginRun(edm::Run const&, edm::EventSetup const&);
     virtual void endRun(edm::Run const&, edm::EventSetup const&);
     virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
@@ -90,7 +91,7 @@ private:
     /// framework file service
     edm::Service<TFileService> fileService_;
     /// input tags
-    edm::InputTag genSignalTag_, genSignalRefTag_, chargedTauDaughterMatchMapTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, tcMETTag_, pfJetTag_, pfTauTag_;
+    edm::InputTag genSignalTag_, genSignalRefTag_, chargedTauDaughterMatchMapTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, trackTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, tcMETTag_, pfJetTag_, pfTauTag_;
     std::vector<edm::InputTag> pfTauDiscriminatorTags_;
     std::vector<std::string> flags_;
     std::string pileUpDistributionFileMC_, pileUpDistributionHistMC_, pileUpDistributionFileData_, pileUpDistributionHistData_;
@@ -112,6 +113,8 @@ private:
     std::vector<ACVertex *> * offlinePV_;
     /// branch content: primary vertices after removal of tracks assigned to tau daughters
     std::vector<ACVertex *> * reducedPV_;
+    /// branch content: (filtered) tracks collection
+    std::vector<ACTrack *> * tracks_;
     /// branch content: muon collection
     std::vector<ACParticle *> * muons_;
     /// branch content: electron collection (gsf)

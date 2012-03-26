@@ -7,6 +7,11 @@ MultiCandidateSelector = cms.EDProducer('MultiCandidateSelector',
             src = cms.InputTag("ak5PFJets"),
             cut = cms.string("pt > 10")
         ),
+        cms.PSet(
+            type = cms.string("tracks"),
+            src = cms.InputTag("generalTracks"),
+            cut = cms.string("pt > 1")
+        ),
 #        cms.PSet(
 #            type = cms.string("muons"),
 #            src = cms.InputTag("muons"),

@@ -2,6 +2,8 @@
 #include "../interface/ACTools.h"
 #include "../interface/ACRef.h"
 #include "../interface/ACCandidate.h"
+#include "../interface/ACCounter.h"
+#include "../interface/ACDataset.h"
 #include "../interface/ACEventGlobals.h"
 #include "../interface/ACEventInfo.h"
 #include "../interface/ACEventWeight.h"
@@ -16,6 +18,7 @@
 #include "../interface/ACFittedDecay.h"
 #include "../interface/ACFittedThreeProngDecay.h"
 #include "../interface/ACPileupInfo.h"
+#include "../interface/ACTrack.h"
 #include "../interface/ACTrigger.h"
 
 #ifdef __CINT__
@@ -49,6 +52,12 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 #pragma link C++ class std::vector<ACCandidate >+;
 #pragma link C++ class std::vector<pACCandidate >+;
 
+#pragma link C++ class ACCounter+;
+#pragma link C++ class pACCounter+;
+
+#pragma link C++ class ACDataset+;
+#pragma link C++ class pACDataset+;
+
 #pragma link C++ class ACPFTau+;
 #pragma link C++ class pACPFTau+;
 #pragma link C++ class std::vector<ACPFTau >+;
@@ -74,6 +83,11 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 #pragma link C++ class pACFitParticle+;
 #pragma link C++ class std::vector<ACFitParticle >+;
 #pragma link C++ class std::vector<pACFitParticle >+;
+
+#pragma link C++ class ACTrack+;
+#pragma link C++ class pACTrack+;
+#pragma link C++ class std::vector<ACTrack >+;
+#pragma link C++ class std::vector<pACTrack >+;
 
 #pragma link C++ class std::pair<std::string, bool>+;
 

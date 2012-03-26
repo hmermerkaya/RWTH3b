@@ -60,6 +60,10 @@ private:
     bool testBranch(std::string branchname, int status) const;
     /// print storage information
     void printTreeStatistics();
+    /// print file input/output
+    void printFileIO();
+    /// split a string into tokens separated by a specific delimiter
+    void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters=" ");
 };
 
 #endif

@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     ACExampleAnalyzer anlzr;
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
-    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_0/TauACIntegration/tauSMBrFromZ_100_7TeV.root");
+    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/PVBugFix/TauNov2011_1000_7TeV.root");
     loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
     loops.back()->loop(anlzr, -1);
 
@@ -46,6 +46,10 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
                 printf("\t pdgID %i, pt %f\n", (*ip)->pdgId(), (*ip)->pt());
             }
         }
+    }
+    printf("number of tracks: %lu\n", event.tracks().size());
+    for (std::vector<ACTrack *>::const_iterator ip = event.tracks().begin(); ip != event.tracks().end(); ++ip) {
+        printf(" pt %f\n", (*ip)->pt());
     }
     printf("number of muons: %lu\n", event.muons().size());
     for (std::vector<ACParticle *>::const_iterator ip = event.muons().begin(); ip != event.muons().end(); ++ip) {

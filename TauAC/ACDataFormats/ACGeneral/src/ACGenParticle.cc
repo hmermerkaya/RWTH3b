@@ -6,14 +6,13 @@ ACGenParticle::ACGenParticle():
 ACCandidate() {
     status_ = -1;
     pdgId_ = 0;
-    charge_ = -1000.;
     vertex_.SetXYZ(-1000,-1000,-1000);
     genDecayRef_ = ACGenDecayRef();
     mother_ = ACGenParticleRef();
     daughters_.clear();
 }
 ACGenParticle::ACGenParticle(int status, std::string name, int pdgId, float charge, const TLorentzVector & p4, const TVector3 & vertex, const ACGenDecayRef & genDecayRef, const ACGenParticleRef & mother, const std::vector<ACGenParticleRef> & daughters):
-ACCandidate(p4, charge) {
+ACCandidate(p4, charge, name) {
     status_ = status;
     pdgId_ = pdgId;
     vertex_ = vertex;

@@ -58,7 +58,16 @@ void MultiCandidateSelector::produce(edm::Event& iEvent, const edm::EventSetup& 
             }
             iEvent.put(pOut, thisInputTag.label());
         } else if (thisType == "tracks") {
-            edm::LogWarning("MultiCandidateSelector") << "Type '" << thisType << "' not implemented yet!";
+            edm::Handle<reco::TrackCollection> pIn;
+            iEvent.getByLabel(thisInputTag, pIn);
+            
+            std::auto_ptr<reco::TrackCollection> pOut(new reco::TrackCollection);
+            StringCutObjectSelector<reco::Track> thisSelector(thisCut);
+            
+            for (reco::TrackCollection::const_iterator i = pIn->begin(); i != pIn->end(); ++i) {
+                if (thisSelector(*i)) pOut->push_back(*i);
+            }
+            iEvent.put(pOut, thisInputTag.label());
         } else {
             edm::LogWarning("MultiCandidateSelector") << "Type '" << thisType << "' not known!";
         }

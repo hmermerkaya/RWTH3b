@@ -15,7 +15,7 @@
 class ACGenParticleConverter : public ACGenParticle {
 public:
     virtual std::string classname() const { return "ACGenParticleConverter"; }
-    /// constructor from SelectedKinematicParticle to initiate a ACGenParticle
+    /// constructor from reco::GenParticle to initiate a ACGenParticle
     ACGenParticleConverter(const reco::GenParticle& particle);
     virtual ~ACGenParticleConverter() {};
 

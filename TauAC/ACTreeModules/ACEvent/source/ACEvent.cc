@@ -10,6 +10,7 @@ ACEvent::ACEvent() {
     reducedPV_ = 0;
     generator_ = 0;
     genTauDecays_ = 0;
+    tracks_ = 0;
     muons_ = 0;
     electrons_ = 0;
     tauDecays_ = 0;
@@ -81,6 +82,14 @@ const std::vector<ACGenDecay *>& ACEvent::genTauDecays() const {
 }
 std::vector<ACGenDecay *> ** ACEvent::linkGenTauDecays() {
     return &genTauDecays_;
+}
+
+const std::vector<ACTrack *>& ACEvent::tracks() const {
+    checkContent(tracks_, "tracks");
+    return *tracks_;
+}
+std::vector<ACTrack *> ** ACEvent::linkTracks() {
+    return &tracks_;
 }
 
 const std::vector<ACParticle *>& ACEvent::muons() const {

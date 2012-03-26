@@ -20,6 +20,7 @@
 #include "../../../ACDataFormats/ACGeneral/interface/ACPFTau.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACParticle.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACPileupInfo.h"
+#include "../../../ACDataFormats/ACGeneral/interface/ACTrack.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACTrigger.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACVertex.h"
 
@@ -58,6 +59,10 @@ public:
     /// set generator tau decays
     std::vector<ACGenDecay *> ** linkGenTauDecays();
     
+    const std::vector<ACTrack *>& tracks() const;
+    /// set track collection
+    std::vector<ACTrack *> ** linkTracks();
+
     const std::vector<ACParticle *>& muons() const;
     /// set muon collection
     std::vector<ACParticle *> ** linkMuons();
@@ -98,6 +103,8 @@ protected:
     std::vector<ACVertex *> * offlinePV_;
     /// branch content: primary vertices after removal of tracks assigned to tau daughters
     std::vector<ACVertex *> * reducedPV_;
+    /// branch content: track collection
+    std::vector<ACTrack *> * tracks_;
     /// branch content: muon collection
     std::vector<ACParticle *> * muons_;
     /// branch content: electron collection (gsf)
