@@ -32,6 +32,8 @@ public:
     void setStoragePaths(const std::vector<std::string> & storagePaths) { storagePaths_ = storagePaths; }
     const std::vector<int> & runIDs() const { return runIDs_; }
     void setRunIDs(std::vector<int> runIDs) { runIDs_ = runIDs; }
+	const std::vector<std::string> & triggerPaths() const { return triggerPaths_; }
+    void setTriggerPaths(const std::vector<std::string> & triggerPaths) { triggerPaths_ = triggerPaths; }
 	const std::string & jobType() const { return jobType_; }
     void setJobType(const std::string & jobType) { jobType_ = jobType;};
 	double scale() const { return scale_; }
@@ -62,6 +64,8 @@ protected:
 	std::vector<std::string> storagePaths_;
     /// list of processed run ID's
 	std::vector<int> runIDs_;
+    /// list of processed trigger paths (in case a trigger pattern is selected)
+	std::vector<std::string> triggerPaths_;
     /// type of the given job
 	std::string jobType_;
 	/// cross section in pb, see eventRates.nb or dataSets.numbers. only filled in case of MC.

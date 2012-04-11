@@ -8,6 +8,7 @@ ACDataset::ACDataset() {
 	initialEvents_ = 0;
 	storagePaths_.clear();
     runIDs_.clear();
+    triggerPaths_.clear();
 	scale_ = 1.0;
 	xsection_ = -1.;
 	luminosity_ = -1.;
@@ -18,6 +19,8 @@ ACDataset::ACDataset() {
 ACDataset::ACDataset(const std::string & name, const std::string & alias, long long int initialEvents, std::vector<std::string> storagePaths, const std::string & jobType, double xsection, float luminosity, bool isBackground, bool isData, double scale):
 name_(name), alias_(alias), initialEvents_(initialEvents), storagePaths_(storagePaths), jobType_(jobType), xsection_(xsection), luminosity_(luminosity), isBackground_(isBackground), isData_(isData), scale_(scale) {
     counters_ = new ACCounter();
+    runIDs_.clear();
+    triggerPaths_.clear();
 }
 ACDataset::~ACDataset() {
     //delete counters_;
