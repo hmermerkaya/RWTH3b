@@ -12,7 +12,8 @@ ACFitParticleConverter::ACFitParticleConverter(const SelectedKinematicParticle &
     if (genRef) genRef_ = *genRef;
 
     //not filled yet:    decayIndex_ = ???;
-    //members of SelectedKinematicParticle not used yet:        reco::PFCandidateRef PFCandRef() const;
+    //members of SelectedKinematicParticle not used yet:
+    //- reco::RecoChargedCandidateRef & SelectedKinematicParticle::candRef() const;
 
     initialP4_.SetVectM(TVector3(selPart.input_parameters()[3],selPart.input_parameters()[4],selPart.input_parameters()[5]), selPart.input_parameters()[6]);
     initialVertex_.SetXYZ(selPart.input_parameters()[0],selPart.input_parameters()[1],selPart.input_parameters()[2]);
