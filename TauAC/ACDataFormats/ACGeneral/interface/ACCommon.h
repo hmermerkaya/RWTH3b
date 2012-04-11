@@ -28,7 +28,7 @@ protected:
     /// convert any value to a string
     template <class T> std::string any2string(T i);
     /// split a string into tokens separated by a specific delimiter
-    void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters=" ");
+    void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters=" ") const;
     /// round value to a given precission
     double round(double value, int power = 0);
     /// delete pointers in a vector
