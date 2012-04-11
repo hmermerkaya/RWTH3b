@@ -3,6 +3,8 @@
 ACExampleHarvester::ACExampleHarvester(const std::string & outpath, bool modifyInputFiles):
 ACHarvester(outpath, modifyInputFiles) {
 }
+ACExampleHarvester::~ACExampleHarvester() {
+}
 
 int main(int argc, char* argv[]) {
     TStopwatch timer;

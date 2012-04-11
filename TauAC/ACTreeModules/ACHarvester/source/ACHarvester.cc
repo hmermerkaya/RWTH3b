@@ -24,7 +24,7 @@ void ACHarvester::scanDirectories(const std::vector<std::string> & directories, 
 }
 bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool printDatasets, bool forcedMergeAll) {
     if (fileNames.size() < 1) {
-        std::cout<<"Harvester::loadRootFiles: ERROR! Empty file list!"<<std::endl;
+        std::cout<<"ACHarvester::loadRootFiles: ERROR! Empty file list!"<<std::endl;
         return false;
     }
     forcedMergeAll_ = forcedMergeAll;
@@ -47,11 +47,11 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
         if (!modifyInputFiles_) {
             file = TFile::Open(abspath.c_str(), "READ");
         } else {
-            std::cout<<"Harvester::loadRootFiles: WARNING! Opening file in write mode at "<<*ifile<<std::endl;
+            std::cout<<"ACHarvester::loadRootFiles: WARNING! Opening file in write mode at "<<*ifile<<std::endl;
             file = TFile::Open(abspath.c_str(), "UPDATE");
         }
         if (!file) {
-            std::cout<<"Harvester::loadRootFiles: ERROR! No file at "<<*ifile<<std::endl;
+            std::cout<<"ACHarvester::loadRootFiles: ERROR! No file at "<<*ifile<<std::endl;
             return false;
         }
         
@@ -93,7 +93,7 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
                         break;
                     }
                 } else {
-                    std::cout<<"Harvester::identifyRootFiles:ERROR! multiple datasets found in "<<ifile->c_str()<<std::endl;
+                    std::cout<<"ACHarvester::identifyRootFiles:ERROR! multiple datasets found in "<<ifile->c_str()<<std::endl;
                     return 101;
                 }
             } else {
@@ -102,17 +102,17 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
         }
         TH1::AddDirectory(status);
         if (!dataset) {
-            std::cout<<"Harvester::identifyRootFiles:ERROR! no dataset found in "<<ifile->c_str()<<std::endl;
+            std::cout<<"ACHarvester::identifyRootFiles:ERROR! no dataset found in "<<ifile->c_str()<<std::endl;
             return 101;
         }
         allDatasets.push_back(std::make_pair(dataset, file));
     }
     if (modified) {
-        std::cout<<"Harvester::loadRootFiles:Input files have been modified. Skip further harvesting."<<std::endl;
+        std::cout<<"ACHarvester::loadRootFiles:Input files have been modified. Skip further harvesting."<<std::endl;
         throw 404;
     }
     if (splitByJobType && splitByDatasetName) {
-        std::cout<<"Harvester::loadRootFiles:ERROR! Mismatch both in jobTypes of dataset names. Harvesting impossible."<<std::endl;
+        std::cout<<"ACHarvester::loadRootFiles:ERROR! Mismatch both in jobTypes of dataset names. Harvesting impossible."<<std::endl;
         throw 404;
     }
     if (splitByJobType && !splitByDatasetName) {
@@ -185,17 +185,17 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
             for (std::vector<TFile*>::const_iterator iter = sample->second.second.begin(); iter != sample->second.second.end(); ++iter) {
                 filesOfCommonSample.Add(*iter);
             }            
-            mergeRootFiles(file, filesOfCommonSample, 0, 0);
+            mergeRootFiles(file, &filesOfCommonSample, 0, 0);
             file->Write();
             // the following two lines are a HOTFIX needed due to a ROOT bug on larger amounts of files
             file->Close();
-            file = TFile::Open(fullPath.c_str());
+            file = TFile::Open(fullPath.c_str(), "READ");//no writing needed any longer
         } else {
             file = sample->second.second.front();
         }
         if (file) mergedDatasets_->push_back(std::make_pair(sample->second.first, file));
         else {
-            std::cout<<"Harvester::loadRootFiles:ERROR! Invalid file created!"<<std::endl;
+            std::cout<<"ACHarvester::loadRootFiles:ERROR! Invalid file created!"<<std::endl;
             throw 404;
         }
         if (fileNames.size()>1) printf("--> Merged %lu file(s) for %s.\n", sample->second.second.size(), sample->first.c_str());
@@ -205,7 +205,7 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
 void ACHarvester::burstCompare() {
     if (operationMode_==3) return;
     if (mergedDatasets_->size() != 2) {
-        std::cout<<"Harvester::burstCompare:INFO! Provide exact two different samples to compare! Skip it."<<std::endl;
+        std::cout<<"ACHarvester::burstCompare:INFO! Provide exact two different samples to compare! Skip it."<<std::endl;
         return;
     }
     if (operationMode_==1) printf("--> Start comparison of %s vs. %s.\n", mergedDatasets_->at(0).first->name().c_str(), mergedDatasets_->at(1).first->name().c_str());
@@ -227,27 +227,28 @@ void ACHarvester::burstCompare() {
     }
 
     compareStyle();
-    mergeRootFiles(target, fileList, 0, 1);
+    mergeRootFiles(target, &fileList, 0, 1);
     target->Write();
     target->Close();
     printf("    Comparison output at %s.\n", filePath.c_str());
 }
 void ACHarvester::scanFileForHistograms(TFile * file) {
-    TFile * tmpFile = new TFile("tmpFile", "RECREATE");
-    TList fileList;
-    fileList.Add(file);
-    mergeRootFiles(tmpFile, fileList, 0, 3);
-    tmpFile->Close();
-    delete tmpFile;
+    scanRootFile(file, 0);
+    file->Close();
+    delete file;
+    //std::cout<<"ACHarvester::scanFileForHistograms done!"<<std::endl;
 }
 
+void ACHarvester::mergeHistograms(TH1 * hist1, TH1 * hist2) {
+    hist1->Add(hist2);
+}
 void ACHarvester::compareHistograms(TH1 * hist1, TH1 * hist2, const ACDataset * dataset1, const ACDataset * dataset2, const std::string & storagePath, const std::string & path) {
     if (!createPlotDir(storagePath, path)) {
-        std::cout<<"Harvester::compareHistograms: ERROR! Failed to create path: "<<storagePath<<"/"<<path<<std::endl;
+        std::cout<<"ACHarvester::compareHistograms: ERROR! Failed to create path: "<<storagePath<<"/"<<path<<std::endl;
         throw 404;
     }
     if (hist1->GetEntries() == 0. || hist2->GetEntries() == 0.) {
-        std::cout<<"Harvester::compareHistograms: WARNING! Empty histogram. Skip "<<path<<"/"<<hist1->GetName()<<std::endl;
+        std::cout<<"ACHarvester::compareHistograms: WARNING! Empty histogram. Skip "<<path<<"/"<<hist1->GetName()<<std::endl;
         return;
     }
     if (!checkCompatibleBinning(hist1, hist2)) {
@@ -292,7 +293,7 @@ void ACHarvester::compareHistograms(TH1 * hist1, TH1 * hist2, const ACDataset * 
         }
         if (normType_==2) {
             //scale to lumi
-            std::cout<<"Harvester::compareHistograms: WARNING! Normalization to lumi not implemented yet. Need to reed desired lumi"<<std::endl;
+            std::cout<<"ACHarvester::compareHistograms: WARNING! Normalization to lumi not implemented yet. Need to reed desired lumi"<<std::endl;
             //h1->Scale(d1->norm(desiredLumi));
             //h2->Scale(d2->norm(desiredLumi));
         }
@@ -389,33 +390,300 @@ bool ACHarvester::modifyDataset(ACDataset * dataset) {
 
     return madeChanges;
 }
-void ACHarvester::mergeRootFiles(TDirectory * target, const TList & inputFiles, int depth, int mode) {
+int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, int depth, int mode) {
     //std::cout << "Target path: " << target->GetPath() << std::endl;
     if (mode==1) {
-        if (inputFiles.GetSize()!=2) {
-            std::cout<<"Harvester::mergeRootFiles: ERROR! To compare histograms specify exact 2 files, not "<<inputFiles.GetSize()<<std::endl;
+        if (sourcelist->GetSize()!=2) {
+            std::cout<<"ACHarvester::mergeRootFiles: ERROR! To compare histograms specify exact 2 files, not "<<sourcelist->GetSize()<<std::endl;
             throw 404;
         }
     }
     depth++;
 //    printf("--> Merge layer %i\r", depth);
 //    fflush(stdout);
+
+    
+    Bool_t status = kTRUE;
+    
+    // Get the dir name
+    std::string fullPath = target->GetPath();
+    std::string::size_type pos = fullPath.find(":");
+    TString path(fullPath.substr(pos+2));
+    std::string storagePath = fullPath.substr(0, pos-5);//strip .root
+    //std::cout << "storagePath, path: " << storagePath <<","<< path << std::endl;
+
+    
+    Int_t nguess = sourcelist->GetSize()+1000;
+    THashList allNames(nguess);
+    allNames.SetOwner(kTRUE);//If hashlist is the owner of its contents, these objects will be deleted whenever the collection itself is deleted
+
+    // performence increase
+    ((THashList*)target->GetList())->Rehash(nguess);
+    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
+    
+    
+    TFile      * current_file = (TFile*)sourcelist->First();
+    TDirectory * current_sourcedir = current_file->GetDirectory(path);
+    
+    while (current_file || current_sourcedir) {
+        // When current_sourcedir != 0 and current_file == 0 we are going over the target
+        // for an incremental merge.
+        if (current_sourcedir && (current_file == 0 || current_sourcedir != target)) {
+            
+            // loop over all keys in this directory
+            TIter nextkey( current_sourcedir->GetListOfKeys() );
+            TKey *key;
+            TString oldkeyname;
+            
+            while ( (key = (TKey*)nextkey())) {
+                
+                // Keep only the highest cycle number for each key.  They are stored in the (hash) list
+                // consecutively and in decreasing order of cycles, so we can continue until the name
+                // changes.
+                if (oldkeyname == key->GetName()) continue;
+                // Read in but do not copy directly the processIds.
+                if (strcmp(key->GetClassName(),"TProcessID") == 0) { key->ReadObj(); continue;}
+                // If we have already seen this object [name], we already processed
+                // the whole list of files for this objects and we can just skip it
+                // and any related cycles.
+                if (allNames.FindObject(key->GetName())) {
+                    oldkeyname = key->GetName();
+                    continue;
+                }
+                
+                TClass *cl = TClass::GetClass(key->GetClassName());
+                if (!cl || !cl->InheritsFrom(TObject::Class())) {
+                    Info("MergeRecursive", "cannot merge object type, name: %s title: %s",
+                         key->GetName(), key->GetTitle());
+                    continue;
+                }
+                allNames.Add(new TObjString(key->GetName()));
+                
+                // read object from first source file
+                TObject *obj;
+                obj = key->ReadObj();
+                if (!obj) {
+                    Info("MergeRecursive", "could not read object for key {%s, %s}",
+                         key->GetName(), key->GetTitle());
+                    continue;
+                }
+                
+                Bool_t canBeMerged = kTRUE;
+                
+                if ( obj->IsA()->InheritsFrom( TDirectory::Class() ) ) {
+                    // it's a subdirectory
+                    //std::cout << "Found subdirectory " << obj->GetName() << "at depth "<< depth << std::endl;
+                    target->cd();
+                    TDirectory *newdir;
+                    newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
+                    
+                    // newdir is now the starting point of another round of merging
+                    // newdir still knows its depth within the target file via
+                    // GetPath(), so we can still figure out where we are in the recursion
+                    //status = MergeRecursive(newdir, sourcelist, type);
+                    status = mergeRootFiles(newdir, sourcelist, depth, mode);
+                    if (!status) return status;
+                } else if (obj->IsA()->InheritsFrom("TH1") || obj->IsA()->InheritsFrom("ACDataset") ) {
+                    TList inputs;//store link to input objects for easy deletion
+
+                    ACDataset * dataset = 0;
+                    TH1 * h1 = 0;
+                    
+                    if (obj->IsA()->InheritsFrom("TH1") ) {
+                        h1 = (TH1*)obj;
+                        //std::cout << "Work on histogram " << obj->GetName() << std::endl;
+                    } else if (obj->IsA()->InheritsFrom("ACDataset") ) {
+                        dataset = (ACDataset*)obj;
+                        std::cout<<"--> found first dataset: "<<dataset->name()<<std::endl;
+                    }
+
+                    // Loop over all source files and merge same-name object
+                    TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
+                    if (nextsource == 0) {
+                        // There is only one file in the list
+                    } else {
+                        unsigned int sampleID = 0;
+                        bool inconsistency = false;
+                        bool binInconsistency = false;
+                        do {
+                            sampleID++;
+                            // make sure we are at the correct directory level by cd'ing to path
+                            TDirectory *ndir = nextsource->GetDirectory(path);
+                            if (ndir) {
+                                ndir->cd();
+                                TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
+                                if (key2) {
+                                    TObject *hobj = key2->ReadObj();
+                                    if (!hobj) {
+                                        Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                             key->GetName(), key->GetTitle(), nextsource->GetName());
+                                        nextsource = (TFile*)sourcelist->After(nextsource);
+                                        continue;
+                                    }
+                                    // Set ownership for collections
+                                    if (hobj->InheritsFrom(TCollection::Class())) {
+                                        ((TCollection*)hobj)->SetOwner();
+                                    }
+                                    hobj->ResetBit(kMustCleanup);
+                                    inputs.Add(hobj);
+                                    
+                                    // now do indiviual merging operations
+                                    if (obj->IsA()->InheritsFrom("TH1") ) {
+                                        TH1 *h2 = (TH2*)hobj;
+                                        if (mode==0) {
+                                            if (checkCompatibleBinning(h1, h2)) mergeHistograms(h1, h2);
+                                            else {
+                                                if (!recoverBinInconsistency(h1, h2)) {
+                                                    if (!binInconsistency) {
+                                                        // report inconsistencies once
+                                                        std::cout<<"    Bins mismatch! Skip histogram "<<path<<"/"<<h2->GetName()<<". No further warnings."<<std::endl;
+                                                        binInconsistency = true;
+                                                    }
+                                                }
+                                            }
+                                        } else compareHistograms(h1, h2, mergedDatasets_->at(0).first, mergedDatasets_->at(sampleID).first, storagePath, path.Data());
+                                    }
+                                    if (obj->IsA()->InheritsFrom("ACDataset") ) {
+                                        if (mode==0) {
+                                            ACDataset * dataset2 = (ACDataset*)hobj;
+                                            //std::cout<<"--> found further dataset: "<<dataset2->name()<<std::endl;
+                                            if (!forcedMergeAll_) {
+                                                if (dataset->name()!=dataset2->name()) {
+                                                    std::cout<<"ACHarvester::mergeRootFiles:ERROR! Mismatch in ACDatasets names: "<<dataset->name()<<"!="<<dataset2->name()<<std::endl;
+                                                    throw 404;
+                                                }
+                                                if (dataset->jobType()!=dataset2->jobType()) {
+                                                    std::cout<<"ACHarvester::mergeRootFiles:ERROR! Mismatch in ACDataset jobTypes: "<<dataset->jobType()<<"!="<<dataset2->jobType()<<std::endl;
+                                                    throw 404;
+                                                }
+                                            }
+                                            combineDatasets(dataset, dataset2);
+                                        }
+                                    }
+                                    // Remove all objects from the list AND delete all heap based objects
+                                    inputs.Delete();
+                                } else {
+                                    if (!inconsistency) {
+                                        // report inconsistencies once
+                                        std::cout<<"    Skip missing object "<<obj->GetName()<<". No further warnings."<<std::endl;
+                                        inconsistency = true;
+                                    }
+                                }
+                            } //std::cout<<"    ignore missing dir "<<path<<" for obj "<<obj->GetName()<<" in file "<<nextsource->GetPath()<<std::endl;
+                            nextsource = (TFile*)sourcelist->After( nextsource );
+                        } while (nextsource);
+                    }
+                } else {
+                    // Object is of no type that we can merge
+                    std::cout << "ACHarvester::mergeRootFiles: WARNING! Cannot merge unknown object type, name: "<<obj->GetName() << " title: " << obj->GetTitle() << std::endl;
+
+                    Bool_t warned = kFALSE;
+                    canBeMerged = kFALSE;
+                    
+                    // Loop over all source files and write similar objects directly to the output file
+                    TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
+                    while (nextsource) {
+                        // make sure we are at the correct directory level by cd'ing to path
+                        TDirectory *ndir = nextsource->GetDirectory(path);
+                        if (ndir) {
+                            ndir->cd();
+                            TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
+                            if (key2) {
+                                if (!warned) {
+                                    Warning("MergeRecursive", "cannot merge object type (n:'%s', t:'%s') - "
+                                            "Merge(TCollection *) not implemented",
+                                            obj->GetName(), obj->GetTitle());
+                                    warned = kTRUE;
+                                }
+                                TObject *nobj = key2->ReadObj();
+                                if (!nobj) {
+                                    Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
+                                         key->GetName(), key->GetTitle(), nextsource->GetName());
+                                    nextsource = (TFile*)sourcelist->After(nextsource);
+                                    continue;
+                                }
+                                nobj->ResetBit(kMustCleanup);
+                                if (target->WriteTObject(nobj, key2->GetName(), "SingleKey") <= 0) {
+                                    Warning("MergeRecursive", "problems copying object (n:'%s', t:'%s') to output file ",
+                                            obj->GetName(), obj->GetTitle());
+                                    status = kFALSE;
+                                }
+                                delete nobj;
+                            }
+                        }
+                        nextsource = (TFile*)sourcelist->After( nextsource );
+                    }
+                }
+                
+                // now write the merged histogram (which is "in" obj) to the target file
+                // note that this will just store obj in the current directory level,
+                // which is not persistent until the complete directory itself is stored
+                // by "target->SaveSelf()" below
+                target->cd();
+                
+                oldkeyname = key->GetName();
+                //!!if the object is a tree, it is stored in globChain...
+                if(obj->IsA()->InheritsFrom( TDirectory::Class() )) {
+                    // Do not delete the directory if it is part of the output
+                    // and we are in incremental mode (because it will be reuse
+                    // and has not been written to disk (for performance reason).
+                    // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed. 
+                    if (dynamic_cast<TDirectory*>(obj)->GetFile() != target) {
+                        delete obj;
+                    }
+                } else if (obj->IsA()->InheritsFrom( TCollection::Class() )) {
+                    // Don't overwrite, if the object were not merged.
+                    if ( obj->Write( oldkeyname, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <= 0 ) {
+                        status = kFALSE;
+                    }
+                    ((TCollection*)obj)->SetOwner();
+                    delete obj;
+                } else {
+                    // Don't overwrite, if the object were not merged.
+                    if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
+                        status = kFALSE;
+                    }
+                    delete obj;
+                }
+            } // while ( ( TKey *key = (TKey*)nextkey() ) )
+        }
+        current_file = current_file ? (TFile*)sourcelist->After(current_file) : (TFile*)sourcelist->First();
+        if (current_file) {
+            current_sourcedir = current_file->GetDirectory(path);
+        } else {
+            current_sourcedir = 0;
+        }
+    }
+    // save modifications to the target directory.
+
+    // In case of incremental build, we will call Write on the top directory/file, so we do not need
+    // to call SaveSelf explicilty.
+    target->SaveSelf(kTRUE);
+    
+    return status;
+}
+void ACHarvester::scanRootFile(const TDirectory * target, int depth) {
+    //std::cout << "Target path: " << target->GetPath() << std::endl;
+    depth++;
+    //    printf("--> Merge layer %i\r", depth);
+    //    fflush(stdout);
     
     std::string fullPath = target->GetPath();
     std::string::size_type pos = fullPath.find(":");
     TString path(fullPath.substr(pos+2));
     std::string storagePath = fullPath.substr(0, pos-5);//without .root
-                                                        //std::cout << "storagePath, path: " << storagePath <<","<< path << std::endl;
     
-    TFile *first_source = (TFile*)inputFiles.First();    
-    first_source->cd(path);
-    TDirectory *current_sourcedir = gDirectory;
+    //std::cout << "storagePath, path: " << storagePath <<","<< path << std::endl;
+    
+    TDirectory * current_sourcedir = gDirectory;
+    current_sourcedir = current_sourcedir->GetDirectory(path);
+    //std::cout << "Target path: " << current_sourcedir->GetPath() << std::endl;
+    
     //gain time, do not add the objects in the list in memory
     Bool_t status = TH1::AddDirectoryStatus();
     TH1::AddDirectory(kFALSE);
     
     // loop over all keys in this directory
-    TChain *globChain = 0;
     TIter nextkey(current_sourcedir->GetListOfKeys());
     TKey *key, *oldkey=0;
     while ((key = (TKey*)nextkey())) {
@@ -423,153 +691,32 @@ void ACHarvester::mergeRootFiles(TDirectory * target, const TList & inputFiles, 
         //keep only the highest cycle number for each key
         if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
         // read object from first source file
-        first_source->cd(path);
         TObject *obj = key->ReadObj();
         //std::cout << "Reading oject " << obj->GetName() << std::endl;
-        if (obj->IsA()->InheritsFrom("TH1")) {
-            //std::cout << "Merging histogram " << obj->GetName() << std::endl;
-            TH1 *h1 = (TH1*)obj;
-            if (mode==3) {
-                processHistogram(h1, path.Data());
-                continue;
-            }
-            // loop over all source files and merge the content of the
-            // correspondant histogram with the one pointed to by "h1"
-            TFile *nextsource = (TFile*)inputFiles.After(first_source);
-            unsigned int sampleID = 0;
-            bool inconsistency = false;
-            bool binInconsistency = false;
-            while (nextsource) {
-                sampleID++;
-                // make sure we are at the correct directory level by cd'ing to path
-                TDirectory * exists = nextsource->GetDirectory(path);
-                if (!exists) {
-                    if (!inconsistency) {
-                        // report inconsistencies once
-                        std::cout<<"    Skip missing directory when searching for "<<path<<"/"<<h1->GetName()<<". No further warnings."<<std::endl;
-                        inconsistency = true;
-                    }
-                } else {
-                    exists->cd();
-                    TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
-                    if (key2) {
-                        TH1 *h2 = (TH1*)key2->ReadObj();
-                        if (mode==0) {
-                            if (checkCompatibleBinning(h1, h2)) h1->Add(h2);
-                            else {
-                                if (!binInconsistency) {
-                                    // report inconsistencies once
-                                    std::cout<<"    Bins mismatch! Skip histogram "<<path<<"/"<<h2->GetName()<<". No further warnings."<<std::endl;
-                                    binInconsistency = true;
-                                }                                
-                            }
-                        } else compareHistograms(h1, h2, mergedDatasets_->at(0).first, mergedDatasets_->at(sampleID).first, storagePath, path.Data());
-                        delete h2;
-                    } else {
-                        if (!inconsistency) {
-                            // report inconsistencies once
-                            std::cout<<"    Skip missing histogram "<<h1->GetName()<<". No further warnings."<<std::endl;
-                            //std::cout<<"    Skip histogram "<<h1->GetName()<<". First detected in "<<exists->GetPath()<<std::endl;
-                            inconsistency = true;
-                        }
-                    }
-                }
-                nextsource = (TFile*)inputFiles.After(nextsource);
-            }
-        } else if (obj->IsA()->InheritsFrom("TTree")) {
-            // loop over all source files create a chain of Trees "globChain"
-            if (mode!=0) {
-                continue;
-            }
-            const char* obj_name= obj->GetName();            
-            globChain = new TChain(obj_name);
-            globChain->Add(first_source->GetName());
-            TFile *nextsource = (TFile*)inputFiles.After(first_source);
-            //      const char* file_name = nextsource->GetName();
-            // cout << "file name  " << file_name << std::endl;
-            while (nextsource) {
-                globChain->Add(nextsource->GetName());
-                nextsource = (TFile*)inputFiles.After(nextsource);
-            }
-        } else if (obj->IsA()->InheritsFrom("TDirectory")) {
-            //std::cout << "Found subdirectory " << obj->GetName() << "at depth "<< depth << std::endl;
-            // create a new subdir of same name and title in the target file
-            target->cd();
-            TDirectory *newdir = target->mkdir(obj->GetName(), obj->GetTitle());
-            // newdir is now the starting point of another round of merging
-            // newdir still knows its depth within the target file via
-            // GetPath(), so we can still figure out where we are in the recursion
-            mergeRootFiles(newdir, inputFiles, depth, mode);
-            
-        } else if (obj->IsA()->InheritsFrom("ACDataset")) {
-            ACDataset * dataset = (ACDataset*)obj;
-            //std::cout<<"--> found first dataset: "<<dataset->name()<<std::endl;
-            // loop over all source files and merge the contents
-            TFile *nextsource = (TFile*)inputFiles.After(first_source);
-            while (nextsource) {
-                // make sure we are at the correct directory level by cd'ing to path
-                nextsource->cd(path);
-                TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(dataset->GetName());
-                if (key2) {
-                    if (mode==0) {
-                        ACDataset * dataset2 = (ACDataset*)key2->ReadObj();
-                        //std::cout<<"--> found further dataset: "<<dataset2->name()<<std::endl;
-                        if (!forcedMergeAll_) {
-                            if (dataset->name()!=dataset2->name()) {
-                                std::cout<<"Harvester::mergeRootFiles:ERROR! Mismatch in ACDatasets names: "<<dataset->name()<<"!="<<dataset2->name()<<std::endl;
-                                throw 404;
-                            }
-                            if (dataset->jobType()!=dataset2->jobType()) {
-                                std::cout<<"Harvester::mergeRootFiles:ERROR! Mismatch in ACDataset jobTypes: "<<dataset->jobType()<<"!="<<dataset2->jobType()<<std::endl;
-                                throw 404;
-                            }
-                        }
-                        combineDatasets(dataset, dataset2);
-                        delete dataset2;
-                    }
-                } else {
-                    std::cout<<"Harvester::mergeRootFiles:Mismatch! Couldn't find an instance of ACDataset in "<<nextsource->GetPath()<<std::endl;
-                }
-                nextsource = (TFile*)inputFiles.After(nextsource);
-            }
-        } else {            
-            // object is of no type that we know or can handle
-            std::cout << "Unknown object type, name: " 
-            << obj->GetName() << " title: " << obj->GetTitle() << std::endl;
-            throw 404;
-        }
         
-        // now write the merged histogram (which is "in" obj) to the target file
-        // note that this will just store obj in the current directory level,
-        // which is not persistent until the complete directory itself is stored
-        // by "target->Write()" below
-        if (obj) {
-            target->cd();
-            
-            //!!if the object is a tree, it is stored in globChain...
-            if(obj->IsA()->InheritsFrom( "TDirectory" )) {
-                //do nothing
-            } else if(obj->IsA()->InheritsFrom( "TTree" )) {
-                globChain->ls();
-                //if (fFastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
-                globChain->Merge(target->GetFile(),0,"keep");
-                delete globChain;
-            } else if (obj->IsA()->InheritsFrom( "TCollection" )) {
-                obj->Write( key->GetName(), TObject::kSingleKey );
-            } else {
-                obj->Write( key->GetName() );
-            }
+        if (obj->IsA()->InheritsFrom("TDirectory")) {
+            //std::cout << "Found subdirectory " << obj->GetName() << " at depth "<< depth << std::endl;
+            TDirectory * newdir = current_sourcedir->GetDirectory(obj->GetName());
+            scanRootFile(newdir, depth);
+        } else if (obj->IsA()->InheritsFrom("TH1")) {
+            //std::cout << "Process histogram " << obj->GetName() << std::endl;
+            TH1 *h1 = (TH1*)obj;
+            processHistogram(h1, path.Data());
         }
         oldkey = key;        
     }
-    // save modifications to target file
-    //target->SaveSelf(kTRUE);
     TH1::AddDirectory(status);
 }
 void ACHarvester::combineDatasets(ACDataset * d1, const ACDataset * d2) {
     //std::cout<<"merge dataset: "<<*d1<<" and "<<*d2<<std::endl;
     //std::cout<<"merge dataset: "<<d1->name()<<" and "<<d2->name()<<std::endl;
     *d1 += *d2;
+}
+bool ACHarvester::recoverBinInconsistency(TH1 * h1, TH1 * h2) const {
+    bool solved = false;
+    //user-defined solution expected here
+    
+    return solved;
 }
 
 // helper functions needed in compareHistograms
@@ -614,23 +761,20 @@ bool ACHarvester::createPlotDir(const std::string & storagePath, const std::stri
     if (path=="") return true;
 
 	//create subdirs (including /'s in canName)
-	std::string::size_type start = path.find_first_not_of("/");
-	std::string::size_type end;
+    std::vector<std::string> folders;
+    tokenizePath(path, folders, "/");
 	std::string tmp = "";
-	while (start!=std::string::npos) {
-		end = path.find("/",start+1);
-		tmp = tmp+path.substr(start, end);
+    for (std::vector<std::string>::const_iterator folder = folders.begin(); folder != folders.end(); ++folder) {
+        tmp += "/" + *folder;
 		if (stat((storagePath+"/"+tmp).c_str(), &st)==0) {//already exists, so continue
-			start = end;
 			continue;
 		}
-		//std::cout<<"Plot::Info: Path "<<storagePath+tmp<<" does not exist ";
+		//std::cout<<"Plot::setupDirectories:Info: Path "<<path_+tmp<<" does not exist ";
 		if (mkdir((storagePath+"/"+tmp).c_str(), 0777) != 0) {
-			std::cout<<"Harvester::createPlotDir: Path "<<storagePath+tmp<<" does not exist and failed to be created.\n";
-			return false;//break if failed to create
-		}//else std::cout<<"but was created.\n";
-		start = end;
-	}
+			std::cout<<"ACHarvester::createPlotDir: Path "<<storagePath+tmp<<" does not exist and failed to be created.\n";
+			break;//break if failed to create
+		}// else std::cout<<"but was created.\n";
+    }
     
     return true;
 }
@@ -665,7 +809,7 @@ void ACHarvester::addHighLegend(TVirtualPad *can, const std::vector<TH1*> & hist
 	unsigned int columns = histVect.size();
 	if(columns==0) return;
     if (columns!=names.size()) {
-        std::cout<<"Harvester::addHighLegend:ERROR! Size mismatch between histograms and labels. Skip legend."<<std::endl;
+        std::cout<<"ACHarvester::addHighLegend:ERROR! Size mismatch between histograms and labels. Skip legend."<<std::endl;
         return;
     }
 	float wholeWidth = 1-gStyle->GetPadLeftMargin()-gStyle->GetPadRightMargin();
@@ -775,4 +919,19 @@ void ACHarvester::compareStyle(){
 	
 	gStyle->SetMarkerStyle(20);
     gStyle->SetMarkerSize(.5);
+}
+void ACHarvester::tokenizePath(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters) const {
+    /// Skip delimiters at beginning.
+    std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    /// Find first "non-delimiter".
+    std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+    
+    while (std::string::npos != pos || std::string::npos != lastPos) {
+        /// Found a token, add it to the vector.
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        /// Skip delimiters. Note the "not_of"
+        lastPos = str.find_first_not_of(delimiters, pos);
+        /// Find next "non-delimiter"
+        pos = str.find_first_of(delimiters, lastPos);
+    }
 }

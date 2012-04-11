@@ -14,6 +14,7 @@
 class ACExampleHarvester : public ACHarvester {
 public:
     ACExampleHarvester(const std::string & outpath = ".", bool modifyInputFiles = false);
+	virtual ~ACExampleHarvester();
 
 protected:
 //    /// compare histograms of several dataset one-by-one (can be replaced by user-defined function)

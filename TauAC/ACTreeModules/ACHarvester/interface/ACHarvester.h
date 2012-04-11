@@ -35,7 +35,8 @@
 #include "TLatex.h"
 #include "TChain.h"
 #include "TTree.h"
-#include "TKey.h"
+#include <TKey.h>
+#include <THashList.h>
 
 #include "../../../ACDataFormats/ACGeneral/interface/ACDataset.h"
 
@@ -56,8 +57,12 @@ public :
 protected:
     /// function called for every histogram found in the first dataset (to be defined by user, e.g. store it, ...)
     virtual void processHistogram(TH1 * h1, const std::string & path) {}
+    /// merge histograms of several files (per default h1->Add(h2) is called), overload for more complex histograms
+    virtual void mergeHistograms(TH1 * hist1, TH1 * hist2);
     /// compare histograms of several dataset one-by-one (can be replaced by user-defined function)
     virtual void compareHistograms(TH1 * hist1, TH1 * hist2, const ACDataset * dataset1, const ACDataset * dataset2, const std::string & storagePath, const std::string & path);
+    /// try to recover mismatching binnings (e.g. different trigger menus), user-defined solution expected
+    virtual bool recoverBinInconsistency(TH1 * h1, TH1 * h2) const;
     /// load user plot style for comparison plots
     virtual void compareStyle();
     /// persistantly modify dataset, only called if modifyInputFiles set to true. returns whether or not changes need to be stored
@@ -85,7 +90,11 @@ private:
      mode=1: compare histograms of different datasets (2 files)
      mode=2: process histograms of the first dataset
      */
-    void mergeRootFiles(TDirectory * target, const TList & inputFiles, int count, int mode = 0);
+    int mergeRootFiles(TDirectory * target, const TList * sourcelist, int count, int mode = 0);
+    /** read stored objects and process each histogram according to user-definition in processHistogram().
+        This function replaces the former mode==3 of mergeRootFiles (it caused a problem during deletion of the temporary created target)
+     */
+    void scanRootFile(const TDirectory * target, int depth);
     /// combine instances of ACDataset of equal id
     void combineDatasets(ACDataset * d1, const ACDataset * d2);
     
@@ -103,6 +112,8 @@ private:
     void addHighLegend(TVirtualPad *can, const std::vector<TH1*> & histVect, const std::vector<std::string> & names);
     /// add a branding in comparison plots
     void addBranding(const std::string & branding);
+    /// split a string into tokens separated by a specific delimiter (lazy copy from ACCommon.h)
+    void tokenizePath(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters=" ") const;
     
 };
 
