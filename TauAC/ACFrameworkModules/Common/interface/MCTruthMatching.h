@@ -30,6 +30,8 @@ public:
     const ACGenParticleRef * getMatching(const edm::Event& evt, const SelectedKinematicParticle * kinparticle);
     /// retrieve a reference to the converted offline object from a framework reference
     const ACGenParticleRef * getConverted(const reco::GenParticleRef & onlineRef) const;
+    /// increment counter if getMatching is not used
+    void increment(bool matched);
 
 private:
     edm::InputTag mapTag_;

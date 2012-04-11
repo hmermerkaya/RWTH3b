@@ -385,7 +385,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
         *tauDecays_ = std::vector<ACFittedThreeProngDecay *>();
         *fittedThreeProngParticles_ = std::vector<ACFitParticle *>();
         for (SelectedKinematicDecayCollection::const_iterator decay = kinematicTaus->begin(); decay != kinematicTaus->end(); ++decay) {
-            ACFittedThreeProngDecayConverter tmp(evt, *decay, kinematicParticleMatching_, fittedThreeProngParticles_, conversionLogPFTau_);
+            ACFittedThreeProngDecayConverter tmp(evt, *decay, kinematicParticleMatching_, genTauDecays_, fittedThreeProngParticles_, conversionLogPFTau_);
             ACFittedThreeProngDecay * tmpP = new ACFittedThreeProngDecay();
             *tmpP = tmp;
             tauDecays_->push_back(tmpP);

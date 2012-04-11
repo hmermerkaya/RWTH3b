@@ -59,6 +59,10 @@ const ACGenParticleRef * MCTruthMatching::getConverted(const reco::GenParticleRe
     return 0;
 
 }
+void MCTruthMatching::increment(bool matched) {
+    passedParticles_++;
+    if (matched) cntMatched_++;
+}
 void MCTruthMatching::printOutro() {
     float ratio = 0.0;
     if (passedParticles_!=0) ratio = (float)cntMatched_/passedParticles_;
