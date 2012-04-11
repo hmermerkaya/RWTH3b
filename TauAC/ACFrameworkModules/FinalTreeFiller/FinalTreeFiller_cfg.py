@@ -21,14 +21,14 @@ process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 ###############
 #steering parameters#
 inputPath, outputPath, jobName, globaltag, isData, jsonFile, pileUpDistributionMC = Steering.LoadUserParameters()
-numberOfEvents = 1000
+numberOfEvents = 100000
 ignoreFilter = True # but always ignore TauMotherProducer until its ready
 printEvents = 0	#print generator event
 triggerTag = "HLT"
 minTau = 1 #minimum of selected taus
 doPileUpReweighting = True
 pileUpReweightingType = "true" #(true or observed) choose according to https://twiki.cern.ch/twiki/bin/view/CMS/PileupMCReweightingUtilities
-runFromCrab = False
+runFromCrab = True
 ###############
 
 if not runFromCrab:

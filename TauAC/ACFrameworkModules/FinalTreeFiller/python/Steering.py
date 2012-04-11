@@ -5,7 +5,7 @@ baseDir = os.path.relpath(os.environ.get('CMSSW_BASE')+"/src")
 
 def LoadUserParameters():
     username = 'perchalla'
-    outputPath = '/user/'+username+'/output/analysis/CMSSW_4_4_2/TauAC_V01-08-01/'
+    outputPath = '/user/'+username+'/output/analysis/CMSSW_4_4_2/TauAC_V01-08-02/'
 
 #    jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_PromptReco_Collisions11_JSON.txt"
     jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_ReRecoNov08_Collisions11_JSON.txt"
