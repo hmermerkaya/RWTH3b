@@ -43,9 +43,9 @@ public:
 private:
     virtual int create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks);
 
-	bool createStartScenario(std::vector<reco::TrackRef> &input, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, reco::Vertex &primVtx);
-	bool kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex &primVtx);
-	bool choose3bestTracks(std::vector<reco::TrackRef> &input, reco::Vertex & pVtx);
+	bool createStartScenario(std::vector<reco::TrackRef> &input, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, const reco::Vertex & primaryVertex);
+	bool kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex);
+	bool choose3bestTracks(std::vector<reco::TrackRef> &input, const reco::Vertex & primaryVertex);
 	bool sumCharge(std::vector<reco::TrackRef> &input);
 	std::vector<reco::TransientTrack> convToTransTrck(std::vector<reco::TrackRef> &input);
 	bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);

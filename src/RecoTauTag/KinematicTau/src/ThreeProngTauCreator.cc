@@ -8,9 +8,8 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 	std::vector<RefCountedKinematicParticle> *daughters = new std::vector<RefCountedKinematicParticle>; //3 particles (3pi)
 	std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>; //1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
 	std::vector<reco::TrackRef> input = inputTracks;
-	reco::Vertex primVtx = primaryVertex;
 	
-	if(!createStartScenario(input, *daughters, *neutrinos, primVtx)) return 0;
+	if(!createStartScenario(input, *daughters, *neutrinos, primaryVertex)) return 0;
 	if (daughters->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2)){
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<daughters->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
 		return 0;
@@ -19,7 +18,8 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 	//in this version createStartScenario always rotates up to thetaMax so that there is always only one solution
 	daughters->push_back(neutrinos->at(0));
 	
-	bool fitWorked = kinematicRefit(*daughters, primVtx);
+	bool fitWorked = kinematicRefit(*daughters, modifiedPV_);//classic: point to rotated PV
+    //bool fitWorked = kinematicRefit(*daughters, primaryVertex);//alternative: point to reduced/unrotated PV
 
 	delete daughters;
 	delete neutrinos;
@@ -28,7 +28,7 @@ int ThreeProngTauCreator::create(const reco::Vertex& primaryVertex, const std::v
 	else return 0;
 }
 
-bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &input, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, reco::Vertex &primVtx){
+bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &input, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, const reco::Vertex & primaryVertex){
 	KinematicParticleFactoryFromTransientTrack kinFactory;
 	float piMassSigma = sqrt(pow(10.,-12.));//not to small to avoid singularities
 	float piChi = 0., piNdf = 0.;//only initial values
@@ -38,7 +38,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		return false;
 	}
 	if (input.size()>3){
-		if(!choose3bestTracks(input, primVtx)) return false;
+		if(!choose3bestTracks(input, primaryVertex)) return false;
 	}else{
 		if(!sumCharge(input)){
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip tauCand due to bad charge sum.";
@@ -73,9 +73,10 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 	
 	double theta0;
 	TVector3 tauFlghtDir;
-    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: initial PV ("<<primVtx.x()<<","<<primVtx.y()<<","<<primVtx.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-primVtx.position().y())/(secVtx.position().x()-primVtx.position().x()));
-	double significance = vtxC.rotatePV(primVtx, secVtx, theta0, tauFlghtDir);//rotation is forced to reach thetaMax
-	if(significance > 0.0) modifiedPV_ = primVtx;//if rotation was needed store modified vertex
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: initial PV ("<<primaryVertex.x()<<","<<primaryVertex.y()<<","<<primaryVertex.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-primaryVertex.position().y())/(secVtx.position().x()-primaryVertex.position().x()));
+    modifiedPV_ = primaryVertex;// do not modify the initial vertex, the rotation is only used for a consistent start scenario
+	double significance = vtxC.rotatePV(modifiedPV_, secVtx, theta0, tauFlghtDir);//rotation is forced to reach thetaMax
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotation significance is "<<significance;
 	
 	for(unsigned int i = 0; i!=transTrkVect.size();i++){
 		pions.push_back(kinFactory.particle(transTrkVect[i],ThreeProngTauCreator::piMass,piChi,piNdf,secVtx.position(),piMassSigma));
@@ -90,7 +91,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: thetaGJ = "<<theta0<<" but replaced by thetaMax = "<<thetaMax;
 		theta0 = thetaMax;
 	}
-    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<primVtx.x()<<","<<primVtx.y()<<","<<primVtx.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-primVtx.position().y())/(secVtx.position().x()-primVtx.position().x()))<<", theta "<<theta0;
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<modifiedPV_.x()<<","<<modifiedPV_.y()<<","<<modifiedPV_.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-modifiedPV_.position().y())/(secVtx.position().x()-modifiedPV_.position().x()))<<", theta "<<theta0;
 
 	std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),ThreeProngTauCreator::tauMass,theta0);//use a pair to prepare for ambiguities
     if (tauSolutions.first < 0. || tauSolutions.second < 0.) {
@@ -119,7 +120,7 @@ bool ThreeProngTauCreator::createStartScenario(std::vector<reco::TrackRef> &inpu
 		
 	return true;
 }
-bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex &primVtx){
+bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex){
 	if(unfitDaughters.size()!=4){
         edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
 		return false;
@@ -128,7 +129,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
 	std::vector<MultiTrackKinematicConstraint* > constraintVector;
 	MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(ThreeProngTauCreator::tauMass, unfitDaughters.size());
 	constraintVector.push_back(tauMass_c);
-	GlobalPoint linP(primVtx.x(), primVtx.y(), primVtx.z());
+	GlobalPoint linP(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
 //	MultiTrackKinematicConstraint *pointing_c = new MultiTrackPointingKinematicConstraint(linP);
 	MultiTrackKinematicConstraint *pointing_c = new MultiTrackVertexLinkKinematicConstraint(linP);
 	constraintVector.push_back(pointing_c);
@@ -151,13 +152,13 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
         LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
         return true;
     } else {
-		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Warning! Tree is not valid. Skip tauCand.";
-//		edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";
+		LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Warning! Tree is not valid. Skip tauCand.";//DEBUG
+		//edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";//INFO
 		return false;
 	}
 }
 
-bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input, reco::Vertex & pVtx){
+bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input, const reco::Vertex & primaryVertex){
 	sort(input.begin(), input.end(), cmpPt<reco::TrackRef>);
 	std::vector<std::vector<reco::TrackRef> > combis = permuteCombinations(input);
 	if(combis.size()==0){
@@ -178,9 +179,9 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to wrong mass. "<<combis.size()<<" combis left.";
 			continue;
 		}
-		TransientVertex tmpVtx;
+		TransientVertex tmprimaryVertex;
 		std::vector<reco::TransientTrack> trks = convToTransTrck(*iter);
-		if(!checkSecVtx(trks, tmpVtx)){
+		if(!checkSecVtx(trks, tmprimaryVertex)){
 			iter = combis.erase(iter);
 			LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::choose3bestTracks: erased combi due to bad vertex. "<<combis.size()<<" combis left.";
 			continue;
@@ -189,8 +190,8 @@ bool ThreeProngTauCreator::choose3bestTracks(std::vector<reco::TrackRef> &input,
 		VertexRotation vtxC(lorentzA1);
 		double theta0;
 		TVector3 tauFlghtDir;
-		reco::Vertex pvTemp = pVtx;//do not modify original pv here
-		double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
+		reco::Vertex pvTemp = primaryVertex;//do not modify original pv here
+		double significance = vtxC.rotatePV(pvTemp, tmprimaryVertex, theta0, tauFlghtDir);
 		movements.push_back(std::make_pair(index,significance));//significance of vertex modification
 		
 		++index;
@@ -275,7 +276,7 @@ std::pair<double,double> ThreeProngTauCreator::getTauMomentumMagnitudes(double m
 
     double root = (pow(ma1,2) + pow(pa1,2))*(pow(pow(ma1,2) - pow(M,2),2) -4*pow(M,2)*pow(pa1,2)*pow(sin(theta),2));
     if (root < 0.) {
-        LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Bad tau magnitude due negative root. Skip the root part and calculate the solution for a maximal GJ angle. Both solutions will be equal.";
+        LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Bad tau magnitude due to negative root. Skip the root part and calculate the solution for a maximal GJ angle. Both solutions will be equal.";
         root = 0.;
     } else root = sqrt(root);
 

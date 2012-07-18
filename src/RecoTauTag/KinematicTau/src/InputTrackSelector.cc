@@ -1,9 +1,10 @@
 #include "RecoTauTag/KinematicTau/interface/InputTrackSelector.h"
 
 InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
-tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "shrinkingCone") ),
+tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "hps") ),
 minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),//only tau candidates with more/equal than minTracks are selected
 minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),//filter returns true if more/equal than minTau_ taus were selected
+minTauPt_( iConfig.getUntrackedParameter<double>("minTauPt", 0.) ),//ignore pftaus below this pt threshold
 trkCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauDaughterTracks" ) )//restrict tau daughters to origin from a certain track collection
 {
 	produces<int>("flag");//0=invalid, 1=valid
@@ -51,7 +52,7 @@ void InputTrackSelector::beginJob(){
 void InputTrackSelector::endJob(){
 	float ratio = 0.0;
 	if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-    edm::LogVerbatim("InputTrackSelector")<<"--> [InputTrackSelector] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks) per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
+    edm::LogVerbatim("InputTrackSelector")<<"--> [InputTrackSelector] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks and pt > "<<minTauPt_<<") per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 bool InputTrackSelector::select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & PFTauRef){
 	bool found = false;
@@ -66,6 +67,9 @@ bool InputTrackSelector::select(std::vector<reco::TrackRefVector> & selected, re
 
 	for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
 		reco::PFTauRef thePFTau(inputCollection, iPFTau);
+        // filter candidates
+        if (thePFTau->pt() < minTauPt_) continue;
+
 		//LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: test tau "<<iPFTau;
 		reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
 		if(tauDaughters.size()>=minTracks_){

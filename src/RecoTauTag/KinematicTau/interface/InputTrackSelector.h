@@ -49,6 +49,7 @@ private:
 	std::string tauType_;
 	edm::InputTag primVtx_;
 	unsigned int minTracks_, minTau_, cnt_, cntFound_;
+    double minTauPt_;
     edm::InputTag trkCollectionTag_;
     
     edm::ProductID trkCollectionID_;
