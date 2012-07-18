@@ -9,10 +9,21 @@ ACHarvester::ACHarvester(const std::string & outpath, bool modifyInputFiles) {
     operationMode_ = 0;
     modifyInputFiles_ = modifyInputFiles;
     forcedMergeAll_ = false;
+    forcedMergeName_ = "";
 }
 ACHarvester::~ACHarvester() {
-    //    harvester.deleteVectorOfPointers(mergedDatasets_);
+    for (std::vector<std::pair<ACDataset*, TFile*> >::iterator i = mergedDatasets_->begin(); i < mergedDatasets_->end(); ++i) {
+        if (i->first) {
+            delete i->first;
+        }
+        if (i->second) {
+            //std::cout<<"cleanup "<<i->second->GetName()<<std::endl;
+            i->second->Close();
+            delete i->second;
+        }
+    }
     delete mergedDatasets_;
+    //std::cout<<"d'tor ACHarvester"<<std::endl;
 }
 
 // main functions
@@ -78,15 +89,13 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
                         name = dataset->name();
                         jobType = dataset->jobType();
                     } else {
-                        if (!forcedMergeAll_) {
-                            if (dataset->name() != name) {
-                                //detected different names
-                                splitByDatasetName = true;
-                            }
-                            if (dataset->jobType() != jobType) {
-                                //detected different types
-                                splitByJobType = true;
-                            }
+                        if (dataset->name() != name) {
+                            //detected different names
+                            splitByDatasetName = true;
+                        }
+                        if (dataset->jobType() != jobType) {
+                            //detected different types
+                            splitByJobType = true;
                         }
                     }
                     if (modified) {
@@ -109,31 +118,37 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
     }
     if (modified) {
         std::cout<<"ACHarvester::loadRootFiles:Input files have been modified. Skip further harvesting."<<std::endl;
-        throw 404;
+        return false;
     }
-    if (splitByJobType && splitByDatasetName) {
-        std::cout<<"ACHarvester::loadRootFiles:ERROR! Mismatch both in jobTypes of dataset names. Harvesting impossible."<<std::endl;
-        throw 404;
-    }
-    if (splitByJobType && !splitByDatasetName) {
-        operationMode_ = 2;
-        commonLabel_ = name;
-        std::cout<<"--> Validation mode: Compare datasets of different jobTypes and common name "<<commonLabel_<<"."<<std::endl;
-    }
-    if (!splitByJobType && splitByDatasetName) {
-        operationMode_ = 1;
-        commonLabel_ = jobType;
-        std::cout<<"--> Comparison mode: Compare datasets of different names and common jobType "<<commonLabel_<<"."<<std::endl;
-    }
-    if (!splitByJobType && !splitByDatasetName) {
-        if (!forcedMergeAll_) {
+    if (!forcedMergeAll_) {
+        if (splitByJobType && splitByDatasetName) {
+            std::cout<<"ACHarvester::loadRootFiles:ERROR! Mismatch both in jobTypes of dataset names. Harvesting impossible."<<std::endl;
+            throw 404;
+        }
+        if (splitByJobType && !splitByDatasetName) {
+            operationMode_ = 2;
+            commonLabel_ = name;
+            std::cout<<"--> Validation mode: Compare datasets of different jobTypes and common name "<<commonLabel_<<"."<<std::endl;
+        }
+        if (!splitByJobType && splitByDatasetName) {
+            operationMode_ = 1;
+            commonLabel_ = jobType;
+            std::cout<<"--> Comparison mode: Compare datasets of different names and common jobType "<<commonLabel_<<"."<<std::endl;
+        }
+        if (!splitByJobType && !splitByDatasetName) {
             operationMode_ = 1;
             commonLabel_ = jobType;
             if (fileNames.size()>1) std::cout<<"--> Burst mode: Datasets are equal in jobType and dataset name. Merge all of them."<<std::endl;
+        }
+    } else {
+        operationMode_ = 3;
+        // try to find common jobType
+        if (!splitByJobType) {
+            commonLabel_ = jobType;
+            std::cout<<"--> Forced burst mode: Datasets names have been ignored. Merge all files of common jobType "<<jobType<<"."<<std::endl;
         } else {
-            operationMode_ = 3;
             commonLabel_ = "";
-            std::cout<<"--> Forced burst mode: Datasets have been ignored. Merge all files."<<std::endl;        
+            std::cout<<"--> Forced burst mode: Datasets have been ignored. Merge all files."<<std::endl;
         }
     }
     // map assigning a unique key for each dataset  (either jobType or dataset name) and all correponding root files
@@ -174,31 +189,68 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
         }
     }
     mergedDatasets_->clear();
+    std::vector<std::string> validStoragePaths;
     for (std::map<std::string, std::pair<ACDataset*, std::vector<TFile*> > >::const_iterator sample = fileMap.begin(); sample != fileMap.end(); ++sample) {
         TFile * file = 0;
-        if (sample->second.second.size() > 1) {
+        
+        std::string currentPath = sample->second.second.front()->GetPath();
+        
+        if (sample->second.second.size() == 1 && (currentPath.find("merged_"+sample->first+".root")!=std::string::npos || currentPath.find("merged_FORCED_")!=std::string::npos)) {
+            // do not merge an input file identical to the merged output
+            file = sample->second.second.front();
+        } else {
+            //merge also single files to have them in the same directory (a copy would be better, I was just too lazy)
             std::string storagePath = outpath_+"/"+commonLabel_;
-            createPlotDir(storagePath);
+            bool alreadyTested = false;
+            for (std::vector<std::string>::const_iterator validStoragePath = validStoragePaths.begin(); validStoragePath != validStoragePaths.end(); ++validStoragePath) {
+                if (*validStoragePath == storagePath) {
+                    alreadyTested = true;
+                    break;
+                }
+            }
+            if (!alreadyTested) {
+                if (!createPlotDir(storagePath)) {
+                    std::cout<<"ACHarvester::loadRootFiles:ERROR! Output directory not available!"<<std::endl;
+                    throw 404;            
+                } else {
+                    validStoragePaths.push_back(storagePath);
+                }
+            }
             std::string fullPath = storagePath+"/merged_"+sample->first+".root";
             file = new TFile(fullPath.c_str(), "RECREATE");
             TList filesOfCommonSample;
             for (std::vector<TFile*>::const_iterator iter = sample->second.second.begin(); iter != sample->second.second.end(); ++iter) {
                 filesOfCommonSample.Add(*iter);
             }            
+            if (forcedMergeAll_) {
+                // choose new name for merged datasets (need to modify the dataset in the ROOT file, not the one in this map)
+                std::cout<<"--> Forced to merge datasets. Choose combined name for the merged dataset:"<<std::endl;
+                std::cout<<"\tcurrent merged dataset name = "<<sample->second.first->name()<<std::endl;
+                std::cout<<"\tType new name (just hit enter to keep the current value): ";
+                std::string newValue = readInput();
+                if (newValue!="") {
+                    forcedMergeName_ = newValue;
+                    std::cout<<"\t... replaced by "<<newValue<<std::endl;
+                } else std::cout<<"\t... keep it."<<std::endl;
+            }
             mergeRootFiles(file, &filesOfCommonSample, 0, 0);
             file->Write();
             // the following two lines are a HOTFIX needed due to a ROOT bug on larger amounts of files
             file->Close();
-            file = TFile::Open(fullPath.c_str(), "READ");//no writing needed any longer
-        } else {
-            file = sample->second.second.front();
+            if (!forcedMergeAll_) file = TFile::Open(fullPath.c_str(), "READ");//no writing needed any longer, no file needed for forcedMergeAll_, as program will quit
         }
-        if (file) mergedDatasets_->push_back(std::make_pair(sample->second.first, file));
-        else {
-            std::cout<<"ACHarvester::loadRootFiles:ERROR! Invalid file created!"<<std::endl;
-            throw 404;
+        if (!forcedMergeAll_) {
+            if (file) mergedDatasets_->push_back(std::make_pair(sample->second.first, file));
+            else {
+                std::cout<<"ACHarvester::loadRootFiles:ERROR! Invalid file created!"<<std::endl;
+                throw 404;
+            }
         }
-        if (fileNames.size()>1) printf("--> Merged %lu file(s) for %s.\n", sample->second.second.size(), sample->first.c_str());
+        if (sample->second.second.size()>1) printf("--> Merged %lu file(s) for %s.\n", sample->second.second.size(), sample->first.c_str());
+    }
+    if (forcedMergeAll_) {        
+        std::cout<<"    Skip further processing in forced merge mode."<<std::endl;
+        return false;
     }
     return true;
 }
@@ -212,7 +264,10 @@ void ACHarvester::burstCompare() {
     else if (operationMode_==2) printf("--> Start comparison of %s vs. %s.\n", mergedDatasets_->at(0).first->jobType().c_str(), mergedDatasets_->at(1).first->jobType().c_str());
 
     std::string storagePath = outpath_+"/"+commonLabel_;
-    createPlotDir(storagePath);
+    if (!createPlotDir(storagePath)) {
+        std::cout<<"ACHarvester::burstCompare:ERROR! Output directory not available!"<<std::endl;
+        throw 404;            
+    }
     std::string filePath = storagePath+"/comparison_";
     if (operationMode_==1) {
         filePath += mergedDatasets_->at(0).first->name()+"_"+mergedDatasets_->at(1).first->name()+".root";
@@ -232,11 +287,11 @@ void ACHarvester::burstCompare() {
     target->Close();
     printf("    Comparison output at %s.\n", filePath.c_str());
 }
-void ACHarvester::scanFileForHistograms(TFile * file) {
+void ACHarvester::scanFileForHistograms(const TFile * file) {
     scanRootFile(file, 0);
-    file->Close();
-    delete file;
-    //std::cout<<"ACHarvester::scanFileForHistograms done!"<<std::endl;
+    //std::cout<<"ACHarvester::scanFileForHistograms done for "<<file->GetName()<<std::endl;
+    //file->Close();// User may not want to invalidate the file here
+    //delete file;
 }
 
 void ACHarvester::mergeHistograms(TH1 * hist1, TH1 * hist2) {
@@ -359,15 +414,9 @@ bool ACHarvester::modifyDataset(ACDataset * dataset) {
     // do whatever you want to manipulate stored datasets
     std::cout<<"ACHarvester::modifyDataset:"<<std::endl;
     bool madeChanges = false;
-    std::cin.unsetf(std::ios_base::skipws); // do not skip leading whitespace
-
     std::cout<<"\tdataset name = "<<dataset->name()<<std::endl;
     std::cout<<"\tType new name (just hit enter to keep the current value): ";
-    std::string newValue = "";
-    if (!(std::cin >> newValue)) {
-		std::cin.clear();
-	}
-	while (std::cin.get() != '\n');
+    std::string newValue = readInput();
     if (newValue!="") {
         dataset->setName(newValue);
         std::cout<<"\t... replaced by "<<newValue<<std::endl;
@@ -376,12 +425,7 @@ bool ACHarvester::modifyDataset(ACDataset * dataset) {
 
     std::cout<<"\tjobType = "<<dataset->jobType()<<std::endl;
     std::cout<<"\tType new jobType (just hit enter to keep the current value): ";
-    newValue = "";
-    std::cin.unsetf(std::ios_base::skipws); // do not skip leading whitespace
-    if (!(std::cin >> newValue)) {
-		std::cin.clear();
-	}
-	while (std::cin.get() != '\n');
+    newValue = readInput();
     if (newValue!="") {
         dataset->setJobType(newValue);
         std::cout<<"\t... replaced by "<<newValue<<std::endl;
@@ -668,23 +712,12 @@ void ACHarvester::scanRootFile(const TDirectory * target, int depth) {
     //    printf("--> Merge layer %i\r", depth);
     //    fflush(stdout);
     
-    std::string fullPath = target->GetPath();
-    std::string::size_type pos = fullPath.find(":");
-    TString path(fullPath.substr(pos+2));
-    std::string storagePath = fullPath.substr(0, pos-5);//without .root
-    
-    //std::cout << "storagePath, path: " << storagePath <<","<< path << std::endl;
-    
-    TDirectory * current_sourcedir = gDirectory;
-    current_sourcedir = current_sourcedir->GetDirectory(path);
-    //std::cout << "Target path: " << current_sourcedir->GetPath() << std::endl;
-    
     //gain time, do not add the objects in the list in memory
     Bool_t status = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(kFALSE);
+    TH1::AddDirectory(kFALSE);//It is now your responsibility to delete the following histograms once you have finished with them.
     
     // loop over all keys in this directory
-    TIter nextkey(current_sourcedir->GetListOfKeys());
+    TIter nextkey(target->GetListOfKeys());
     TKey *key, *oldkey=0;
     while ((key = (TKey*)nextkey())) {
         //std::cout << "move to next oject at " << key << std::endl;
@@ -696,11 +729,14 @@ void ACHarvester::scanRootFile(const TDirectory * target, int depth) {
         
         if (obj->IsA()->InheritsFrom("TDirectory")) {
             //std::cout << "Found subdirectory " << obj->GetName() << " at depth "<< depth << std::endl;
-            TDirectory * newdir = current_sourcedir->GetDirectory(obj->GetName());
-            scanRootFile(newdir, depth);
+            //TDirectory * newdir = target->GetDirectory(obj->GetName());
+            scanRootFile((TDirectory*)obj, depth);
         } else if (obj->IsA()->InheritsFrom("TH1")) {
-            //std::cout << "Process histogram " << obj->GetName() << std::endl;
             TH1 *h1 = (TH1*)obj;
+            //std::cout << "Process histogram " << h1->GetName() << " with nentries " << h1->GetEntries() << std::endl;
+            std::string fullPath = target->GetPath();
+            std::string::size_type pos = fullPath.find(":");
+            TString path(fullPath.substr(pos+2));
             processHistogram(h1, path.Data());
         }
         oldkey = key;        
@@ -711,6 +747,9 @@ void ACHarvester::combineDatasets(ACDataset * d1, const ACDataset * d2) {
     //std::cout<<"merge dataset: "<<*d1<<" and "<<*d2<<std::endl;
     //std::cout<<"merge dataset: "<<d1->name()<<" and "<<d2->name()<<std::endl;
     *d1 += *d2;
+    if (forcedMergeAll_ && forcedMergeName_ != "") {
+        d1->setName(forcedMergeName_);
+    }
 }
 bool ACHarvester::recoverBinInconsistency(TH1 * h1, TH1 * h2) const {
     bool solved = false;
@@ -729,7 +768,7 @@ void ACHarvester::scanDirectory(const std::string & directory, std::vector<std::
         for (boost::filesystem::directory_iterator itr(directory); itr!=boost::filesystem::directory_iterator(); ++itr) {
             //std::cout<<itr->path().string()<<std::endl;// display full path
             if (boost::filesystem::is_directory(itr->path().string())) {
-                //printf("%*s cd %s\n", 4*level-1, "", itr->path().filename().c_str());// display filename only
+                printf("%*s cd %s\n", 4*level-1, "", itr->path().filename().c_str());// display filename only
                 scanDirectory(itr->path().string(), fileNames, level);
             } else if (is_regular_file(itr->status())) {
                 if (itr->path().extension()==".root") {
@@ -746,9 +785,7 @@ bool ACHarvester::createPlotDir(const std::string & storagePath, const std::stri
     if (stat(storagePath.c_str(), &st)!=0) {
         std::cout<<"ACHarvester::createPlotDir: the following path does not exist\n\t"<<storagePath<<std::endl;
         std::cout<<"\tCreate it? (y/n)\t";
-        std::string create = "n";
-        std::cin>>create;
-        //                std::cout<<"\n";
+        std::string create = readInput();
         if (create=="y") {
             if (mkdir(storagePath.c_str(), 0777) == 0) std::cout<<"\t"<<storagePath<<" was created."<<std::endl;
             else{
@@ -756,6 +793,11 @@ bool ACHarvester::createPlotDir(const std::string & storagePath, const std::stri
                 return false;
             }
         } else return false;
+    } else {
+        std::cout<<"ACHarvester::createPlotDir: the following path already exists\n\t"<<storagePath<<std::endl;
+        std::cout<<"\tKeep it and write into the existing folder? (y/n)\t";
+        std::string create = readInput();
+        if (create!="y") return false;
     }
     
     if (path=="") return true;
@@ -934,4 +976,23 @@ void ACHarvester::tokenizePath(const std::string& str, std::vector<std::string>&
         /// Find next "non-delimiter"
         pos = str.find_first_of(delimiters, lastPos);
     }
+}
+const std::string ACHarvester::readInput() const {
+    std::string result = "";
+    // clear all recent status flags to enable further reading
+    std::cin.clear();
+    // Ignore to the end of file
+    //std::cin.ignore(INT_MAX); // or std::cin.ignore(std::numeric_limits<std::streamsize>::max());
+    // Ignore to the end of line
+    //std::cin.ignore(INT_MAX, '\n'); //or std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    // do not skip leading whitespace
+    std::cin.unsetf(std::ios_base::skipws);
+ 
+    if (!(std::cin >> result)) {
+		std::cin.clear();// clear again in case of errors
+	}
+	while (std::cin.get() != '\n');// read until newline
+    //std::cout<<"ACHarvester::readInput: result is "<<result<<std::endl;
+    
+    return result;
 }

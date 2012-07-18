@@ -10,7 +10,8 @@ int main(int argc, char* argv[]) {
     ACExampleAnalyzer anlzr;
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
-    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/PVBugFix/TauNov2011_1000_7TeV.root");
+    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/tauSMBrFromZ_100_7TeV.root");
+    ACTreeReader::SetVerbosity(true);
     loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
     loops.back()->loop(anlzr, -1);
 
@@ -25,9 +26,34 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
     }
     printf("\n");
     printf("PFMET topology: %f\n", event.eventGlobals()->pfMETTopology());
+    printf("PFMET MET, METType1Corrected: %f, %f\n", event.eventGlobals()->pfMET().Mag(), event.eventGlobals()->pfType1CorrectedMET().Mag());
 
-    printf("trigger: %s\n", event.trigger()->tableName().c_str());
+    const std::map<std::string, std::vector<std::string> > & moduleNamesPerPath = event.trigger()->moduleNamesPerPath();
+    const std::map<std::string, std::vector<ACTriggerObjectRef> > & objectsPerModule = event.trigger()->objectsPerModule();
+    printf("trigger: %s, with %lu paths and %lu trigger objects.\n", event.trigger()->tableName().c_str(), moduleNamesPerPath.size(), event.triggerObjects().size());
+    for (std::map<std::string, std::vector<std::string> >::const_iterator path = moduleNamesPerPath.begin(); path != moduleNamesPerPath.end(); ++path) {
+        unsigned int objectSize = 0;
+        for (std::vector<std::string>::const_iterator module = path->second.begin(); module !=path->second.end(); ++module) {
+            std::map<std::string, std::vector<ACTriggerObjectRef> >::const_iterator objects = objectsPerModule.find(*module);
+            if (objects == objectsPerModule.end()) continue;
+            objectSize += objects->second.size();
+            if (objects->second.size() > 0) {
+                printf("\t\tlast object of module %s: %i pt %f\n", module->c_str(), objects->second.back()->pdgID(), objects->second.back()->pt());
+            }
+        }
+        printf("\tpath %s contains %lu modules and %i trigger objects\n", path->first.c_str(), path->second.size(), objectSize);
+    }
+    
+    printf("beamspot:\n");
+    std::stringstream output;
+    event.beamSpot()->print(output);
+    std::cout<<output.str();
     printf("offlinePV: size %lu\n", event.offlinePV().size());
+    for (std::vector<ACVertex*>::const_iterator vtx = event.offlinePV().begin(); vtx != event.offlinePV().end(); ++vtx) {
+        std::cout<<"\tstored "<<(*vtx)->tracks().size()<<"/"<<(*vtx)->trackSize();
+        if ((*vtx)->tracks().size() > 0) std::cout<<" (first track with pt "<<(*vtx)->tracks().front()->pt()<<")";
+        std::cout<<std::endl;
+    }
     printf("reducedPV: size %lu\n", event.reducedPV().size());
 
     printf("number of generator particles: %lu\n", event.generator().size());
@@ -66,7 +92,6 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
         for (std::map<std::string,bool>::const_iterator idiscr = (*decay)->PFTauRef()->discriminators().begin(); idiscr != (*decay)->PFTauRef()->discriminators().end(); ++idiscr) {
             printf("\t\t\t discr: %s pass: %i\n", idiscr->first.c_str(), idiscr->second);
         }
-        printf("\t\t PFTauRef pt: %f\n", (*decay)->PFTauRef()->p4().Pt());
         for (std::vector<ACFitParticleRef>::const_iterator ip = (*decay)->particles()->begin(); ip != (*decay)->particles()->end(); ++ip) {
             printf("\t pdgID %i, pt %f\n", (*ip)->pdgId(), (*ip)->pt());
             if ((*ip)->genRef().isValid()) {
@@ -83,7 +108,7 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
         if ((*itau)->jetRef().isValid()) {
             printf("\t tau pt: %f, charged hadr signal cands: %i, pi0 signal cands: %i, jetRef pt: %f\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands(), (*itau)->signalPiZeroCands(), (*itau)->jetRef()->pt());
         } else {
-            printf("\t tau pt: %f, charged hadr signal cands: %i, pi0 signal cands: %i\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands(), (*itau)->signalPiZeroCands());        
+            printf("\t tau pt: %f, charged hadr signal cands: %i, pi0 signal cands: %i, no jetRef!\n", (*itau)->p4().Pt(), (*itau)->signalPFChargedHadrCands(), (*itau)->signalPiZeroCands());
         }
     }
     printf("number of pileup information: %lu\n", event.pileup().size());

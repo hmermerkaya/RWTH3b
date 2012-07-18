@@ -52,7 +52,7 @@ public :
     /// burst mode: compare histograms from different samples one by one
     void burstCompare();
     /// scan a single file for histograms and call user defined function processHistogram() to process them
-    void scanFileForHistograms(TFile * file);
+    void scanFileForHistograms(const TFile * file);
 
 protected:
     /// function called for every histogram found in the first dataset (to be defined by user, e.g. store it, ...)
@@ -84,6 +84,8 @@ private:
     int operationMode_;
     /// merge all files ignoring their contained datasets
     bool forcedMergeAll_;
+    /// merged name stored into datasets when using forcedMergeAll_ (user defined during run time)
+    std::string forcedMergeName_;
     
     /** read stored histograms and merge histograms according to mode, based on ROOT's hadd.C
      mode=0: combine files of one dataset from several (grid) jobs (arbitrary number of files)
@@ -114,7 +116,8 @@ private:
     void addBranding(const std::string & branding);
     /// split a string into tokens separated by a specific delimiter (lazy copy from ACCommon.h)
     void tokenizePath(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters=" ") const;
-    
+    /// helper function to read from command line input (std::cin)
+    const std::string readInput() const;
 };
 
 #endif

@@ -5,16 +5,14 @@ baseDir = os.path.relpath(os.environ.get('CMSSW_BASE')+"/src")
 
 def LoadUserParameters():
     username = 'perchalla'
-    outputPath = '/user/'+username+'/output/analysis/CMSSW_4_4_2/TauAC_V01-08-02/'
+    outputPath = '/user/'+username+'/output/analysis/CMSSW_4_4_2/development/'
 
-#    jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_PromptReco_Collisions11_JSON.txt"
     jsonFile = baseDir+"/ACFrameworkModules/FinalTreeFiller/Cert_160404-180252_7TeV_ReRecoNov08_Collisions11_JSON.txt"
 
     jobName = 'tauSMBrFromZ'
 
     inputPath = ''
     globaltag = ''
-#    pileUpDistributionMC = 'MCPileUpDistMaker/Summer11_PU_S4'
     pileUpDistributionMC = 'MCPileUpDistMaker/Fall2011'
 
     if jobName == 'tauSMBrFromZ':
@@ -31,9 +29,46 @@ def LoadUserParameters():
         ##/QCD_Pt-30to80_EMEnriched_TuneZ2_7TeV-pythia/Fall11-PU_S6-START44_V5-v1/AODSIM
         inputPath = 'Fall11/QCD_Pt-30to80_EMEnriched_TuneZ2_7TeV-pythia/AODSIM/PU_S6-START44_V5-v1/'
         globaltag = 'START44_V12::All'
+    elif jobName == 'QCD80to170':
+        ##/QCD_Pt-80to170_EMEnriched_TuneZ2_7TeV-pythia6/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'QCD170to250':
+        ##/QCD_Pt-170to250_EMEnriched_TuneZ2_7TeV-pythia6/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'QCD250to350':
+        ##/QCD_Pt-250to350_EMEnriched_TuneZ2_7TeV-pythia6/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'QCD350toInf':
+        ##/QCD_Pt-350_EMEnriched_TuneZ2_7TeV-pythia6/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
     elif jobName == 'WJetsToLNu':
         ##/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/Fall11-PU_S6-START44_V5-v1/AODSIM
-        inputPath = 'Fall11/QCD_Pt-30to80_EMEnriched_TuneZ2_7TeV-pythia/AODSIM/PU_S6-START44_V5-v1/'
+        ##or /WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'DYJetsToLL':
+        ##/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'WW':
+        ##/WW_TuneZ2_7TeV_pythia6_tauola/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'WZ':
+        ##/WZ_TuneZ2_7TeV_pythia6_tauola/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'ZZ':
+        ##/ZZ_TuneZ2_7TeV_pythia6_tauola/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
+        globaltag = 'START44_V12::All'
+    elif jobName == 'TTJets':
+        ##/TTJets_TuneZ2_7TeV-madgraph-tauola/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = ''
         globaltag = 'START44_V12::All'
     elif jobName == 'TauNov2011A':
         ##/Tau/Run2011A-08Nov2011-v1/AOD

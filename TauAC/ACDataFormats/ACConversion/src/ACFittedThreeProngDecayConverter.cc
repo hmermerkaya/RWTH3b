@@ -36,7 +36,7 @@ ACFittedThreeProngDecayConverter::ACFittedThreeProngDecayConverter(const edm::Ev
                     (*genTauDecay)->chargedDaughters(chargedGenDaughters);
                     for (std::vector<const ACGenParticle *>::const_iterator genParticle = chargedGenDaughters.begin(); genParticle != chargedGenDaughters.end(); ++genParticle) {
                         if (particle->charge()!=(*genParticle)->charge()) continue;
-                        if (fabs(particle->candRef()->pt() - (*genParticle)->pt()) > .2 * (*genParticle)->pt()) continue;
+//                        if (fabs(particle->candRef()->pt() - (*genParticle)->pt()) > .2 * (*genParticle)->pt()) continue;
                         const double & dR = reco::deltaR(*(particle->candRef()), **genParticle);
                         if (dR > 0.01) continue;
                         //std::cout<<"\tFound a similar track from pdgID "<<(*genParticle)->pdgId()<<" at dR = "<<dR<<" with pT = "<<(*genParticle)->pt()<<std::endl;

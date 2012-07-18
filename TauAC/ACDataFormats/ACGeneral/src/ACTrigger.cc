@@ -2,13 +2,15 @@
 
 ClassImp(ACTrigger)
 
-ACTrigger::ACTrigger(std::string tableName, std::map<std::string,int> hltPathMap) {
+ACTrigger::ACTrigger(const std::string & tableName, const std::map<std::string, int> & hltPathMap) {
     tableName_ = tableName;
     hltPathMap_ = hltPathMap;
+    moduleNamesPerPath_.clear();
+    objectsPerModule_.clear();
 }
-const std::string & ACTrigger::tableName() const {
-    return tableName_;
-}
-const std::map<std::string,int> & ACTrigger::hltPathMap() const {
-    return hltPathMap_;
+ACTrigger::ACTrigger(const std::string & tableName, const std::map<std::string, int> & hltPathMap, const std::map<std::string, std::vector<std::string> > & moduleNamesPerPath, const std::map<std::string, std::vector<ACRef<ACTriggerObject> > > & objectsPerModule){
+    tableName_ = tableName;
+    hltPathMap_ = hltPathMap;
+    moduleNamesPerPath_ = moduleNamesPerPath;
+    objectsPerModule_ = objectsPerModule;
 }

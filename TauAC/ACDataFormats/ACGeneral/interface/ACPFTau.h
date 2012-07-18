@@ -37,7 +37,7 @@ public:
 protected:
     /// results of the original PFTau discriminators
     std::map<std::string, bool> discriminators_;
-    /// reference to initial jet (FIXME: not filled yet)
+    /// reference to initial jet
     ACJetRef jetRef_;
 
     /// size of tracks in the signal cone of the PFTau candidate

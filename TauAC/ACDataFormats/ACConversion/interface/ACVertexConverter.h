@@ -8,6 +8,7 @@
  */
 
 #include "../../ACGeneral/interface/ACVertex.h"
+#include "ACFrameworkModules/Common/interface/ConversionLog.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -17,7 +18,7 @@ class ACVertexConverter : public ACVertex {
 public:
     virtual std::string classname() const { return "ACVertexConverter"; }
     /// constructor from reco::Vertex to initiate an ACVertex
-    ACVertexConverter(const reco::Vertex& vertex);
+    ACVertexConverter(const reco::Vertex& vertex, const TrackConversionLog * conversionLogTrack = 0);
     virtual ~ACVertexConverter() {};
 };
 

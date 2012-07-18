@@ -6,6 +6,8 @@ ACEvent::ACEvent() {
     eventWeight_ = 0;
     eventGlobals_ = 0;
     trigger_ = 0;
+    triggerObjects_ = 0;
+    beamSpot_ = 0;
     offlinePV_ = 0;
     reducedPV_ = 0;
     generator_ = 0;
@@ -50,6 +52,23 @@ const ACTrigger * ACEvent::trigger() const {
 }
 ACTrigger ** ACEvent::linkTrigger() {
     return &trigger_;
+}
+
+const std::vector<ACTriggerObject *>& ACEvent::triggerObjects() const {
+    checkContent(triggerObjects_, "triggerObjects");
+    return *triggerObjects_;
+}
+/// set trigger info
+std::vector<ACTriggerObject *> ** ACEvent::linkTriggerObjects() {
+    return &triggerObjects_;
+}
+
+const ACBeamSpot * ACEvent::beamSpot() const {
+    checkContent(beamSpot_, "beamSpot");
+    return beamSpot_;
+}
+ACBeamSpot ** ACEvent::linkBeamSpot() {
+    return &beamSpot_;
 }
 
 const std::vector<ACVertex *>& ACEvent::offlinePV() const {

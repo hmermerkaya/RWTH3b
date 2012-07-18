@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
     
     ACExampleHarvester harvester( "/user/perchalla/plots/analysis/CMSSW_4_4_2/Harvester/", false);
     if (allFilenames.size()==0) harvester.scanDirectories(directories, allFilenames);
-    harvester.loadRootFiles(allFilenames);
+    if (!harvester.loadRootFiles(allFilenames)) return 0;
     // work on different datasets
     harvester.burstCompare();
     

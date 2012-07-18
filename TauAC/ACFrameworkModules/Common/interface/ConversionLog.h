@@ -45,5 +45,6 @@ template<class S, class T> const T * ConversionLog<S, T>::getConverted(const S &
 
 typedef ConversionLog<reco::PFTauRef, ACPFTauRef> PFTauConversionLog;
 typedef ConversionLog<reco::PFJetRef, ACJetRef> PFJetConversionLog;
+typedef ConversionLog<reco::TrackRef, ACTrackRef> TrackConversionLog;
 
 #endif

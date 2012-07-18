@@ -132,7 +132,13 @@ void ACTreeReader::Init(TChain *chain) {
     
     status = fChain_->SetBranchAddress("ACTrigger", event_.linkTrigger());
     testBranch("ACTrigger", status);
-    
+
+    status = fChain_->SetBranchAddress("triggerObjects", event_.linkTriggerObjects());
+    testBranch("triggerObjects", status);
+
+    status = fChain_->SetBranchAddress("ACBeamSpot", event_.linkBeamSpot());
+    testBranch("ACBeamSpot", status);
+
     status = fChain_->SetBranchAddress("offlinePV", event_.linkOfflinePV());
     testBranch("offlinePV", status);
     status = fChain_->SetBranchAddress("reducedPV", event_.linkReducedPV());

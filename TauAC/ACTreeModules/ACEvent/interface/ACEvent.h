@@ -22,6 +22,8 @@
 #include "../../../ACDataFormats/ACGeneral/interface/ACPileupInfo.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACTrack.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACTrigger.h"
+#include "../../../ACDataFormats/ACGeneral/interface/ACTriggerObject.h"
+#include "../../../ACDataFormats/ACGeneral/interface/ACBeamSpot.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACVertex.h"
 
 class ACEvent {
@@ -42,7 +44,15 @@ public:
     const ACTrigger * trigger() const;
     /// set trigger info
     ACTrigger ** linkTrigger();
-    
+
+    const std::vector<ACTriggerObject *>& triggerObjects() const;
+    /// set trigger objects
+    std::vector<ACTriggerObject *> ** linkTriggerObjects();
+
+    const ACBeamSpot * beamSpot() const;
+    /// set vertex collection for offline primay vertices
+    ACBeamSpot ** linkBeamSpot();
+
     const std::vector<ACVertex *>& offlinePV() const;
     /// set vertex collection for offline primay vertices
     std::vector<ACVertex *> ** linkOfflinePV();
@@ -99,6 +109,10 @@ protected:
     ACEventGlobals * eventGlobals_;
     /// branch content: HLT trigger menu
     ACTrigger * trigger_;
+    /// branch content: HLT trigger menu
+    std::vector<ACTriggerObject *> * triggerObjects_;
+    /// branch content: beam spot
+    ACBeamSpot * beamSpot_;
     /// branch content: offline primary vertices
     std::vector<ACVertex *> * offlinePV_;
     /// branch content: primary vertices after removal of tracks assigned to tau daughters

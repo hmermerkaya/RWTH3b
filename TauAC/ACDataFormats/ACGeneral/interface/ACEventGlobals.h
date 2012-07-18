@@ -14,13 +14,15 @@
 class ACEventGlobals : public ACCommon {
 public:
     virtual std::string classname() const { return "ACEventGlobals"; }
-    ACEventGlobals(const TVector3& pfMET, const TVector3& tcMET, double pfSumET, double tcSumET);
+    ACEventGlobals(const TVector3& pfMET, const TVector3& pfType1CorrectedMET, const TVector3& tcMET, double pfSumET, double pfType1CorrectedSumET, double tcSumET);
     ACEventGlobals();
     virtual ~ACEventGlobals() {};
 
     const TVector3& pfMET() const { return pfMET_; }
+    const TVector3& pfType1CorrectedMET() const { return pfType1CorrectedMET_; }
     const TVector3& tcMET() const { return tcMET_; }
     double pfSumET() const { return pfSumET_; }
+    double pfType1CorrectedSumET() const { return pfType1CorrectedSumET_; }
     double tcSumET() const { return tcSumET_; }
     double pfMETSignificance() const;
     double tcMETSignificance() const;
@@ -30,10 +32,18 @@ public:
     ClassDef(ACEventGlobals,1);
 
 protected:
-    /// missing transverse energy
-    TVector3 pfMET_, tcMET_;
-    /// total transverse energy
-    double pfSumET_, tcSumET_;
+    /// missing transverse energy from PFJets
+    TVector3 pfMET_;
+    /// missing transverse energy from PFJets type-1 corrected
+    TVector3 pfType1CorrectedMET_;
+    /// missing transverse energy from CaloJets
+    TVector3 tcMET_;
+    /// total transverse energy from PFJets
+    double pfSumET_;
+    /// total transverse energy from PFJets type-1 corrected
+    double pfType1CorrectedSumET_;
+    /// total transverse energy from CaloJets
+    double tcSumET_;
 };
 
 typedef ACEventGlobals* pACEventGlobals;

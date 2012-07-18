@@ -13,6 +13,7 @@
 #include "../interface/ACParticle.h"
 #include "../interface/ACFitParticle.h"
 #include "../interface/ACVertex.h"
+#include "../interface/ACBeamSpot.h"
 #include "../interface/ACDecay.h"
 #include "../interface/ACGenDecay.h"
 #include "../interface/ACFittedDecay.h"
@@ -20,10 +21,12 @@
 #include "../interface/ACPileupInfo.h"
 #include "../interface/ACTrack.h"
 #include "../interface/ACTrigger.h"
+#include "../interface/ACTriggerObject.h"
 
 #ifdef __CINT__
 
-/// additional typedefs needed in the LinkDef file. all instances of different template types need to be linked.
+// additional typedefs needed in the LinkDef file. all instances of different template types need to be linked.
+// CINT failes when there is multiple layers of templates/pointers
 typedef ACDecayBase<ACGenParticle> ACGenParticleDecayForLinkDefOnly;
 typedef ACGenParticleDecayForLinkDefOnly* pACGenParticleDecayForLinkDefOnly;
 typedef ACDecayBase<ACFitParticle> ACFitParticleDecayForLinkDefOnly;
@@ -42,10 +45,12 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 #pragma link C++ class ACFitParticleRef+;
 #pragma link C++ class ACJetRef+;
 #pragma link C++ class ACPFTauRef+;
+#pragma link C++ class ACTrackRef+;
 #pragma link C++ class ACVertexRef+;
 #pragma link C++ class ACGenDecayRef+;
 #pragma link C++ class ACFittedDecayRef+;
 #pragma link C++ class ACFittedThreeProngDecayRef+;
+#pragma link C++ class ACTriggerObjectRef+;
 
 #pragma link C++ class ACCandidate+;
 #pragma link C++ class pACCandidate+;
@@ -89,8 +94,6 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 #pragma link C++ class std::vector<ACTrack >+;
 #pragma link C++ class std::vector<pACTrack >+;
 
-#pragma link C++ class std::pair<std::string, bool>+;
-
 #pragma link C++ class ACGenParticleDecayForLinkDefOnly+;
 #pragma link C++ class pACGenParticleDecayForLinkDefOnly+;
 #pragma link C++ class ACGenDecay+;
@@ -122,6 +125,11 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 #pragma link C++ class std::vector<ACVertex >+;
 #pragma link C++ class std::vector<pACVertex >+;
 
+#pragma link C++ class ACBeamSpot+;
+#pragma link C++ class pACBeamSpot+;
+#pragma link C++ class std::vector<ACBeamSpot >+;
+#pragma link C++ class std::vector<pACBeamSpot >+;
+
 #pragma link C++ class ACPileupInfo+;
 #pragma link C++ class pACPileupInfo+;
 #pragma link C++ class std::vector<ACPileupInfo >+;
@@ -129,5 +137,11 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 
 #pragma link C++ class ACTrigger+;
 #pragma link C++ class pACTrigger+;
+#pragma link C++ class ACTriggerObject+;
+#pragma link C++ class pACTriggerObject+;
+#pragma link C++ class std::vector<pACTriggerObject >+;
+
+#pragma link C++ class std::pair<std::string, bool>+;
+#pragma link C++ class pair<string,vector<string> >+;//CINT ignores std namespace, adding std:: here will screw the dictionary somehow
 
 #endif

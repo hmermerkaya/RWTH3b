@@ -11,10 +11,12 @@ class ACParticle;
 class ACFitParticle;
 class ACJet;
 class ACPFTau;
+class ACTrack;
 class ACVertex;
 template<class T> class ACDecayBase;
 class ACFittedDecay;
 class ACFittedThreeProngDecay;
+class ACTriggerObject;
 
 /**
  Class to store a reference to an object derived from ACCommon.
@@ -79,10 +81,12 @@ typedef ACRef<ACParticle> ACParticleRef;
 typedef ACRef<ACFitParticle> ACFitParticleRef;
 typedef ACRef<ACJet> ACJetRef;
 typedef ACRef<ACPFTau> ACPFTauRef;
+typedef ACRef<ACTrack> ACTrackRef;
 typedef ACRef<ACVertex> ACVertexRef;
 typedef ACRef<ACDecayBase<ACGenParticle> > ACGenDecayRef;
 typedef ACRef<ACDecayBase<ACParticle> > ACDecayRef;
 typedef ACRef<ACFittedDecay> ACFittedDecayRef;
 typedef ACRef<ACFittedThreeProngDecay> ACFittedThreeProngDecayRef;
+typedef ACRef<ACTriggerObject> ACTriggerObjectRef;
 
 #endif

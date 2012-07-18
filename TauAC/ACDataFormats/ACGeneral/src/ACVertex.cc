@@ -18,13 +18,7 @@ position_(position), valid_(valid), chi2_(chi2), ndof_(ndof), trackSize_(trackSi
     error_.ResizeTo(TMatrixDSym(3));
     error_ = error;
 }
-const TVector3 & ACVertex::position() const { return position_; }
-bool ACVertex::valid() const { return valid_; }
-const TMatrixDSym & ACVertex::error() const { return error_; }
-float ACVertex::chi2() const { return chi2_; }
-float ACVertex::ndof() const { return ndof_; }
-double ACVertex::trackSize() const { return trackSize_; }
-double ACVertex::ptSum() const { return ptSum_; }
+
 double ACVertex::vtxDistanceSignificance(const ACVertex & vtx) const {
 	//distance between both vertices is calculated in units of their projected errorsum
 	TMatrixDSym matrix = error() + vtx.error();

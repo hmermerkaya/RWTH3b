@@ -28,6 +28,7 @@
 #include "ACDataFormats/ACGeneral/interface/ACPFTau.h"
 #include "ACDataFormats/ACGeneral/interface/ACParticle.h"
 #include "ACDataFormats/ACGeneral/interface/ACFittedThreeProngDecay.h"
+#include "ACDataFormats/ACConversion/interface/ACBeamSpotConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACVertexConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACPFTauConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACGenParticleConverter.h"
@@ -37,14 +38,16 @@
 #include "ACDataFormats/ACConversion/interface/ACJetConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACPileupConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACTrackConverter.h"
+#include "ACDataFormats/ACConversion/interface/ACTriggerObjectConverter.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
-#include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
@@ -80,6 +83,8 @@ private:
     virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
     virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 
+    /// determine once the list of PFTau discriminators from the event content
+    void determinePFTauDiscriminators(const edm::Event& iEvent);
     /// insert branches in the main tree
     void storeEvent(const edm::Event& evt);
 
@@ -91,10 +96,12 @@ private:
     /// framework file service
     edm::Service<TFileService> fileService_;
     /// input tags
-    edm::InputTag genSignalTag_, genSignalRefTag_, chargedTauDaughterMatchMapTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, trackTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, tcMETTag_, pfJetTag_, pfTauTag_;
-    std::vector<edm::InputTag> pfTauDiscriminatorTags_;
+    edm::InputTag genSignalTag_, genSignalRefTag_, chargedTauDaughterMatchMapTag_, beamSpotTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, triggerEventTag_, trackTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, pfType1CorrectedMetTag_, tcMETTag_, pfJetTag_, pfTauTag_, pfTauDiscriminatorPattern_;
+    double minJetPt_, minTauPt_, minTrackPt_;
     std::vector<std::string> flags_;
     std::string pileUpDistributionFileMC_, pileUpDistributionHistMC_, pileUpDistributionFileData_, pileUpDistributionHistData_;
+    /// dynamically derived input tags for PFTau discriminators
+    std::vector<edm::InputTag> discriminators_;
 
     /// event and run counters
     unsigned int evtCnt_, runCnt_;
@@ -109,6 +116,10 @@ private:
     ACEventGlobals * eventGlobals_;
     /// branch content: HLT trigger menu
     ACTrigger * trigger_;
+    /// branch content: HLT trigger menu
+    std::vector<ACTriggerObject*> * triggerObjects_;
+    /// branch content: beam spot
+    ACBeamSpot * beamSpot_;
     /// branch content: offline primary vertices
     std::vector<ACVertex *> * offlinePV_;
     /// branch content: primary vertices after removal of tracks assigned to tau daughters
@@ -144,6 +155,8 @@ private:
     PFTauConversionLog * conversionLogPFTau_;
     /// logging of the association between CMSSW JetRefs and ACJetRefs
     PFJetConversionLog * conversionLogPFJet_;
+    /// logging of the association between CMSSW TrackRefs and ACTrackRefs
+    TrackConversionLog * conversionLogTrack_;
     
     edm::Lumi3DReWeighting * lumiWeights_; 
 };

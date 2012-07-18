@@ -22,7 +22,7 @@ class ACPFTauConverter : public ACPFTau {
 public:
     virtual std::string classname() const { return "ACPFTauConverter"; }
     /// constructor from PFTau to initiate a ACPFTau
-    ACPFTauConverter(const edm::Event& evt, const reco::PFTauRef& tau, const std::vector<edm::InputTag> & tauDiscriminators, const PFJetConversionLog * conversionLogPFJet);
+    ACPFTauConverter(const edm::Event& evt, const reco::PFTauRef& tau, const std::vector<edm::InputTag> & discriminators, const PFJetConversionLog * conversionLogPFJet);
     virtual ~ACPFTauConverter() {};
 };
 

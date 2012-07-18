@@ -2,16 +2,16 @@ import FWCore.ParameterSet.Config as cms
 
 MultiCandidateSelector = cms.EDProducer('MultiCandidateSelector',
     filters = cms.VPSet(
-        cms.PSet(
-            type = cms.string("pfJets"),
-            src = cms.InputTag("ak5PFJets"),
-            cut = cms.string("pt > 10")
-        ),
-        cms.PSet(
-            type = cms.string("tracks"),
-            src = cms.InputTag("generalTracks"),
-            cut = cms.string("pt > 1")
-        ),
+#        cms.PSet(
+#            type = cms.string("pfJets"),
+#            src = cms.InputTag("ak5PFJets"),
+#            cut = cms.string("pt > 10")
+#        ),
+#        cms.PSet(
+#            type = cms.string("tracks"),
+#            src = cms.InputTag("generalTracks"),
+#            cut = cms.string("pt > 1")
+#        ),
 #        cms.PSet(
 #            type = cms.string("muons"),
 #            src = cms.InputTag("muons"),

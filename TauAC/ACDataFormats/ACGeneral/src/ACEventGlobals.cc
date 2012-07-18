@@ -2,14 +2,16 @@
 
 ClassImp(ACEventGlobals)
 
-ACEventGlobals::ACEventGlobals(const TVector3& pfMET, const TVector3& tcMET, double pfSumET, double tcSumET) {
+ACEventGlobals::ACEventGlobals(const TVector3& pfMET, const TVector3& pfType1CorrectedMET, const TVector3& tcMET, double pfSumET, double pfType1CorrectedSumET, double tcSumET) {
     pfMET_ = pfMET;
+    pfType1CorrectedMET_ = pfType1CorrectedMET;
     tcMET_ = tcMET;
     pfSumET_ = pfSumET;
+    pfType1CorrectedSumET_ = pfType1CorrectedSumET;
     tcSumET_ = tcSumET;
 }
 ACEventGlobals::ACEventGlobals() {
-    ACEventGlobals(TVector3(-1000,-1000,-1000), TVector3(-1000,-1000,-1000), -1000.0, -1000.0);
+    ACEventGlobals(TVector3(-1000,-1000,-1000), TVector3(-1000,-1000,-1000), TVector3(-1000,-1000,-1000), -1000.0, -1000.0, -1000.0);
 }
 double ACEventGlobals::pfMETSignificance() const {
     if (pfSumET_ > 0.0) {

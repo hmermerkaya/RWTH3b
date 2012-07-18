@@ -64,7 +64,7 @@ void GenSelector::beginJob() {
 void GenSelector::endJob() {
     float ratio = 0.0;
     if (cnt_!=0) ratio=(float)cntFound_/cnt_;
-    edm::LogVerbatim("GenSelector")<<"--> [GenSelector] found at least one charged tau from "<<motherPdgID_<<". Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<ratio*100.0;
+    edm::LogVerbatim("GenSelector")<<"--> [GenSelector] found at least one charged tau from "<<motherPdgID_<<". Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<ratio*100.0<<"%.";
 }
 
 bool GenSelector::storeEvent(edm::Event& iEvent, reco::GenParticleCollection & collection, reco::GenParticleRefVector & collectionRef) {

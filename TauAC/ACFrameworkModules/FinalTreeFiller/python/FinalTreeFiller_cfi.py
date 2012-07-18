@@ -4,31 +4,27 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     genSignal = cms.InputTag('GenSelector','genSignalDecay'),
     genSignalRef = cms.InputTag('GenSelector','genSignalDecayRef'), #same length/content as genSignalDecay, but originals not copied objects
     chargedTauDaughterMatchMap = cms.InputTag('chargedTauDaughterTruth'),
+	beamSpot = cms.InputTag('offlineBeamSpot'), #derived from multi-track fit (>>100 tracks)
 	primVtx = cms.InputTag('offlinePrimaryVertices'), #this is the PV from the standard reco
 #	reducedPrimVtx = cms.InputTag('ThreeProngInputSelectorStep2','primVtx'), #this is the vertex obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!!)
 	reducedPrimVtx = cms.InputTag('reducedPrimaryVertices'), #this is the FULL vertex collection obtained by ThreeProngInputSelector by ignoring the tau tracks (this one is not rotated!!! possibly not all of them entered the fit)
     pileupInfo = cms.InputTag('addPileupInfo'),
     triggerResults = cms.InputTag('TriggerResults','','HLT'),
-    tracks = cms.InputTag('MultiCandidateSelector','generalTracks'),
+    triggerEvent = cms.InputTag('hltTriggerSummaryAOD','','HLT'),
+    #tracks = cms.InputTag('MultiCandidateSelector','generalTracks'),
+    tracks = cms.InputTag('generalTracks'),
+    minTrackPt = cms.untracked.double(1.),   #ignore tracks below this pt threshold
     muons = cms.InputTag('muons'),
     electrons = cms.InputTag('gsfElectrons'),
     kinematicTaus = cms.InputTag('KinematicTauProducer','SelectedKinematicDecays'),
     pfMET = cms.InputTag('pfMet'),
+    pfType1CorrectedMet = cms.InputTag('pfType1CorrectedMet'),
     tcMET = cms.InputTag('tcMet'),
-    pfJets = cms.InputTag('MultiCandidateSelector','ak5PFJets'),
-    pfTaus = cms.InputTag('hpsPFTauProducer'),
-    pfTauDiscriminators = cms.VInputTag(
-        cms.InputTag('hpsPFTauDiscriminationByDecayModeFinding'),
-        cms.InputTag('hpsPFTauDiscriminationByLooseElectronRejection'),
-        cms.InputTag('hpsPFTauDiscriminationByLooseIsolation'),
-        cms.InputTag('hpsPFTauDiscriminationByLooseMuonRejection'),
-        cms.InputTag('hpsPFTauDiscriminationByMediumElectronRejection'),
-        cms.InputTag('hpsPFTauDiscriminationByMediumIsolation'),
-        cms.InputTag('hpsPFTauDiscriminationByTightElectronRejection'),
-        cms.InputTag('hpsPFTauDiscriminationByTightIsolation'),
-        cms.InputTag('hpsPFTauDiscriminationByTightMuonRejection'),
-        cms.InputTag('hpsPFTauDiscriminationByVLooseIsolation'),
-    ),
+    pfJets = cms.InputTag('ak5PFJets'),
+    minJetPt = cms.untracked.double(10.),   #ignore jets below this pt threshold
+    pfTaus = cms.InputTag('hpsPFTauProducer'), #the most recently produced product
+    minTauPt = cms.untracked.double(10.),   #ignore pftaus below this pt threshold (default is 0., should be defined according to InputTrackSelector)
+    pfTauDiscriminatorPattern = cms.InputTag('hpsPFTauDiscriminationBy','','RECO'),# just a pattern (all branches of type PFTauDiscriminator that match this pattern are kept)
     #to be done: replace this string by a scan of all executed modules and test whether it is a filter or not
 	flags = cms.vstring("GenSelector","PrimVtxSelector","InputTrackSelector","ThreeProngInputSelectorStep1","ThreeProngInputSelectorStep2","KinematicTauProducer"),
     pileUpDistributionFileMC = cms.untracked.string(""),

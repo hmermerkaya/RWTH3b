@@ -21,13 +21,15 @@ public:
     ACVertex(const TVector3 & position, bool valid, const TMatrixDSym & error = TMatrixDSym(3), float chi2 = -1000., float ndof = -1000., const double & trackSize = -1000., const double & ptSum = -1000.);
     virtual ~ACVertex() {};
 
-    const TVector3 & position() const;
-    bool valid() const;
-    const TMatrixDSym & error() const;
-    float chi2() const;
-    float ndof() const;
-    double trackSize() const;
-    double ptSum() const;
+    const TVector3 & position() const { return position_; }
+    bool valid() const { return valid_; }
+    const TMatrixDSym & error() const { return error_; }
+    float chi2() const { return chi2_; }
+    float ndof() const { return ndof_; }
+    const std::vector<ACTrackRef> & tracks() const { return tracks_; }
+    double trackSize() const { return trackSize_; }
+    double ptSum() const { return ptSum_; }
+
     /// distance from vtx in units of their projected errorsum
     double vtxDistanceSignificance(const ACVertex & vtx) const;
 	/// project error in direction of axis
@@ -59,6 +61,8 @@ protected:
     float chi2_;
     /// ndof of the vertex fit
     float ndof_;
+    /// reference to assigned tracks (might be missing due to track filters or different track collection, use trackSize for true size of tracks assigned to this vertex)
+    std::vector<ACTrackRef> tracks_;
     /// size of all assigned tracks
     double trackSize_;
     /// ptsum of all assigned tracks (according to the official PV sorting at VertexHigherPtSquared, ignore tracks with errors larger than pt)

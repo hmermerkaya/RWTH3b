@@ -10,13 +10,13 @@ from FWCore.PythonUtilities.LumiList import LumiList
 #relative path to $CMSSW_BASE/src. needed for crab and to run from arbitrary paths
 baseDir = os.path.relpath(os.environ.get('CMSSW_BASE')+"/src")
 
-process = cms.Process("FinalTreeFiller")
+processName = "FinalTreeFiller"
+process = cms.Process(processName)
 #process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck")
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("ACFrameworkModules.Common.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
-
 
 ###############
 #steering parameters#
@@ -26,6 +26,10 @@ ignoreFilter = True # but always ignore TauMotherProducer until its ready
 printEvents = 0	#print generator event
 triggerTag = "HLT"
 minTau = 1 #minimum of selected taus
+minJetPt = 10. #ignore pfjets below this pt threshold (in GeV)
+minTauPt = 10. #ignore pftaus below this pt threshold (in GeV)
+minTrackPt = 1. #ignore tracks below this pt threshold (in GeV)
+rerunTauID = True #whether or not to rerun the PFTau sequence
 doPileUpReweighting = True
 pileUpReweightingType = "true" #(true or observed) choose according to https://twiki.cern.ch/twiki/bin/view/CMS/PileupMCReweightingUtilities
 runFromCrab = True
@@ -88,6 +92,7 @@ process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
 process.InputTrackSelector.minTau = cms.untracked.uint32(minTau)
 process.InputTrackSelector.filterTaus = cms.untracked.bool(False)
+process.InputTrackSelector.minTauPt = cms.untracked.double(minTauPt)
 process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cff")
 process.ThreeProngInputSelectorStep1.minTau = cms.untracked.uint32(minTau)
 process.ThreeProngInputSelectorStep2.minTau = cms.untracked.uint32(minTau)
@@ -103,6 +108,9 @@ process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
 process.load("ACFrameworkModules.FinalTreeFiller.FinalTreeFiller_cfi")
 process.FinalTreeFiller.triggerResults = cms.InputTag("TriggerResults","",triggerTag)
 process.FinalTreeFiller.decayType = cms.untracked.string(decayType)
+process.FinalTreeFiller.minTauPt = cms.untracked.double(minTauPt)
+process.FinalTreeFiller.minJetPt = cms.untracked.double(minJetPt)
+process.FinalTreeFiller.minTrackPt = cms.untracked.double(minTrackPt)
 
 if doPileUpReweighting and not isData:
     process.FinalTreeFiller.pileUpDistributionFileMC = cms.untracked.string(baseDir+"/data/MCPileUpDistributions.root")
@@ -110,8 +118,27 @@ if doPileUpReweighting and not isData:
     process.FinalTreeFiller.pileUpDistributionFileData = cms.untracked.string(dataPileUpFilename)
     process.FinalTreeFiller.pileUpDistributionHistData = cms.untracked.string("pileup")
 
-### candidate selectors
-process.load("ACFrameworkModules.MultiCandidateSelector.MultiCandidateSelector_cfi")
+### candidate selectors (deprecated as violating refs)
+#process.load("ACFrameworkModules.MultiCandidateSelector.MultiCandidateSelector_cfi")
+
+### jet energy correction
+process.load("ACFrameworkModules.FinalTreeFiller.JetEnergyCorrection_cff")
+### MET corrections (produces branch 'pfType1CorrectedMet' which contains type I (L1FastL2L3-L1) corrected pfMET for ak5PFJets with pt>10 GeV)
+process.load("JetMETCorrections.Type1MET.pfMETCorrections_cff")
+if isData:
+    jetCorrectionProducer = process.ak5PFJetsL1L2L3Residual
+    process.FinalTreeFiller.pfJets = cms.InputTag('ak5PFJetsL1L2L3Residual')
+    process.pfJetMETcorr.jetCorrLabel = cms.string('ak5PFL1FastL2L3Residual')
+else:
+    jetCorrectionProducer = process.ak5PFJetsL1L2L3
+    process.FinalTreeFiller.pfJets = cms.InputTag('ak5PFJetsL1L2L3')
+
+if rerunTauID:
+    process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
+    tauIDSeq = cms.Sequence(process.PFTau)
+    process.FinalTreeFiller.pfTauDiscriminatorPattern = cms.InputTag('hpsPFTauDiscriminationBy','',processName)
+else:
+    tauIDSeq = cms.Sequence()
 
 #process.debugOutput = cms.OutputModule("PoolOutputModule",
 #    outputCommands = cms.untracked.vstring('keep *'),
@@ -122,18 +149,24 @@ process.load("ACFrameworkModules.MultiCandidateSelector.MultiCandidateSelector_c
 #ignore filter
 process.ignorePath = cms.Path(
     process.generatorSequence
+    *tauIDSeq
+    *jetCorrectionProducer
+    *process.producePFMETCorrections
     *cms.ignore(process.PrimVtxSelector)
     #*cms.ignore(process.HLTSelector)
     *cms.ignore(process.InputTrackSelector)
     *process.ignoreThreeProngInputSelector
     *cms.ignore(process.KinematicTauProducer)
     *process.matchingSeq
-    *process.MultiCandidateSelector
+    #*process.MultiCandidateSelector
     *process.FinalTreeFiller
 )
 #cumulative
 process.cumulativePath = cms.Path(
     process.generatorSequence
+    *tauIDSeq
+    *jetCorrectionProducer
+    *process.producePFMETCorrections
     *process.PrimVtxSelector
     #*process.HLTSelector
     *process.InputTrackSelector
@@ -142,7 +175,7 @@ process.cumulativePath = cms.Path(
     #*process.KinematicTauBasicProducer
     #*process.KinematicTauSkim
     *process.matchingSeq
-    *process.MultiCandidateSelector
+    #*process.MultiCandidateSelector
     *process.FinalTreeFiller
 )
 
