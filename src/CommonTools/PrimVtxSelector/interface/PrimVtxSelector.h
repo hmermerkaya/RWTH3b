@@ -1,14 +1,9 @@
-// -*- C++ -*-
-//
-// Package:    PrimVtxSelector
-// Class:      PrimVtxSelector
-// 
 /**
 
- Description: simple primary vertex selector by minimum of included tracks and goodness of fit. produces one single vertex if possible.
+ Simple primary vertex selector by minimum of included tracks and goodness of fit. produces one single vertex if possible.
 
- Implementation:
-     <Notes on implementation>
+ @author Lars Perchalla & Philip Sauerland
+ @date 2010
 */
 
 // system include files

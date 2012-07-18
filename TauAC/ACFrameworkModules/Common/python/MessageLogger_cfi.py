@@ -62,7 +62,7 @@ if useDEBUG:
       #HLTSelector = cms.untracked.PSet(limit = cms.untracked.int32(0)),#listen only to specific module(s)
 	)
 #print '-->FinalTreeFiller.MessageLogger_cfi::Warning: Some messages will be partially suppressed if like "ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid."'
-#MessageLogger.cerr.ThreeProngTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(1))#reduce reoccurence (after limit is reached reports are shown exponentially)
+MessageLogger.cerr.ThreeProngTauCreator = cms.untracked.PSet(limit = cms.untracked.int32(1))#reduce reoccurence (after limit is reached reports are shown exponentially)
 MessageLogger.cerr.MCCollectionNotFound = cms.untracked.PSet(limit = cms.untracked.int32(1))
 
 if enableStatistics:

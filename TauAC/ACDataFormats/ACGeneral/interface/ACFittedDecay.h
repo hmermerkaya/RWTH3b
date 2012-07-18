@@ -11,7 +11,6 @@
 
 #include "ACDecay.h"
 #include "ACFitParticle.h"
-#include "ACPFTau.h"
 
 class ACFittedDecay : public ACDecayBase<ACFitParticle> {
 public:
