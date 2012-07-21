@@ -40,37 +40,25 @@
 
 class KinematicTauProducer : public edm::EDFilter {
 public:
-	explicit KinematicTauProducer(const edm::ParameterSet&);
-	~KinematicTauProducer();
-	
+  explicit KinematicTauProducer(const edm::ParameterSet&);
+  ~KinematicTauProducer();
+  
 private:
-	virtual void beginJob();
-	virtual bool filter(edm::Event&, const edm::EventSetup&);
-	virtual void endJob();
-	
-	/**
-	 Execute the kinematic fit and in case of success modify the taus parameters
-	 */
-	bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
-	/**
-	 combine a discriminator of important quality cuts of a refitted tau decay
-	 */
-	bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
-	/**
-	 Fill the new PFTau dicriminators from fit result
-	 */
-	void discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & dicrimValues);
-	/**
-	 Calulate the maximal allowed GJ angle from a1 parameters
-	 */	
-	double thetaGJMax(double ma1, double pa1, double Mtau = 1.777);
-	
-	const edm::ParameterSet fitParameters_;
-	edm::Event * iEvent_;
-	edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
-	
-	edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
-	
-	unsigned int cnt_, cntFound_;
+  virtual void beginJob();
+  virtual bool filter(edm::Event&, const edm::EventSetup&);
+  virtual void endJob();
+  
+  //Execute the kinematic fit and in case of success modify the taus parameters
+  bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
+  //combine a discriminator of important quality cuts of a refitted tau decay
+  bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
+  //Fill the new PFTau dicriminators from fit result
+  void discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & dicrimValues);
+  
+  const edm::ParameterSet fitParameters_;
+  edm::Event * iEvent_;
+  edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;  
+  edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
+  unsigned int cnt_, cntFound_;
 	
 };

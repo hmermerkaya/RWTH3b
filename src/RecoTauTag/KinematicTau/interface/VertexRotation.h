@@ -12,6 +12,9 @@
  @date 2009
  */
 
+#ifndef VertexRotation_h
+#define VertexRotation_h
+
 // system include files
 #include <memory>
 #include <fstream>
@@ -269,3 +272,4 @@ private:
 	
 	
 };
+#endif

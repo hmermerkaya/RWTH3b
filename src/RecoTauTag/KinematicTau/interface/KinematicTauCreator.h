@@ -19,18 +19,18 @@
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
 
-
-class KinematicTauCreator {
+class KinematicTauCreator : protected  KinematicTauTools {
 public:
     /**
      default constructor
      */
-    KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder);
+  KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder);
     /**
      constructor with user defined fit parameters
      */
-    KinematicTauCreator(const TransientTrackBuilder & transTrackBuilder, const edm::ParameterSet& cfg);
+  KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg);
     virtual ~KinematicTauCreator();
 
     /**
@@ -92,7 +92,6 @@ protected:
      ref to original tracks used by the fit
      */
     std::vector<reco::TrackRef> selectedTracks_;
-    TransientTrackBuilder transTrackBuilder_;
     /**
      Fake vertex. The primary vertex can be rotated within its errors around the secondary vertex. Errors are copied from the original vertex as they have not been modified.
      */
