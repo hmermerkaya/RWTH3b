@@ -1,8 +1,8 @@
 #include  "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 
-const double KinematicTauTools::piMass = 0.140;//0.13957018;
-const double KinematicTauTools::tauMass = 1.777;//1.77682;
+const double KinematicTauTools::piMass = 0.13957018;
+const double KinematicTauTools::tauMass = 1.77682;
 
 KinematicTauTools::KinematicTauTools(){
 
