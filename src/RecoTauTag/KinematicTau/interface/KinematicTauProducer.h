@@ -33,6 +33,7 @@
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
@@ -49,7 +50,7 @@ private:
   virtual void endJob();
   
   //Execute the kinematic fit and in case of success modify the taus parameters
-  bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx);
+  bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx,std::vector<SelectedKinematicDecay> &KinematicFitTauDecays_);
   //combine a discriminator of important quality cuts of a refitted tau decay
   bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
   //Fill the new PFTau dicriminators from fit result
@@ -58,7 +59,7 @@ private:
   const edm::ParameterSet fitParameters_;
   edm::Event * iEvent_;
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;  
-  edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_;
+  edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_,KinematicTauCandTag_;
   unsigned int cnt_, cntFound_;
 	
 };

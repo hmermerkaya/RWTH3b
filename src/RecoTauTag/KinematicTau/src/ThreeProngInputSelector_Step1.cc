@@ -100,7 +100,8 @@ bool ThreeProngInputSelector_Step1::select(reco::TrackCollection & nonTauTracks,
 	}
 	if (!exists) {
 	  tautracks.push_back(*tracks);
-	} else {
+	} 
+	else {
 	  duplicateTracks.push_back(*tracks);   
 	}
       }

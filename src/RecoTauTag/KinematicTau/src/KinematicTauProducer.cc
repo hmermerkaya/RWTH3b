@@ -4,11 +4,13 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
   primVtx_( iConfig.getParameter<edm::InputTag>( "primVtx" ) ),//primVtx from generalTracks
   selectedTauCandidatesTag_( iConfig.getParameter<edm::InputTag>( "selectedTauCandidates" ) ),//only used to save number of tracks in signal cone of PFTau candidate
-  inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) )
+  inputCollectionTag_( iConfig.getParameter<edm::InputTag>( "inputTracks" ) ),
+  KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag"))
 {
   produces<reco::PFTauCollection>();
   produces<reco::PFTauDiscriminator>("PFRecoTauDiscriminationByKinematicFit");//boolean per decay whether the fit was successfull
   produces<reco::PFTauDiscriminator>("PFRecoTauDiscriminationByKinematicFitQuality");//boolean per decay whether it passes some major quality cuts
+  produces<std::vector<SelectedKinematicDecay> >("KinematicFitTauDecays");
 }
 
 KinematicTauProducer::~KinematicTauProducer(){
@@ -22,6 +24,9 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
   std::auto_ptr<reco::PFTauCollection> selected_ = std::auto_ptr<reco::PFTauCollection >(new reco::PFTauCollection);
   reco::PFTauCollection & selected = * selected_;
   
+  std::auto_ptr<std::vector<SelectedKinematicDecay> > KinematicFitTauDecays =  std::auto_ptr<std::vector<SelectedKinematicDecay> >(new std::vector<SelectedKinematicDecay>);
+  std::vector<SelectedKinematicDecay> &KinematicFitTauDecays_=*KinematicFitTauDecays;
+
   iEvent_ = &iEvent;
   edm::Handle<reco::VertexCollection> primVtxs;
   iEvent_->getByLabel( primVtx_, primVtxs);
@@ -35,14 +40,15 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
   if(primVtxs->size()>=1){
     iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
     const reco::Vertex primVtx = primVtxs->front();
-    filterValue = select(selected, discrimValues, primVtx);
+    filterValue = select(selected, discrimValues, primVtx,KinematicFitTauDecays_);
     if(filterValue) edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Passed";
     else edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Failed"; 
   }
   
   edm::OrphanHandle<reco::PFTauCollection> orphanTaus = iEvent_->put(selected_);
   discriminate(orphanTaus, discrimValues);
-	
+
+  iEvent_->put(KinematicFitTauDecays,"KinematicFitTauDecays");  
   if(filterValue) cntFound_++;//found at least 1 refit tau
   
   return filterValue;
@@ -58,7 +64,7 @@ void KinematicTauProducer::endJob(){
   edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] asks for >= 1 kinTau per event. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
-bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx){
+bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx,std::vector<SelectedKinematicDecay> &KinematicFitTauDecays_){
   bool success = false;
   discrimValues.clear();
   
@@ -72,6 +78,10 @@ bool KinematicTauProducer::select(reco::PFTauCollection & selected, std::map<int
   }
   edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::select: Size of usedTaus: "<< usedTaus->size() << " Size of Track Collection: " << inputCollection->size()  ;
   unsigned int index = 0;
+
+  edm::Handle<std::vector<std::vector<SelectedKinematicDecay> > > KinematicTauCandidate;
+  iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidate);
+
   //TransientTrackBuilder trkBuilder = *transTrackBuilder_;
   KinematicTauCreator *kinTauCrtr = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_);
   for(std::vector<reco::TrackRefVector>::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {

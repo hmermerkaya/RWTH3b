@@ -1,5 +1,8 @@
 #include  "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+
 
 const double KinematicTauTools::piMass = 0.13957018;
 const double KinematicTauTools::tauMass = 1.77682;
@@ -144,7 +147,7 @@ bool KinematicTauTools::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, T
 std::vector<reco::TransientTrack> KinematicTauTools::convToTransTrck(std::vector<reco::TrackRef> &input){
   //TransientTrackBuilder delivers reco::TransientTrack
   std::vector<reco::TransientTrack> transTrkVct;
-  for (std::vector<reco::TrackRef>::iterator iter=input.begin(); iter!=input.end(); ++iter) {
+  for (std::vector<reco::TrackRef>::const_iterator iter=input.begin(); iter!=input.end(); ++iter) {
     transTrkVct.push_back( transientTrackBuilder_->build( *iter ) );
   }
   return transTrkVct;
@@ -156,10 +159,10 @@ std::vector<reco::TransientTrack> KinematicTauTools::convToTransTrck(std::vector
 template <typename T> double KinematicTauTools::getInvariantMass(const T & tracks){//if second argument empty default pion is supposed
   double SumPx(0),SumPy(0),SumPz(0),SumE(0);
   for(unsigned int i=0; i<tracks.size(); i++){
-    SumPx += tracks[i]->px();
-    SumPy += tracks[i]->py();
-    SumPz += tracks[i]->pz();
-    SumE += sqrt(pow(tracks[i]->p(),2)+pow(Get_piMass(),2));
+    SumPx += tracks.at(i)->px();
+    SumPy += tracks.at(i)->py();
+    SumPz += tracks.at(i)->pz();
+    SumE += sqrt(pow(tracks.at(i)->p(),2)+pow(Get_piMass(),2));
   }
   return sqrt(pow(SumE,2)-pow(SumPx,2)-pow(SumPy,2)-pow(SumPz,2));
 }
@@ -171,11 +174,23 @@ template <typename T>  bool KinematicTauTools::cmpPt(const T & a, const T & b){
 }
 
 
+double KinematicTauTools::VertexRotationAndSignificance(const std::vector<reco::TrackRef> & input,TransientVertex tmpVtx, std::vector<reco::TransientTrack> trks, const reco::Vertex & pVtx){
+  double massA1 = getInvariantMass(input);
+  TLorentzVector lorentzA1 = getSumTLorentzVec(input, massA1);
+  VertexRotation vtxC(lorentzA1);
+  double theta0;
+  TVector3 tauFlghtDir;
+  reco::Vertex pvTemp = pVtx;//do not modify original pv here                                                                                                                                                                                
+  return vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
+}
+
+
 bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRef> & input, reco::Vertex & pVtx){
   std::vector<std::vector<reco::TrackRef> > combis=KinematicTauTools::choose3Prongs(input);
   std::vector<reco::TrackRefVector> selected;
   return KinematicTauTools::choose3bestTracks(selected,combis,pVtx);
 }
+
 
 bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRefVector> & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx) {
   std::vector<std::pair<int,double> > movements;
@@ -188,27 +203,39 @@ bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRefVector> & se
       LogTrace("ThreeProngInputSelector_Step2") << "ThreeProngInputSelector_Step2::choose3bestTracks: Erased combi due to bad vertex. " << combis.size() << " combis left.";
       continue;
     }
+    /*
     double massA1 = getInvariantMass(*iter);
     TLorentzVector lorentzA1 = getSumTLorentzVec(*iter, massA1);
     VertexRotation vtxC(lorentzA1);
     double theta0;
     TVector3 tauFlghtDir;
-    reco::Vertex pvTemp = pVtx;//do not modify original pv here                                                                                                                                                      
-    double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
+    reco::Vertex pvTemp = pVtx;//do not modify original pv here                                                                                                                                                                              
+    double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);*/
+    double significance = VertexRotationAndSignificance(*iter,tmpVtx,trks,pVtx);
+
+    edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::choose3bestTracks Original method significance " << significance
+						 << " PVertexFit and Rotate (" 
+						 <<  pVtx.position().x()
+						 << "," <<  pVtx.position().y()
+						 << "," <<  pVtx.position().z() << ")"
+						 << " SV (" <<  tmpVtx.position().x()
+						 << "," <<  tmpVtx.position().y()
+						 << "," <<  tmpVtx.position().z() << ")";
+
     movements.push_back(std::make_pair(index, significance));
 
     ++index;
-    ++iter;//only moved if nothing was deleted                                                                                                                                                                       
+    ++iter;//only moved if nothing was deleted                                                                                                                                                                                               
   }
   if (combis.size()<1) {
     LogTrace("ThreeProngInputSelector_Step2") << "ThreeProngInputSelector_Step2::choose3bestTracks: No combi survived.";
     return false;
   }
   reco::TrackRefVector tmpvec;
-  if (combis.size()>1) {//chose the pair with smallest vertex rotation needed!!!
+  if (combis.size()>1) {//chose the pair with smallest vertex rotation needed!!!                                                                                                                                                             
     sort(movements.begin(), movements.end(), pairSecond<int, double>);
-    LogTrace("ThreeProngInputSelector_Step2") << "ThreeProngInputSelector_Step2::choose3bestTracks:Too much combis (" << combis.size() << ") left. Take one with smallest vtx correction movement (" 
-					      << movements.front().second << " [sigma]), second best is (" << movements.at(1).second << " [sigma]).";
+    LogTrace("ThreeProngInputSelector_Step2") << "ThreeProngInputSelector_Step2::choose3bestTracks:Too much combis (" << combis.size() << ") left. Take one with smallest vtx correction movement ("
+                                              << movements.front().second << " [sigma]), second best is (" << movements.at(1).second << " [sigma]).";
     unsigned int i = movements.front().first;
     for (std::vector<reco::TrackRef>::const_iterator iter = combis.at(i).begin(); iter != combis.at(i).end(); ++iter) {
       tmpvec.push_back(*iter);
@@ -222,6 +249,9 @@ bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRefVector> & se
   selected.push_back(tmpvec);
   return true;
 }
+
+
+
 
 
 template <class T> TLorentzVector KinematicTauTools::getSumTLorentzVec(const T& tracks, const double massConstraint){
@@ -244,4 +274,27 @@ template <typename T> bool KinematicTauTools::cmpChi2(const T &a, const T &b){
   return a->chi2() > b->chi2();
 }
 
-
+bool  KinematicTauTools::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks){
+  //load general track collection and substract tau tracks from it 
+  edm::Handle<reco::TrackCollection> trackCollection;
+  iEvent_->getByLabel(trackCollectionTag_,trackCollection);
+  
+  if (!trackCollection.isValid()) {
+    edm::LogError("ThreeProngInputSelector_Step1") << "ThreeProngInputSelector_Step1::select: no track collection found!";
+    return false;
+  }
+  
+  unsigned int idx = 0;
+  for (reco::TrackCollection::const_iterator iTrk = trackCollection->begin(); iTrk != trackCollection->end(); ++iTrk, idx++) {
+    reco::TrackRef tmpRef(trackCollection, idx);
+    bool isTauTrk = false;
+    for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
+      if (tmpRef == *tauTrk) {
+	isTauTrk = true;
+	break;
+      }
+    }
+    if (!isTauTrk) nonTauTracks.push_back(*iTrk);
+  }
+  return true;
+}

@@ -19,6 +19,7 @@ KinematicTauAdvancedProducer::~KinematicTauAdvancedProducer(){
 
 // ------------ method called on each new Event  ------------
 bool KinematicTauAdvancedProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::filter Start.";
   bool filterValue = false;
   
   cnt_++;
@@ -35,23 +36,24 @@ bool KinematicTauAdvancedProducer::filter(edm::Event& iEvent, const edm::EventSe
   
   edm::Handle<reco::VertexCollection> primVtxs;
   iEvent_->getByLabel( primVtx_, primVtxs);
-  
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::filter A.";  
   if(primVtxs->size()>=1){
     const reco::VertexRef primaryVtxRef(primVtxs, 0);
     filterValue = select(selected, PFTauRefCollection, daughterCollection, primaryVtxRef);
   }
-  
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::filter B.";
   iEvent_->put(PFTauRefCollection_,"selectedTauRefs");
   edm::OrphanHandle<reco::RecoChargedCandidateCollection> orphanCands = iEvent_->put(daughterCollection_,"selectedTauDaughters");
   correctReferences(selected, orphanCands);//has to be called before put(selected_,"SelectedKinematicParticles")!!!
   iEvent_->put(selected_,"SelectedKinematicDecays");
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::filter C.";
   
   std::auto_ptr<int> flagPtr = std::auto_ptr<int>(new int);
   int &flag = *flagPtr;
   if(filterValue) flag = 1;
   else flag = 0;
   iEvent_->put(flagPtr,"flag");
-  
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::filter Finished.";
   return filterValue;
 }
 void KinematicTauAdvancedProducer::beginJob(){
@@ -65,6 +67,7 @@ void KinematicTauAdvancedProducer::endJob(){
 }
 
 bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & refitDecays, reco::PFTauRefVector & PFTauRefCollection, reco::RecoChargedCandidateCollection & daughterCollection, const reco::VertexRef & primaryVtxRef){
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select Start.";
   bool fullyDetermined = false;
   //	std::vector<bool> ambiguity;
   
@@ -77,14 +80,17 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
 						 <<") and "<<selectedTauCandidatesTag_.encode()<<"("<<usedTaus->size()<<")";
     return false;
   }
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select A.";
   unsigned int index = 0;
   //TransientTrackBuilder trkBuilder = *transTrackBuilder_;
   KinematicTauCreator *kinTauCrtr = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_);
   unsigned int cntValid = 0;
   for(std::vector<reco::TrackRefVector>::const_iterator tracks = inputCollection->begin(); tracks != inputCollection->end(); ++tracks, ++index) {
+    edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select a1 track: " << index;
     std::vector<reco::TrackRef> input;
     for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
     int fitStatus = kinTauCrtr->create(*primaryVtxRef, input);
+    edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select a2.";
     if(fitStatus==1){
       cntValid++;
       
@@ -92,15 +98,18 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
       //		reco::PFTau refitPFTau = kinTauCrtr->getPFTau();
       //		std::vector<math::XYZTLorentzVector> refitDaughters = kinTauCrtr->getRefittedChargedDaughters();
       
+      edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select a3.";
       //fitting debug only:
       std::vector<reco::TrackRef> usedTracks = kinTauCrtr->getSelectedTracks();
       reco::PFTauRef tauRef = usedTaus->at(index);
       saveSelectedTracks(usedTracks, daughterCollection);
       saveKinParticles(kinTauCrtr, refitDecays, tauRef, primaryVtxRef);
       //save tau ref
+      edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select a4.";
       PFTauRefCollection.push_back(tauRef);
     }
   }
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select B.";
   if(cntValid >= minKinTau_){
     fullyDetermined = true;
     cntFound_++;//found at least minKinTau_ refit tau
@@ -118,6 +127,7 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
   //		if(verbosity_>=2) printf("evt %d KinematicTauAdvancedProducer::select: %d kinematic tau(s) reconstructed with %d ambiguities.\n", iEvent_->id().event(), refitDecays.size(), cntDoubleTaus);
   //	}else printf("evt %d KinematicTauAdvancedProducer::select:Warning: only %d kinematic tau(s) reconstructed with %d ambiguities. Skip Evt.\n", iEvent_->id().event(), refitDecays.size(), cntDoubleTaus);
   
+  edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select Finish.";
   delete kinTauCrtr;
   
   return fullyDetermined;

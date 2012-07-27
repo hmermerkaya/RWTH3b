@@ -29,30 +29,33 @@
 
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
+
+#include  "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
+#include "TString.h"
 
-class InputTrackSelector : public edm::EDFilter {
+class InputTrackSelector : public edm::EDFilter, protected KinematicTauTools {
 public:
-	explicit InputTrackSelector(const edm::ParameterSet&);
-	~InputTrackSelector();
-	
+  explicit InputTrackSelector(const edm::ParameterSet&);
+  ~InputTrackSelector();
+  
 private:
-	virtual void beginJob();
-	virtual bool filter(edm::Event&, const edm::EventSetup&);
-	virtual void endJob();
-	bool select(std::vector<reco::TrackRefVector> & refitParticles, reco::PFTauRefVector & PFTauRef);
-	reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
-	
-	edm::Event * iEvent_;
-	std::string tauType_;
-	edm::InputTag primVtx_;
-	unsigned int minTracks_, minTau_, cnt_, cntFound_;
-    double minTauPt_;
-    edm::InputTag trkCollectionTag_;
-    
-    edm::ProductID trkCollectionID_;
-
-
+  virtual void beginJob();
+  virtual bool filter(edm::Event&, const edm::EventSetup&);
+  virtual void endJob();
+  bool select(std::vector<reco::TrackRefVector> &selected, reco::PFTauRefVector &PFTauRef, std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_);
+  reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
+  
+  edm::Event * iEvent_;
+  std::string tauType_;
+  edm::InputTag trkCollectionTag_,vtxtrackCollectionTag_, primVtx_;
+  edm::ProductID trkCollectionID_;
+  unsigned int minTracks_, minTau_, nTauPerVtx_, cnt_, cntFound_;
+  double minTauPt_;
+  std::vector<std::string> TauVtxList_;
 };
+

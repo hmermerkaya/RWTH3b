@@ -43,6 +43,7 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
 #include <TLorentzVector.h>
 #include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
@@ -62,12 +63,12 @@ private:
   virtual void beginJob();
   virtual bool filter(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
-  bool select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & taurefs, reco::VertexCollection & primaryVertex);
+  bool select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & taurefs, reco::VertexCollection & primaryVertex,std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_);
   
   edm::Event * iEvent_;
   edm::ParameterSet iConfig_;
-  edm::InputTag threeProngCollectionTag_, selectedTauCandidatesTag_, primVtxTag_;
+  edm::InputTag threeProngCollectionTag_, selectedTauCandidatesTag_, primVtxTag_,KinematicTauCandTag_;
   unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
   double maxChi2ndf_;    
-
+  edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
 };

@@ -36,6 +36,7 @@
 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
 #include <TLorentzVector.h>
 
