@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.16 2012/01/25 12:58:11 perchall Exp $
+// $Id: SelectedKinematicDecay.h,v 1.17 2012/07/24 23:17:51 inugent Exp $
 //
 //
 
@@ -35,9 +35,8 @@ class SelectedKinematicDecay {
   enum FitSequence{AmbiguitySolution=0,PlusSolution,MinusSolution};
 
   SelectedKinematicDecay();
-  SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRef, reco::TrackRefVector &TrackTriplet, 
-			 const reco::VertexRef &primaryVertexRef,std::string primVtxReFitTag, unsigned int nTauPerVtx,
-			 std::vector<reco::TransientTrack> &secVtxTracks, TransientVertex &secVtx);
+  SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRef, std::vector<reco::TrackRef> &TrackTriplet, 
+			 const reco::Vertex &primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx);
   SelectedKinematicDecay(const SelectedKinematicParticleCollection & particles, 
 			 const int iterations, const int maxiterations, const float csum, 
 			 const float mincsum, const int constraints, const int ndf, const float chi2, 
@@ -50,11 +49,11 @@ class SelectedKinematicDecay {
   // Set Functions
   // 
   void SetTauDecayMode(unsigned int tauDecayMode){tauDecayMode_=tauDecayMode;}
-  void SetInitialProperties(unsigned int tauDecayMode, const reco::PFTauRef tauRef,reco::TrackRefVector TrackTriplet, 
-			    const reco::VertexRef primaryVertexRef,std::string primVtxReFitTag, unsigned int nTauPerVtx,
-			    std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx);
-  void SetPrimaryVertexReFit(reco::VertexRef primaryVertexReFit);
+  void SetInitialProperties(unsigned int tauDecayMode, const reco::PFTauRef tauRef, std::vector<reco::TrackRef> TrackTriplet, 
+			    const reco::Vertex primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx);
+  void SetPrimaryVertexReFit(reco::Vertex primaryVertexReFit);
   void SetPrimaryVertexReFitAndRotated(reco::Vertex primaryVertexReFitAndRotated);
+  void SetSecondaryVertex(std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx);
   void SetKinematicFitProperties(const SelectedKinematicParticleCollection particles, 
 				 const int iterations, const int maxiterations, const float csum, 
 				 const float mincsum, const int constraints, const int ndf, 
@@ -68,14 +67,14 @@ class SelectedKinematicDecay {
   //
   unsigned int TauDecayMode(){return tauDecayMode_;}
   const reco::PFTauRef & PFTauRef() const { return PFTauRef_;}
-  const reco::TrackRefVector & TrackTriplet()const{return TrackTriplet_;}
-  const reco::VertexRef & PrimaryVertex() const{return primVtx_;}
+  const std::vector<reco::TrackRef> & TrackTriplet()const{return TrackTriplet_;}
+  const reco::Vertex & PrimaryVertex() const{return primVtx_;}
   std::string PrimaryVertexReFitCollectionTag(){return primVtxReFitTag_;}
   unsigned int NumberOfTauPerVtx()const{return nTauPerVtx_;}
   std::vector<reco::Track> SecondaryVertexTracks(){return secVtxTracks_;}
   reco::Vertex  SecondaryVertex(){return secVtx_;};
 
-  const reco::VertexRef & PrimaryVertexReFit()const{return primaryVertexReFit_;}
+  const reco::Vertex & PrimaryVertexReFit()const{return primaryVertexReFit_;}
   const reco::Vertex & PrimaryVertexReFitAndRotated()const{return primaryVertexReFitAndRotated_;}
   const std::map<std::string, bool> & discriminators() const { return discriminators_; }
     
@@ -84,7 +83,6 @@ class SelectedKinematicDecay {
   void daughters(std::vector< SelectedKinematicParticle const * > & par) const;        /// return all particles assigned to this decay w/o the mother
   void chargedDaughters(std::vector< SelectedKinematicParticle const * > & par) const; /// return only all charged particles assigned to this decay w/o the mother
   void neutralDaughters(std::vector< SelectedKinematicParticle const * > & par) const; /// return only all neutral particles assigned to this decay w/o the mother
-  
   void modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par); ///DO NOT USE after reading from event stream!
   
   const int iterations() const;
@@ -105,13 +103,13 @@ class SelectedKinematicDecay {
   // internal variables
   unsigned int             tauDecayMode_;
   reco::PFTauRef           PFTauRef_;
-  reco::TrackRefVector     TrackTriplet_;
-  reco::VertexRef          primVtx_;
+  std::vector<reco::TrackRef> TrackTriplet_;
+  reco::Vertex             primVtx_;
   std::string              primVtxReFitTag_;
   unsigned int             nTauPerVtx_;
   std::vector<reco::Track> secVtxTracks_; 
   reco::Vertex             secVtx_;
-  reco::VertexRef          primaryVertexReFit_;
+  reco::Vertex             primaryVertexReFit_;
   reco::Vertex             primaryVertexReFitAndRotated_;
 
   SelectedKinematicParticleCollection particles_; /// collection of kinematic particles assigned to this decay
