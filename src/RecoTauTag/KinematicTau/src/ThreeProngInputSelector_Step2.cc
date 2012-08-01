@@ -8,10 +8,6 @@ ThreeProngInputSelector_Step2::ThreeProngInputSelector_Step2(const edm::Paramete
   minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)) //filter returns true if more/equal than minTau_ taus were selected
 {
     iConfig_ = iConfig;
-    produces<int>("flag"); //0=invalid, 1=valid
-    produces<std::vector<reco::TrackRefVector> >("InputTracks"); //save collection of vector<reco::CandidateRef> for each tau cand
-    produces<reco::PFTauRefVector>("InputTauRefs"); //needed to fill in unfit KinematicParticle later on
-    produces<reco::VertexCollection>("primVtx"); //has to be vector. save one of length one
     produces<std::vector<SelectedKinematicDecay> >("PreKinematicDecaysStep2");
 }
 

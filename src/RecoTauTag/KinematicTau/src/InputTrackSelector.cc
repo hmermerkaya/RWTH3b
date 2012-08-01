@@ -11,11 +11,7 @@ InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
   minTauPt_( iConfig.getUntrackedParameter<double>("minTauPt", 0.) ),               // Ignore pftaus below this pt threshold
   TauVtxList_( iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks") )
 {
-  produces<int>("flag");//0=invalid, 1=valid
-  produces<std::vector<reco::TrackRefVector> >("InputTracks");//save collection of vector<reco::CandidateRef> for each tau cand
-  produces<reco::PFTauRefVector>("InputTauRefs");//needed to fill in unfit KinematicParticle later on
   produces<std::vector<std::vector<SelectedKinematicDecay> > >("PreKinematicDecaysStep1");
-
   for(unsigned int i=0; i<TauVtxList_.size(); i++){
     produces<reco::TrackCollection>(TauVtxList_.at(i)); //save collection of tracks not belonging to any tau candidate
   }
