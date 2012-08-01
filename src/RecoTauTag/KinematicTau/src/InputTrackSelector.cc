@@ -85,6 +85,7 @@ bool InputTrackSelector::select(std::vector<reco::TrackRefVector> &selected, rec
   bool found = false;
   edm::Handle<reco::VertexCollection > primaryVertexCollection;
   iEvent_->getByLabel(primVtx_,primaryVertexCollection);
+  
   if(primaryVertexCollection->size()>0){
     edm::Handle<reco::PFTauCollection> inputCollection;
     iEvent_->getByLabel(tauType_+"PFTauProducer", inputCollection);
@@ -115,7 +116,7 @@ bool InputTrackSelector::select(std::vector<reco::TrackRefVector> &selected, rec
 	}
       }
     }
-
+    
     // remove duplicates
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
@@ -142,7 +143,7 @@ bool InputTrackSelector::select(std::vector<reco::TrackRefVector> &selected, rec
 	}
       }
     }
-
+    
     // Get Vertex Tracks List
     if(NonTauTracksLists_.size()==1)GetNonTauTracks(iEvent_,trkCollectionTag_,NonTauTracksLists_.at(0),tautracks);
   }
@@ -150,7 +151,8 @@ bool InputTrackSelector::select(std::vector<reco::TrackRefVector> &selected, rec
     cntFound_++;
     found = true;
     LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: "<<selected.size()<<" tau candidate(s) reconstructed.";
-  }//else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: Only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Evt.";
+  }
+  else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: Only "<<selected.size()<<" tau candidate(s) reconstructed. Skip Evt.";
     
   return found;
 }

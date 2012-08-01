@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.17 2012/07/24 23:17:51 inugent Exp $
+// $Id: SelectedKinematicDecay.h,v 1.18 2012/07/27 17:12:38 inugent Exp $
 //
 //
 
@@ -28,6 +28,8 @@
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
+#include "TVector3.h"
+#include "TLorentzVector.h"
 
 class SelectedKinematicDecay {
  public:
@@ -35,7 +37,7 @@ class SelectedKinematicDecay {
   enum FitSequence{AmbiguitySolution=0,PlusSolution,MinusSolution};
 
   SelectedKinematicDecay();
-  SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRef, std::vector<reco::TrackRef> &TrackTriplet, 
+  SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRefOrig, std::vector<reco::TrackRef> &TrackTriplet, 
 			 const reco::Vertex &primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx);
   SelectedKinematicDecay(const SelectedKinematicParticleCollection & particles, 
 			 const int iterations, const int maxiterations, const float csum, 
@@ -49,11 +51,11 @@ class SelectedKinematicDecay {
   // Set Functions
   // 
   void SetTauDecayMode(unsigned int tauDecayMode){tauDecayMode_=tauDecayMode;}
-  void SetInitialProperties(unsigned int tauDecayMode, const reco::PFTauRef tauRef, std::vector<reco::TrackRef> TrackTriplet, 
+  void SetInitialProperties(unsigned int tauDecayMode, const reco::PFTauRef tauRefOrig, std::vector<reco::TrackRef> TrackTriplet, 
 			    const reco::Vertex primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx);
-  void SetPrimaryVertexReFit(reco::Vertex primaryVertexReFit);
-  void SetPrimaryVertexReFitAndRotated(reco::Vertex primaryVertexReFitAndRotated);
-  void SetSecondaryVertex(std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx);
+  void SetTauVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
+			      std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx);
+  void SetRawKinematics(TVector3 tauFlghtDir,TLorentzVector a1_p4,double initThetaGJ, double ThetaMax);
   void SetKinematicFitProperties(const SelectedKinematicParticleCollection particles, 
 				 const int iterations, const int maxiterations, const float csum, 
 				 const float mincsum, const int constraints, const int ndf, 
@@ -66,18 +68,21 @@ class SelectedKinematicDecay {
   // Get Functions
   //
   unsigned int TauDecayMode(){return tauDecayMode_;}
-  const reco::PFTauRef & PFTauRef() const { return PFTauRef_;}
+  const reco::PFTauRef & PFTauRef() const { return PFTauRefOrig_;}
   const std::vector<reco::TrackRef> & TrackTriplet()const{return TrackTriplet_;}
   const reco::Vertex & PrimaryVertex() const{return primVtx_;}
   std::string PrimaryVertexReFitCollectionTag(){return primVtxReFitTag_;}
   unsigned int NumberOfTauPerVtx()const{return nTauPerVtx_;}
   std::vector<reco::Track> SecondaryVertexTracks(){return secVtxTracks_;}
   reco::Vertex  SecondaryVertex(){return secVtx_;};
-
   const reco::Vertex & PrimaryVertexReFit()const{return primaryVertexReFit_;}
   const reco::Vertex & PrimaryVertexReFitAndRotated()const{return primaryVertexReFitAndRotated_;}
-  const std::map<std::string, bool> & discriminators() const { return discriminators_; }
-    
+  const std::map<std::string, bool> & discriminators()const{ return discriminators_; }
+  TLorentzVector a1_p4(){return a1_p4_;}
+  double ThetaMax(){return thetaMax_;}
+  double InitalThetaGJ(){return initThetaGJ_;}
+  TVector3 InitalFlightDirection(){return tauFlghtDir_;}
+      
   const SelectedKinematicParticleCollection & particles() const { return particles_; } /// return all particles assigned to this decay including the mother.
   const SelectedKinematicParticle* topParticle() const;                                /// return the mother particle of this decay. this is the decaying particle itself.
   void daughters(std::vector< SelectedKinematicParticle const * > & par) const;        /// return all particles assigned to this decay w/o the mother
@@ -94,23 +99,27 @@ class SelectedKinematicDecay {
   const float mincsum() const;
   const double vtxSignPVRotSV() const { return vtxSignPVRotSV_; }        /// quality criterion: vertex significance between the rotated primary vertex and the secondary vertex of the tau decay
   const double vtxSignPVRotPVRed() const { return vtxSignPVRotPVRed_; }  /// quality criterion: vertex significance of the primary vertex rotation w.r.t. the initial primary vertex (already w/o tracks assigned to the tau decay)
-  const double a1Mass() const { return a1Mass_; }                        /// quality criterion: mass of the a1 system
+  const double a1Mass() const { return a1Mass_;}                         /// quality criterion: mass of the a1 system
   const double chi2prob() const;                                         /// quality criterion: chi2 probability of the fit
   const int sgnlConeTrkSize() const;                                     /// size of tracks in the signal cone of the initial PFTau candidate
   const double energyTFraction() const { return energyTFraction_; }      /// quality criterion: transversal energy fraction between the intial PFTau and the final kinematic tau
   
  private:
   // internal variables
-  unsigned int             tauDecayMode_;
-  reco::PFTauRef           PFTauRef_;
+  unsigned int                tauDecayMode_;
+  reco::PFTauRef              PFTauRefOrig_;
   std::vector<reco::TrackRef> TrackTriplet_;
-  reco::Vertex             primVtx_;
-  std::string              primVtxReFitTag_;
-  unsigned int             nTauPerVtx_;
-  std::vector<reco::Track> secVtxTracks_; 
-  reco::Vertex             secVtx_;
-  reco::Vertex             primaryVertexReFit_;
-  reco::Vertex             primaryVertexReFitAndRotated_;
+  reco::Vertex                primVtx_;
+  std::string                 primVtxReFitTag_;
+  unsigned int                nTauPerVtx_;
+  std::vector<reco::Track>    secVtxTracks_; 
+  reco::Vertex                secVtx_;
+  reco::Vertex                primaryVertexReFit_;
+  reco::Vertex                primaryVertexReFitAndRotated_;
+  TLorentzVector              a1_p4_;
+  double                      thetaMax_;
+  double                      initThetaGJ_;
+  TVector3                    tauFlghtDir_;
 
   SelectedKinematicParticleCollection particles_; /// collection of kinematic particles assigned to this decay
   int iterations_;                                /// fit parameter: iterations until convergence

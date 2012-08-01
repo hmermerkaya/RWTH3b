@@ -57,7 +57,7 @@ public:
 
   bool sumCharge(const std::vector<reco::TrackRef> & input);
   vVTrackRef choose3Prongs(std::vector<reco::TrackRef> & input);
-  double VertexRotationAndSignificance(const std::vector<reco::TrackRef> & input,TransientVertex tmpVtx, std::vector<reco::TransientTrack> trks, const reco::Vertex & pVtx);
+  double VertexRotationAndSignificance(const std::vector<reco::TrackRef> & input,TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,reco::Vertex &pVtx,TLorentzVector &lorentzA1, TVector3 &tauFlghtDir, double &theta0, double &thetaMax);
   bool choose3bestTracks(std::vector<reco::TrackRef> & input, reco::Vertex & pVtx);
   bool choose3bestTracks(std::vector<reco::TrackRefVector> & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx);
   bool removeDuplicateTriplets(const std::vector<reco::TrackRef> & duplicateTracks, vVVTrackRef & threeProngCombis, vVVTrackRef::iterator & candidates, vVTrackRef::iterator & triplets);

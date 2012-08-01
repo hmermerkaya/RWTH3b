@@ -26,17 +26,18 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
-
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
-#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
-#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
-
-#include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
+#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
+#include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
+
+
 
 
 class KinematicTauProducer : public edm::EDFilter {
@@ -50,16 +51,19 @@ private:
   virtual void endJob();
   
   //Execute the kinematic fit and in case of success modify the taus parameters
-  bool select(reco::PFTauCollection & selected, std::map<int, std::vector<bool> > & discrimValues, const reco::Vertex & primaryVtx,std::vector<SelectedKinematicDecay> &KinematicFitTauDecays_);
+  bool select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection);
   //combine a discriminator of important quality cuts of a refitted tau decay
-  bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, const reco::PFTauRef & tauRef, const reco::Vertex & primaryVtx);
-  //Fill the new PFTau dicriminators from fit result
-  void discriminate(const edm::OrphanHandle<reco::PFTauCollection> & collection, const std::map<int, std::vector<bool> > & dicrimValues);
+  bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, SelectedKinematicDecay &KFTau);
+  int  saveKinParticles(const KinematicTauCreator * kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, std::map<std::string, bool> tauDiscriminators);
+  void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
+  void correctReferences(SelectedKinematicDecayCollection & selected, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
+  void setMissingQualityCriteria(SelectedKinematicDecayCollection &decay, const KinematicTauCreator * kinTauCrtr);
+
   
   const edm::ParameterSet fitParameters_;
   edm::Event * iEvent_;
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;  
-  edm::InputTag primVtx_, selectedTauCandidatesTag_, inputCollectionTag_,KinematicTauCandTag_;
+  edm::InputTag KinematicTauCandTag_;
   unsigned int cnt_, cntFound_;
 	
 };

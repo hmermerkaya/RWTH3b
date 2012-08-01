@@ -4,42 +4,40 @@ SelectedKinematicDecay::SelectedKinematicDecay() {
   SetInitialProperties(Undefined,reco::PFTauRef(),std::vector<reco::TrackRef>(),reco::Vertex(),"",0);
   SetKinematicFitProperties(SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0,std::map<std::string, bool>());
   setMissingQualityCriteria(-1,-1,-1,-1);
-  SetPrimaryVertexReFit(reco::Vertex());
-  SetPrimaryVertexReFitAndRotated(reco::Vertex());
-  SetSecondaryVertex(std::vector<reco::TransientTrack>(),TransientVertex());
+  SetTauVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());  
+  SetRawKinematics(TVector3(),TLorentzVector(),0.0,0.0);
 }
 
 
-SelectedKinematicDecay::SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRef, std::vector<reco::TrackRef> &TrackTriplet,
+SelectedKinematicDecay::SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRefOrig, std::vector<reco::TrackRef> &TrackTriplet,
 					       const reco::Vertex &primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx){
-  SetInitialProperties(tauDecayMode,tauRef,TrackTriplet,primaryVertex,primVtxReFitTag,nTauPerVtx);
+  SetInitialProperties(tauDecayMode,tauRefOrig,TrackTriplet,primaryVertex,primVtxReFitTag,nTauPerVtx);
   SetKinematicFitProperties(SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0,std::map<std::string, bool>());
   setMissingQualityCriteria(-1,-1,-1,-1);
-  SetPrimaryVertexReFit(reco::Vertex());
-  SetPrimaryVertexReFitAndRotated(reco::Vertex());
-  SetSecondaryVertex(std::vector<reco::TransientTrack>(),TransientVertex());
+  SetTauVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
+  SetRawKinematics(TVector3(),TLorentzVector(),0.0,0.0);
 }
 
 SelectedKinematicDecay::SelectedKinematicDecay(const SelectedKinematicParticleCollection & particles,
-						 const int iterations, const int maxiterations, const float csum,
-						 const float mincsum, const int constraints, const int ndf, const float chi2,
-						 const reco::PFTauRef & tauRef, const std::map<std::string, bool> & discriminators){
+					       const int iterations, const int maxiterations, const float csum,
+					       const float mincsum, const int constraints, const int ndf, const float chi2,
+					       const reco::PFTauRef & tauRef, const std::map<std::string, bool> & discriminators){
   SetInitialProperties(Undefined,tauRef,std::vector<reco::TrackRef>(),reco::Vertex()," ",0);
   SetKinematicFitProperties(particles,iterations,maxiterations,csum,mincsum,constraints,ndf,chi2,discriminators);
   setMissingQualityCriteria(-1,-1,-1,-1);
-  SetPrimaryVertexReFit(reco::Vertex());
-  SetPrimaryVertexReFitAndRotated(reco::Vertex()); 
-  SetSecondaryVertex(std::vector<reco::TransientTrack>(),TransientVertex());
+  SetTauVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
+  SetRawKinematics(TVector3(),TLorentzVector(),0.0,0.0);
 }
 
 SelectedKinematicDecay::~SelectedKinematicDecay(){
 
 }
 
-void SelectedKinematicDecay::SetInitialProperties(unsigned int tauDecayMode,reco::PFTauRef tauRef,std::vector<reco::TrackRef> TrackTriplet, const reco::Vertex primaryVertex,
+void SelectedKinematicDecay::SetInitialProperties(unsigned int tauDecayMode,reco::PFTauRef tauRefOrig,
+						  std::vector<reco::TrackRef> TrackTriplet, const reco::Vertex primaryVertex,
 						  std::string primVtxReFitTag, unsigned int nTauPerVtx){
   tauDecayMode_=tauDecayMode;
-  PFTauRef_=tauRef;
+  PFTauRefOrig_=tauRefOrig;
   TrackTriplet_=TrackTriplet;
   primVtx_=primaryVertex;
   primVtxReFitTag_=primVtxReFitTag;
@@ -73,20 +71,24 @@ void SelectedKinematicDecay::setMissingQualityCriteria(const double vtxSignPVRot
 }
 
 
-void SelectedKinematicDecay::SetPrimaryVertexReFit(reco::Vertex primaryVertexReFit){
+void SelectedKinematicDecay::SetTauVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
+						    std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx){
   primaryVertexReFit_=primaryVertexReFit;
-}
-
-void SelectedKinematicDecay::SetPrimaryVertexReFitAndRotated(reco::Vertex primaryVertexReFitAndRotated){
   primaryVertexReFitAndRotated_=primaryVertexReFitAndRotated;
-}
-
-void SelectedKinematicDecay::SetSecondaryVertex(std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx){
   for(unsigned int i=0;i<secVtxTracks.size();i++){
     secVtxTracks_.push_back(secVtxTracks.at(i).track());
   }
   secVtx_=secVtx;
 }
+
+void SelectedKinematicDecay::SetRawKinematics(TVector3 tauFlghtDir,TLorentzVector a1_p4,double initThetaGJ, double ThetaMax){
+  tauFlghtDir_=tauFlghtDir;
+  a1_p4_=a1_p4;
+  initThetaGJ_=initThetaGJ;
+  thetaMax_=ThetaMax;
+}
+
+
 
 const SelectedKinematicParticle * SelectedKinematicDecay::topParticle() const {
     return &(particles_.front());

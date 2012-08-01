@@ -2,7 +2,6 @@
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
 KinematicTauSkim::KinematicTauSkim(const edm::ParameterSet& iConfig):
-  kinTausTag_( iConfig.getParameter<edm::InputTag>( "kinematicTaus" ) ),
   discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") ),
   KinematicFitTauTag_(iConfig.getParameter<edm::InputTag>("KinematicFitTauTag")),
   minTau_( iConfig.getUntrackedParameter<unsigned int>( "minTau", 1 ) )//filter returns true if more than minTau_ taus are found
@@ -16,38 +15,21 @@ bool KinematicTauSkim::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool filterValue = false;
   cnt_++;
 
-  edm::Handle<std::vector<std::vector<SelectedKinematicDecay> > > KinematicFitTaus;
+  edm::Handle<SelectedKinematicDecayCollection> KinematicFitTaus;
   iEvent.getByLabel(KinematicFitTauTag_,KinematicFitTaus);
   
-  edm::Handle<reco::PFTauCollection> tauCollection;
-  iEvent.getByLabel(kinTausTag_, tauCollection);
-  
-  std::vector<edm::Handle<reco::PFTauDiscriminator> > tauDiscriminators;
-  for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr) {
-    //std::cout<< "KinematicTauSkim::filter: Discriminator name: " <<*discr<<std::endl;
-    edm::Handle<reco::PFTauDiscriminator> tmpHandle;
-    iEvent.getByLabel(kinTausTag_.label(), *discr, tmpHandle);
-    tauDiscriminators.push_back(tmpHandle);
-  }		
-  
-  unsigned int validTaus = 0;
-  unsigned int index = 0;
-  //std::cout<<"KinematicTauSkim::filter: Test "<<tauCollection->size()<<" taus"<<std::endl;
-  for (reco::PFTauCollection::const_iterator tau = tauCollection->begin(); tau != tauCollection->end(); ++tau, index++) {
-    bool passed = true;
-    reco::PFTauRef tauRef(tauCollection, index);
-    //std::cout<< "KinematicTauSkim::filter: tau at " <<index<<": (p,pt,et, vertex) ("<<tauRef->p()<<","<<tauRef->pt()<<","<<tauRef->et()<<", ("<<tauRef->vx()<<","<<tauRef->vy()<<","<<tauRef->vz()<<"))";
-    for (std::vector<edm::Handle<reco::PFTauDiscriminator> >::const_iterator discr = tauDiscriminators.begin(); discr!=tauDiscriminators.end(); ++discr) {
-      if( !((**discr)[tauRef]) ){
-	//std::cout<<"\t"<<discr->provenance()->productInstanceName()<<" "<<(**discr)[tauRef]<<std::endl;
-	passed = false;
-	break;
+  unsigned int ntaus(0);  
+  for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
+    bool passed=true;
+    for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr){
+      if(kinFitTau->discriminators().count(*discr)>0){
+	if(!(kinFitTau->discriminators().find(*discr)->second))passed=false;
       }
     }
-    if(passed) validTaus++;
+    if(passed)ntaus++;		
   }
-  
-  if(validTaus >= minTau_){
+  edm::LogInfo("KinematicTauSkim")<<"ntaus " << ntaus << " required " << minTau_ << " inputsize " << KinematicFitTaus->size();
+  if(ntaus >= minTau_){
     cntFound_++;//found at least minTau_ refitted tau(s)
     filterValue = true;
   }

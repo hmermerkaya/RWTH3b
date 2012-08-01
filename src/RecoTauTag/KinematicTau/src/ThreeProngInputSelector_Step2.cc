@@ -127,7 +127,7 @@ bool ThreeProngInputSelector_Step2::select(std::vector<reco::TrackRefVector> & s
       }
     }
 
-
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     edm::Handle<std::vector<std::vector<SelectedKinematicDecay> > > KinematicTauCandidate;
     iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidate);
 
@@ -153,10 +153,16 @@ bool ThreeProngInputSelector_Step2::select(std::vector<reco::TrackRefVector> & s
 	  edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::select:  PFTau "<< i <<" (Px,Py,Pz,E)=("<<(pfiter)->p4().Px() << ","<<(pfiter)->p4().Px() << ","<<(pfiter)->p4().Pz() << ","<<(pfiter)->p4().E() << ")";
 	}
         SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
-	KTau.SetPrimaryVertexReFit(primaryVertices.front());
 	if(SVH.hasSecondaryVertex()){
-	  reco::Vertex primaryVertexReFitAndRotated=KTau.PrimaryVertexReFit();
-	  double s = VertexRotationAndSignificance(KTau.TrackTriplet(),SVH.SecondaryVertex(),SVH.RefittedTracks(),primaryVertexReFitAndRotated);
+	  reco::Vertex primaryVertexReFit=primaryVertices.front();
+	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
+	  TVector3 tauFlghtDir;
+	  TLorentzVector a1_p4;
+	  double initThetaGJ,ThetaMax;
+	  TransientVertex SecondaryVertex=SVH.SecondaryVertex();
+	  std::vector<reco::TransientTrack> RefittedTracks=SVH.RefittedTracks();
+	  double s = VertexRotationAndSignificance(KTau.TrackTriplet(),SecondaryVertex,RefittedTracks,
+						   primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
 	  edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::select: significance " << s 
 						       << " PVertexFit and Rotate (" <<  primaryVertexReFitAndRotated.position().x() 
 						       << "," <<  primaryVertexReFitAndRotated.position().y() 
@@ -165,9 +171,9 @@ bool ThreeProngInputSelector_Step2::select(std::vector<reco::TrackRefVector> & s
 						       << "," <<  SVH.SecondaryVertex().position().y()
                                                        << "," <<  SVH.SecondaryVertex().position().z() << ")";
 
-	  if(s<sig && s>=0){// caught nan
-	    KTau.SetPrimaryVertexReFitAndRotated(primaryVertexReFitAndRotated);
-	    KTau.SetSecondaryVertex(SVH.RefittedTracks(),SVH.SecondaryVertex());
+	  if(s<sig && s>=0){// prevent nan
+	    KTau.SetTauVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.RefittedTracks(),SVH.SecondaryVertex());
+	    KTau.SetRawKinematics(tauFlghtDir,a1_p4,initThetaGJ,ThetaMax);
 	    bestTau=KTau;
 	    hasTau=true;
 	  }

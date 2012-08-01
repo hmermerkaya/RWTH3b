@@ -8,11 +8,9 @@ const double KinematicTauTools::piMass = 0.13957018;
 const double KinematicTauTools::tauMass = 1.77682;
 
 KinematicTauTools::KinematicTauTools(){
-
 }
 
 KinematicTauTools::~KinematicTauTools(){
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -174,14 +172,12 @@ template <typename T>  bool KinematicTauTools::cmpPt(const T & a, const T & b){
 }
 
 
-double KinematicTauTools::VertexRotationAndSignificance(const std::vector<reco::TrackRef> & input,TransientVertex tmpVtx, std::vector<reco::TransientTrack> trks, const reco::Vertex & pVtx){
+double KinematicTauTools::VertexRotationAndSignificance(const std::vector<reco::TrackRef> &input,TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,reco::Vertex &pVtx,TLorentzVector &lorentzA1, TVector3 &tauFlghtDir, double &theta0, double &thetaMax){
   double massA1 = getInvariantMass(input);
-  TLorentzVector lorentzA1 = getSumTLorentzVec(input, massA1);
+  lorentzA1 = getSumTLorentzVec(input, massA1);
   VertexRotation vtxC(lorentzA1);
-  double theta0;
-  TVector3 tauFlghtDir;
-  reco::Vertex pvTemp = pVtx;//do not modify original pv here                                                                                                                                                                                
-  return vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);
+  thetaMax=fabs(vtxC.calcThetaMax());
+  return vtxC.rotatePV(pVtx,tmpVtx,theta0, tauFlghtDir);
 }
 
 
@@ -192,7 +188,7 @@ bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRef> & input, r
 }
 
 
-bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRefVector> & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex & pVtx) {
+bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRefVector> & selected, std::vector<std::vector<reco::TrackRef> > combis, const reco::Vertex &pVtx) {
   std::vector<std::pair<int,double> > movements;
   unsigned index = 0;
   for (std::vector<std::vector<reco::TrackRef> >::iterator iter = combis.begin(); iter != combis.end();) {
@@ -203,15 +199,11 @@ bool KinematicTauTools::choose3bestTracks(std::vector<reco::TrackRefVector> & se
       LogTrace("ThreeProngInputSelector_Step2") << "ThreeProngInputSelector_Step2::choose3bestTracks: Erased combi due to bad vertex. " << combis.size() << " combis left.";
       continue;
     }
-    /*
-    double massA1 = getInvariantMass(*iter);
-    TLorentzVector lorentzA1 = getSumTLorentzVec(*iter, massA1);
-    VertexRotation vtxC(lorentzA1);
-    double theta0;
+    TLorentzVector lorentzA1;
+    double theta0,thetaMax;
     TVector3 tauFlghtDir;
-    reco::Vertex pvTemp = pVtx;//do not modify original pv here                                                                                                                                                                              
-    double significance = vtxC.rotatePV(pvTemp, tmpVtx, theta0, tauFlghtDir);*/
-    double significance = VertexRotationAndSignificance(*iter,tmpVtx,trks,pVtx);
+    reco::Vertex pvTemp = pVtx;//do not modify original pv here
+    double significance = VertexRotationAndSignificance(*iter,tmpVtx,trks,pvTemp,lorentzA1,tauFlghtDir,theta0,thetaMax);
 
     edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::choose3bestTracks Original method significance " << significance
 						 << " PVertexFit and Rotate (" 
@@ -263,9 +255,9 @@ template <class T> TLorentzVector KinematicTauTools::getSumTLorentzVec(const T& 
   }
   TLorentzVector lorentz;
   lorentz.SetXYZM(sumPx, sumPy, sumPz, massConstraint);
-
   return lorentz;
 }
+
 template <typename S, typename T> bool KinematicTauTools::pairSecond(const std::pair<S, T> &a, const std::pair<S, T> &b){
   return a.second < b.second;
 }
@@ -298,3 +290,4 @@ bool  KinematicTauTools::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &trac
   }
   return true;
 }
+

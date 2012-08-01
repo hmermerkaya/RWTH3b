@@ -89,7 +89,7 @@ bool KinematicTauAdvancedProducer::select(SelectedKinematicDecayCollection & ref
     edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select a1 track: " << index;
     std::vector<reco::TrackRef> input;
     for(reco::TrackRefVector::iterator trk = tracks->begin(); trk!=tracks->end(); ++trk) input.push_back(*trk);
-    int fitStatus = kinTauCrtr->create(*primaryVtxRef, input);
+    int fitStatus =false;// kinTauCrtr->create(*primaryVtxRef, input);
     edm::LogInfo("KinematicTauAdvancedProducer")<<"KinematicTauAdvancedProducer::select a2.";
     if(fitStatus==1){
       cntValid++;
@@ -200,6 +200,7 @@ int KinematicTauAdvancedProducer::saveKinParticles(const KinematicTauCreator * k
 	
   return refitTauDecay.size();
 }
+
 void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayCollection & selected, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands){
   unsigned index = 0;
   std::vector<reco::RecoChargedCandidateRef> newRefs;
@@ -224,6 +225,7 @@ void KinematicTauAdvancedProducer::correctReferences(SelectedKinematicDecayColle
     }
   }
 }
+
 void KinematicTauAdvancedProducer::storePFTauDiscriminators(const reco::PFTauRef & tauRef, std::map<std::string, bool> & tauDiscriminators){
   //store pftau discriminators for each SelectedKinematicDecay
   if(tauDiscriminators.size()!=0){

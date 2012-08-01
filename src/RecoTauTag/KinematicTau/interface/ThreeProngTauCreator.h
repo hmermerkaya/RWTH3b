@@ -11,6 +11,10 @@
  @date 2009
  */
 
+#ifndef ThreeProngTauCreator_h
+#define ThreeProngTauCreator_h
+
+
 #include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
 
@@ -39,11 +43,14 @@ public:
   virtual int ndf() const;
   
 private:
-  virtual int create(const reco::Vertex& primaryVertex, const std::vector<reco::TrackRef>& inputTracks);
-  bool createStartScenario(std::vector<reco::TrackRef> &input, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, const reco::Vertex & primaryVertex);
+  virtual int create(SelectedKinematicDecay &KFTau);
+  bool createStartScenario(SelectedKinematicDecay &KFTau, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos);
+
   bool kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex);
   std::pair<double,double> getTauMomentumMagnitudes(double ma1,double pa1,double M,double theta);
   RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx);
   RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
 	
 };
+
+#endif
