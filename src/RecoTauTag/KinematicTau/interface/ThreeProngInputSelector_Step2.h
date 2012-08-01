@@ -27,7 +27,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDFilter.h"
+#include "FWCore/Framework/interface/EDProducer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -54,20 +54,20 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-class ThreeProngInputSelector_Step2 : public edm::EDFilter, protected KinematicTauTools {
+class ThreeProngInputSelector_Step2 : public edm::EDProducer, protected KinematicTauTools {
 public:
   ThreeProngInputSelector_Step2(const edm::ParameterSet&);
   virtual ~ThreeProngInputSelector_Step2();
 	
 private:
   virtual void beginJob();
-  virtual bool filter(edm::Event&, const edm::EventSetup&);
+  virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
-  bool select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & taurefs, reco::VertexCollection & primaryVertex,std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_);
+  bool select(std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_);
   
   edm::Event * iEvent_;
   edm::ParameterSet iConfig_;
-  edm::InputTag threeProngCollectionTag_, selectedTauCandidatesTag_, primVtxTag_,KinematicTauCandTag_;
+  edm::InputTag primVtxTag_,KinematicTauCandTag_;
   unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
   double maxChi2ndf_;    
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;

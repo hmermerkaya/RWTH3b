@@ -18,7 +18,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDFilter.h"
+#include "FWCore/Framework/interface/EDProducer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -40,14 +40,14 @@
 
 
 
-class KinematicTauProducer : public edm::EDFilter {
+class KinematicTauProducer : public edm::EDProducer {
 public:
   explicit KinematicTauProducer(const edm::ParameterSet&);
   ~KinematicTauProducer();
   
 private:
   virtual void beginJob();
-  virtual bool filter(edm::Event&, const edm::EventSetup&);
+  virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
   
   //Execute the kinematic fit and in case of success modify the taus parameters

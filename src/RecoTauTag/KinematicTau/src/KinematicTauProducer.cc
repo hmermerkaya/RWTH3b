@@ -24,7 +24,7 @@ KinematicTauProducer::~KinematicTauProducer(){
 }
 
 // ------------ method called on each new Event  ------------
-bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
+void KinematicTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   bool filterValue = false;
   cnt_++;
   iEvent_ = &iEvent;
@@ -45,7 +45,6 @@ bool KinematicTauProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent_->put(KinematicFitTauDecays,"KinematicFitTau");
 
   if(filterValue) cntFound_++;//found at least 1 refit tau
-  return filterValue;
 }
 
 void KinematicTauProducer::beginJob(){

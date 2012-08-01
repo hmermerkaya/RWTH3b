@@ -20,7 +20,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDFilter.h"
+#include "FWCore/Framework/interface/EDProducer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -38,16 +38,16 @@
 
 #include "TString.h"
 
-class InputTrackSelector : public edm::EDFilter, protected KinematicTauTools {
+class InputTrackSelector : public edm::EDProducer, protected KinematicTauTools {
 public:
   explicit InputTrackSelector(const edm::ParameterSet&);
   ~InputTrackSelector();
   
 private:
   virtual void beginJob();
-  virtual bool filter(edm::Event&, const edm::EventSetup&);
+  virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
-  bool select(std::vector<reco::TrackRefVector> &selected, reco::PFTauRefVector &PFTauRef, std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_);
+  bool select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_);
   reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
   
   edm::Event * iEvent_;
