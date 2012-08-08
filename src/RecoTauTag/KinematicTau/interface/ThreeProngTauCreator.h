@@ -48,7 +48,7 @@ private:
 
   bool kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex);
   std::pair<double,double> getTauMomentumMagnitudes(double ma1,double pa1,double M,double theta);
-  RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx);
+  RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,std::vector<TLorentzVector> &NuGuessLV);
   RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
 	
 };

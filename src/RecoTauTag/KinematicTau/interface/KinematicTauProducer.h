@@ -12,6 +12,10 @@
  @date 2009
  */
 
+#ifndef KinematicTauProducer_h
+#define KinematicTauProducer_h
+
+
 // system include files
 #include <memory>
 #include <fstream>
@@ -67,3 +71,4 @@ private:
   unsigned int cnt_, cntFound_;
 	
 };
+#endif

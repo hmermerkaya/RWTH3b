@@ -4,7 +4,7 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TauReco/interface/PFTau.h"
-
+#include "TLorentzVector.h"
 #include <vector>
 
 namespace {
@@ -36,6 +36,10 @@ namespace {
  
     std::map<std::string, bool> map1;
     edm::Wrapper<std::map<std::string, bool> > wmap1;
+
+    std::vector<TLorentzVector> vlv;
+    edm::Wrapper<std::vector<TLorentzVector> > wvlv;
+
   };
 }
 

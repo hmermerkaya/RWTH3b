@@ -3,19 +3,18 @@
 SelectedKinematicDecay::SelectedKinematicDecay() {
   SetInitialProperties(Undefined,reco::PFTauRef(),std::vector<reco::TrackRef>(),reco::Vertex(),"",0);
   SetKinematicFitProperties(SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0,std::map<std::string, bool>());
-  setMissingQualityCriteria(-1,-1,-1,-1);
-  SetTauVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());  
-  SetRawKinematics(TVector3(),TLorentzVector(),0.0,0.0);
+  SetMissingQualityCriteria(-1,-1,-1,-1);
+  SetInitalVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());  
+  SetInitalKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),0.0,0.0);
 }
-
 
 SelectedKinematicDecay::SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRefOrig, std::vector<reco::TrackRef> &TrackTriplet,
 					       const reco::Vertex &primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx){
   SetInitialProperties(tauDecayMode,tauRefOrig,TrackTriplet,primaryVertex,primVtxReFitTag,nTauPerVtx);
   SetKinematicFitProperties(SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0,std::map<std::string, bool>());
-  setMissingQualityCriteria(-1,-1,-1,-1);
-  SetTauVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
-  SetRawKinematics(TVector3(),TLorentzVector(),0.0,0.0);
+  SetMissingQualityCriteria(-1,-1,-1,-1);
+  SetInitalVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
+  SetInitalKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),0.0,0.0);
 }
 
 SelectedKinematicDecay::SelectedKinematicDecay(const SelectedKinematicParticleCollection & particles,
@@ -24,9 +23,9 @@ SelectedKinematicDecay::SelectedKinematicDecay(const SelectedKinematicParticleCo
 					       const reco::PFTauRef & tauRef, const std::map<std::string, bool> & discriminators){
   SetInitialProperties(Undefined,tauRef,std::vector<reco::TrackRef>(),reco::Vertex()," ",0);
   SetKinematicFitProperties(particles,iterations,maxiterations,csum,mincsum,constraints,ndf,chi2,discriminators);
-  setMissingQualityCriteria(-1,-1,-1,-1);
-  SetTauVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
-  SetRawKinematics(TVector3(),TLorentzVector(),0.0,0.0);
+  SetMissingQualityCriteria(-1,-1,-1,-1);
+  SetInitalVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
+  SetInitalKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),0.0,0.0);
 }
 
 SelectedKinematicDecay::~SelectedKinematicDecay(){
@@ -37,11 +36,12 @@ void SelectedKinematicDecay::SetInitialProperties(unsigned int tauDecayMode,reco
 						  std::vector<reco::TrackRef> TrackTriplet, const reco::Vertex primaryVertex,
 						  std::string primVtxReFitTag, unsigned int nTauPerVtx){
   tauDecayMode_=tauDecayMode;
-  PFTauRefOrig_=tauRefOrig;
-  TrackTriplet_=TrackTriplet;
-  primVtx_=primaryVertex;
-  primVtxReFitTag_=primVtxReFitTag;
   nTauPerVtx_=nTauPerVtx;
+  PFTauRefOrig_=tauRefOrig;
+  primVtxReFitTag_=primVtxReFitTag;
+
+  initalTrackTriplet_=TrackTriplet;
+  initalPrimVtx_=primaryVertex;
 }
 
 void SelectedKinematicDecay::SetKinematicFitProperties(const SelectedKinematicParticleCollection particles,
@@ -59,7 +59,7 @@ void SelectedKinematicDecay::SetKinematicFitProperties(const SelectedKinematicPa
   discriminators_ = discriminators;
 }
 
-void SelectedKinematicDecay::setMissingQualityCriteria(const double vtxSignPVRotSV, const double vtxSignPVRotPVRed, const double a1Mass, const double energyTFraction) {
+void SelectedKinematicDecay::SetMissingQualityCriteria(const double vtxSignPVRotSV, const double vtxSignPVRotPVRed, const double a1Mass, const double energyTFraction) {
   vtxSignPVRotSV_ = vtxSignPVRotSV;
   vtxSignPVRotPVRed_ = vtxSignPVRotPVRed;
   //WARNING!!!
@@ -71,86 +71,129 @@ void SelectedKinematicDecay::setMissingQualityCriteria(const double vtxSignPVRot
 }
 
 
-void SelectedKinematicDecay::SetTauVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
+void SelectedKinematicDecay::SetInitalVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
 						    std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx){
-  primaryVertexReFit_=primaryVertexReFit;
-  primaryVertexReFitAndRotated_=primaryVertexReFitAndRotated;
+  initalPrimaryVertexReFit_=primaryVertexReFit;
+  initalPrimaryVertexReFitAndRotated_=primaryVertexReFitAndRotated;
   for(unsigned int i=0;i<secVtxTracks.size();i++){
-    secVtxTracks_.push_back(secVtxTracks.at(i).track());
+    initalSecVtxTracks_.push_back(secVtxTracks.at(i).track());
   }
-  secVtx_=secVtx;
+  initalSecVtx_=secVtx;
 }
 
-void SelectedKinematicDecay::SetRawKinematics(TVector3 tauFlghtDir,TLorentzVector a1_p4,double initThetaGJ, double ThetaMax){
-  tauFlghtDir_=tauFlghtDir;
-  a1_p4_=a1_p4;
-  initThetaGJ_=initThetaGJ;
-  thetaMax_=ThetaMax;
+void SelectedKinematicDecay::SetKFSecondaryVertex(reco::Vertex SecVtx_){
+  SecVtx_=SecVtx_;
 }
 
+void SelectedKinematicDecay::SetInitalKinematics(TVector3 tauFlghtDir,std::vector<TLorentzVector> initalpions,TLorentzVector intial_a1_p4,double initThetaGJ, double ThetaMax){
+  initalTauFlghtDir_=tauFlghtDir;
+  initalpions_=initalpions;
+  intial_a1_p4_=intial_a1_p4;
+  initalThetaGJ_=initThetaGJ;
+  initalThetaMax_=ThetaMax;
+}
+
+void SelectedKinematicDecay::SetInitalGuess(std::vector<TLorentzVector> &TauGuessLV,std::vector<TLorentzVector> &NuGuessLV){
+  initalTauGuess_=TauGuessLV;
+  initalNuGuess_=NuGuessLV;
+}
+
+TLorentzVector SelectedKinematicDecay::InitialTauGuess(unsigned int ambiguity){ 
+  if(ambiguity<initalTauGuess_.size()) return initalTauGuess_.at(ambiguity);
+  return TLorentzVector(0,0,0,0);
+}
+
+TLorentzVector SelectedKinematicDecay::InitalNeutrinoGuess(unsigned int ambiguity){
+  if(ambiguity<initalNuGuess_.size())return initalNuGuess_.at(ambiguity);
+  return TLorentzVector(0,0,0,0);
+}
+
+std::vector<TLorentzVector> SelectedKinematicDecay::InitalPions(){
+  return  initalpions_;
+}
+
+TLorentzVector SelectedKinematicDecay::Inital_a1_p4(){
+  /*  TLorentzVector intial_a1_p4(0,0,0,0);
+  for(unsigned int i=0; i<initalpions_.size();i++){
+    intial_a1_p4+=initalpions_.at(i);  
+    }
+    return intial_a1_p4;
+  */
+  return intial_a1_p4_;
+}
+
+TLorentzVector SelectedKinematicDecay::Tau(unsigned int ambiguity){
+  for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
+    if(iParticle->name()=="tau"){
+      return iParticle->p4(); 
+    }
+  }
+  return TLorentzVector(0,0,0,0); 
+}
+
+TLorentzVector SelectedKinematicDecay::Neutrino(unsigned int ambiguity){
+  for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
+    if(iParticle->name()=="neutrino"){
+      return iParticle->p4();
+    }
+  }
+  return TLorentzVector(0,0,0,0);
+}
+
+std::vector<TLorentzVector> SelectedKinematicDecay::Pions(unsigned int ambiguity){
+  std::vector<TLorentzVector> pions;
+  for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
+    if(iParticle->name()=="pion"){
+      pions.push_back(iParticle->p4());
+    }
+  }
+  return pions;
+}
 
 
 const SelectedKinematicParticle * SelectedKinematicDecay::topParticle() const {
     return &(particles_.front());
 }
+
 void SelectedKinematicDecay::daughters(std::vector< SelectedKinematicParticle const * > & par) const {
-    for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-		if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
-    }
+  for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
+  }
 }
+
 void SelectedKinematicDecay::chargedDaughters(std::vector< SelectedKinematicParticle const * > & par) const {
     for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-        if ( std::abs(iter->charge()) == 1 ) {
-			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
-        }
+      if ( std::abs(iter->charge()) == 1 ) {
+	if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
+      }
     }
 }
 void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicParticle const * > & par) const {
-    for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-        if ( std::abs(iter->charge()) == 0 ) {
-			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
-        }
+  for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    if ( std::abs(iter->charge()) == 0 ) {
+      if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
     }
+  }
 }
 
 void SelectedKinematicDecay::modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par) {
-    for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-        if ( std::abs(iter->charge()) == 1 ) {
-			if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
-        }
+  for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
+    if ( std::abs(iter->charge()) == 1 ) {
+      if(iter != particles_.begin()) par.push_back(&(*iter));//skip mother
     }
+  }
 }
 
-const int SelectedKinematicDecay::iterations() const {
-    return iterations_;
-}
-const int SelectedKinematicDecay::maxiterations() const {
-    return maxiterations_;
-}
-const float SelectedKinematicDecay::chi2() const {
-    return chi2_;
-}
-const float SelectedKinematicDecay::constraints() const {
-    return constraints_;
-}
-const float SelectedKinematicDecay::ndf() const {
-    return ndf_;
-}
-const float SelectedKinematicDecay::csum() const {
-    return csum_;
-}
-const float SelectedKinematicDecay::mincsum() const {
-    return mincsum_;
-}
 
 const double SelectedKinematicDecay::chi2prob() const {
-    ChiSquared chiSquared(chi2(), ndf());
-    return chiSquared.probability();
+  ChiSquared chiSquared(chi2(), ndf());
+  return chiSquared.probability();
 }
+
 const int SelectedKinematicDecay::sgnlConeTrkSize() const {
-    if (PFTauRef().isAvailable()) {
-        return PFTauRef()->signalPFChargedHadrCands().size();
-    }
-    printf("SelectedKinematicDecay::sgnlConeTrkSize:ERROR! reference to PFTau invalid. Return dummy value.\n");
-    return 0;
+  if (PFTauRef().isAvailable()) {
+    return PFTauRef()->signalPFChargedHadrCands().size();
+  }
+  printf("SelectedKinematicDecay::sgnlConeTrkSize:ERROR! reference to PFTau invalid. Return dummy value.\n");
+  return 0;
 }

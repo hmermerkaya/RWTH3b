@@ -73,6 +73,7 @@ const TVectorT<double> SelectedKinematicParticle::convertVector( const Algebraic
   }
   return tmpVector;
 }
+
 const TMatrixDSym SelectedKinematicParticle::convertMatrix( const AlgebraicSymMatrix77 & matrix ) {
   TMatrixDSym tmpMatrix(7);
   for (int i = 0; i < 7; i++) {
@@ -91,6 +92,7 @@ const TLorentzVector SelectedKinematicParticle::p4() const {
   p4tmp.SetVectM(TVector3(kinparm_[3], kinparm_[4], kinparm_[5]), kinparm_[6]);
   return p4tmp;
 }
+
 const TVector3 SelectedKinematicParticle::vertex() const {
   TVector3 vtx(kinparm_[0], kinparm_[1], kinparm_[2]);
   return vtx;

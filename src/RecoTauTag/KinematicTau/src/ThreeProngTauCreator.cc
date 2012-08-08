@@ -32,17 +32,14 @@ bool ThreeProngTauCreator::createStartScenario(SelectedKinematicDecay &KFTau, st
   
   // Obtain stored values from Kinematic Tau Candidate
   SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
-  selectedTracks_=KFTau. TrackTriplet(); //uses orignal triplet tracks (why?)
-  std::vector<reco::TransientTrack> transTrkVect=SVH.RefittedTracks();
-  TransientVertex secVtx=SVH.SecondaryVertex();
-  TLorentzVector lorentzA1=KFTau.a1_p4();
-  double thetaMax=KFTau.ThetaMax();
+  selectedTracks_=KFTau.InitalTrackTriplet(); //uses orignal triplet tracks (why?)
+  std::vector<reco::TransientTrack> transTrkVect=SVH.InitalRefittedTracks();
+  TransientVertex secVtx=SVH.InitalSecondaryVertex();
+  TLorentzVector lorentzA1=KFTau.Inital_a1_p4();
+  double thetaMax=KFTau.InitalThetaMax();
   double theta0=KFTau.InitalThetaGJ();
   TVector3 tauFlghtDir=KFTau.InitalFlightDirection();
-  modifiedPV_ =KFTau.PrimaryVertexReFitAndRotated();
-
-  //LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: initial PV ("<<primaryVertex.x()<<","<<primaryVertex.y()<<","<<primaryVertex.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-primaryVertex.position().y())/(secVtx.position().x()-primaryVertex.position().x()));
-  //LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotation significance is "<<significance;
+  modifiedPV_ =KFTau.InitalPrimaryVertexReFitAndRotated();
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Now setup Fit parameters
@@ -71,17 +68,24 @@ bool ThreeProngTauCreator::createStartScenario(SelectedKinematicDecay &KFTau, st
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: tau solutions = "<<tauSolutions.first<<", "<<tauSolutions.second;
   }
   
+  std::vector<TLorentzVector> TauGuessLV;
+  std::vector<TLorentzVector> NuGuessLV;
   bool ambiguity = false;
   if(fabs(tauSolutions.first-tauSolutions.second) > pow(10.0,-6)) ambiguity = true;
   TLorentzVector tauGuess1;
   tauFlghtDir = tauFlghtDir.Unit();
   tauGuess1.SetXYZM(tauFlghtDir.X()*tauSolutions.first , tauFlghtDir.Y()*tauSolutions.first , tauFlghtDir.Z()*tauSolutions.first , Get_tauMass());
-  neutrinos.push_back(unknownNu(tauGuess1, lorentzA1, secVtx));
+  TauGuessLV.push_back(tauGuess1);
+  neutrinos.push_back(unknownNu(tauGuess1, lorentzA1, secVtx,NuGuessLV));
   if(ambiguity==true){
     TLorentzVector tauGuess2;
     tauGuess2.SetXYZM(tauFlghtDir.X()*tauSolutions.second, tauFlghtDir.Y()*tauSolutions.second, tauFlghtDir.Z()*tauSolutions.second, Get_tauMass());
-    neutrinos.push_back(unknownNu(tauGuess2, lorentzA1, secVtx));
+    neutrinos.push_back(unknownNu(tauGuess2, lorentzA1, secVtx,NuGuessLV));
   }
+  ///////////////////////////////////////////////////////
+  // Fill info from Inital State
+  KFTau.SetInitalGuess(TauGuessLV,NuGuessLV); 
+  ///////////////////////////////////////////////////////
   if(neutrinos.size() != 1 && neutrinos.size() != 2){
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad neutrino size = "<<neutrinos.size();
     return false;
@@ -163,7 +167,7 @@ std::pair<double,double> ThreeProngTauCreator::getTauMomentumMagnitudes(double m
   return std::make_pair(tauMomentumMagnitude1,tauMomentumMagnitude2);
 }
 
-RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx){
+RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,std::vector<TLorentzVector> &NuGuessLV){
   TLorentzVector nuGuess = tauGuess-a1;
   LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::unknownNu: nuGuess (vx, vy, vz, px,py,pz,m) "<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<","<<nuGuess.Px()<<","<<nuGuess.Py()<<","<<nuGuess.Pz()<<","<<nuGuess.M()<<", phi: "<<nuGuess.Phi();
   if(tauGuess.P()==0.)  nuGuess.SetXYZM(1,1,1,0);

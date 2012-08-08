@@ -14,6 +14,10 @@
  @date 2009
  */
 
+#ifndef InputTrackSelector_h
+#define InputTrackSelector_h
+
+
 // system include files
 #include <memory>
 #include <fstream>
@@ -59,3 +63,4 @@ private:
   std::vector<std::string> TauVtxList_;
 };
 
+#endif

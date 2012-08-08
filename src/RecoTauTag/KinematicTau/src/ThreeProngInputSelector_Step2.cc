@@ -73,20 +73,20 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	  TVector3 tauFlghtDir;
 	  TLorentzVector a1_p4;
 	  double initThetaGJ,ThetaMax;
-	  TransientVertex SecondaryVertex=SVH.SecondaryVertex();
-	  std::vector<reco::TransientTrack> RefittedTracks=SVH.RefittedTracks();
-	  double s = VertexRotationAndSignificance(KTau.TrackTriplet(),SecondaryVertex,RefittedTracks,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
+	  TransientVertex SecondaryVertex=SVH.InitalSecondaryVertex();
+	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitalRefittedTracks();
+	  double s = VertexRotationAndSignificance(KTau.InitalTrackTriplet(),SecondaryVertex,RefittedTracks,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
 	  edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::select: significance " << s 
 						       << " PVertexFit and Rotate (" <<  primaryVertexReFitAndRotated.position().x() 
 						       << "," <<  primaryVertexReFitAndRotated.position().y() 
 						       << "," <<  primaryVertexReFitAndRotated.position().z() << ")" 
-						       << " SV (" <<  SVH.SecondaryVertex().position().x()
-						       << "," <<  SVH.SecondaryVertex().position().y()
-						       << "," <<  SVH.SecondaryVertex().position().z() << ")";
+						       << " SV (" <<  SVH.InitalSecondaryVertex().position().x()
+						       << "," <<  SVH.InitalSecondaryVertex().position().y()
+						       << "," <<  SVH.InitalSecondaryVertex().position().z() << ")";
 	  
 	  if(s<sig && s>=0){// prevent nan
-	    KTau.SetTauVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.RefittedTracks(),SVH.SecondaryVertex());
-	    KTau.SetRawKinematics(tauFlghtDir,a1_p4,initThetaGJ,ThetaMax);
+	    KTau.SetInitalVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.InitalRefittedTracks(),SVH.InitalSecondaryVertex());
+	    KTau.SetInitalKinematics(tauFlghtDir,SVH.Inital_pions(),a1_p4,initThetaGJ,ThetaMax);
 	    bestTau=KTau;
 	    hasTau=true;
 	  }

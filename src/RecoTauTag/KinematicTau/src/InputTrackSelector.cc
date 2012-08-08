@@ -98,14 +98,14 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
       for(unsigned int j=0;j<KFCandidates.at(i).size();j++){
-	std::vector<reco::TrackRef> Triplet_ij=KFCandidates.at(i).at(j).TrackTriplet();
+	std::vector<reco::TrackRef> Triplet_ij=KFCandidates.at(i).at(j).InitalTrackTriplet();
 	std::vector<reco::TrackRef>::iterator track_ij;
 	for (track_ij = Triplet_ij.begin(); track_ij != Triplet_ij.end(); track_ij++) tautracks.push_back(*track_ij);
 	for(unsigned int k=0;k<KFCandidates.size();k++){
 	  for(unsigned int l=0;l<KFCandidates.at(k).size();l++){
 	    if(!(i==k && j==l)){
 	      unsigned int duplicates=0;
-	      std::vector<reco::TrackRef> Triplet_kl=KFCandidates.at(k).at(l).TrackTriplet();
+	      std::vector<reco::TrackRef> Triplet_kl=KFCandidates.at(k).at(l).InitalTrackTriplet();
 	      std::vector<reco::TrackRef>::iterator track_kl;
 	      for (track_ij = Triplet_ij.begin(); track_ij != Triplet_ij.end(); track_ij++){
 		for (track_kl = Triplet_kl.begin(); track_kl != Triplet_kl.end(); track_kl++){

@@ -9,4 +9,8 @@
 <use   name="DataFormats/RecoCandidate"/>
 <use   name="CommonTools/RecoAlgos"/>
 <use   name="RecoVertex/PrimaryVertexProducer"/>
+<use   name="DQMServices/Core"/>
+<use   name="FWCore/ServiceRegistry"/>
+<use   name="FWCore/ServiceRegistry"/>
+<use   name="Validation/EventGenerator"/> 
 <flags   EDM_PLUGIN="1"/>

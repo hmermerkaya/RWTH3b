@@ -279,7 +279,7 @@ void KinematicTauAdvancedProducer::setMissingQualityCriteria(SelectedKinematicDe
   else {
     energyTFraction = tauRef->et()/energyTFraction;    
   }
-  decay.setMissingQualityCriteria(vtxSignPVRotSV, vtxSignPVRotPVRed, a1Mass, energyTFraction);
+  decay.SetMissingQualityCriteria(vtxSignPVRotSV, vtxSignPVRotPVRed, a1Mass, energyTFraction);
 }
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauAdvancedProducer);
