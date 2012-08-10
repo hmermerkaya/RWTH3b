@@ -23,7 +23,8 @@
 #include "DataFormats/Candidate/interface/CandMatchMap.h"
 #include <SimDataFormats/GeneratorProducts/interface/HepMCProduct.h>
 #include <SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h>
-
+#include "Validation/EventGenerator/interface/PdtPdgMini.h"
+#include "Validation/EventGenerator/interface/TauDecay.h"
 #include "RecoTauTag/KinematicTau/interface/TauDecay_CMSSWReco.h"
 
 KinematicTauAnalyzer::KinematicTauAnalyzer(const edm::ParameterSet& iConfig):
@@ -32,8 +33,6 @@ KinematicTauAnalyzer::KinematicTauAnalyzer(const edm::ParameterSet& iConfig):
   gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
   GenEventInfo_(iConfig.getParameter<edm::InputTag>("GenEventInfo")),
   TauMatchingDR_( iConfig.getParameter<double>("TauMatchingDR")),
-  tau_pdgid_(15),
-  NJAKID_(22),
   TauM_(1.77682),     // temp solution untill particle helper made
   PionM_(0.13957018), // temp solution untill particle helper made
   NuM_(0.0)           // temp solution untill particle helper made
@@ -114,7 +113,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       // If Truth is valid run truth comparison
       if(genParticles.isValid()){
 	for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end(); ++itr){
-	  if(fabs(itr->pdgId())==tau_pdgid_){
+	  if(fabs(itr->pdgId())==fabs(PdtPdgMini::tau_minus)){
 	    TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
 	    if(Tau.DeltaR(mc)<TauMatchingDR_){
 	      TauDecay_CMSSWReco TD;
@@ -122,7 +121,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	      const reco::GenParticle mytau=(*itr);
 	      TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
 	      std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
-	      if(jak_id<NJAKID_){
+	      if(jak_id<TauDecay::NJAKID){
 		//Tau
 		TauMatch_dphi.at(jak_id)->Fill(Tau.DeltaPhi(mc),weight);
 		TauMatch_dtheta.at(jak_id)->Fill(mc.Theta()-Tau.Theta(),weight);
@@ -132,7 +131,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  double pidrmin=999;
 		  TLorentzVector mcpion;
 		  for(unsigned int j=0;j<DecayProd.size();j++){
-		    if(fabs(DecayProd.at(j)->pdgId())==211 ||fabs(DecayProd.at(j)->pdgId())==321){
+		    if(fabs(DecayProd.at(j)->pdgId())==fabs(PdtPdgMini::pi_plus) ||fabs(DecayProd.at(j)->pdgId())==fabs(PdtPdgMini::K_plus)){
                       TLorentzVector mcPions_t(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
 		      if(mcPions_t.DeltaR(Pions.at(i))<pidrmin){
 			mcpion=mcPions_t;
@@ -150,7 +149,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		TLorentzVector mcnu;
 		bool hasnu=false;
 		for(unsigned int i=0;i<DecayProd.size();i++){
-		  if(16==fabs(DecayProd.at(i)->pdgId())){ mcnu= TLorentzVector(DecayProd.at(i)->p4().Px(),DecayProd.at(i)->p4().Py(),DecayProd.at(i)->p4().Pz(),DecayProd.at(i)->p4().E()); hasnu=true;}
+		  if(fabs(PdtPdgMini::nu_tau)==fabs(DecayProd.at(i)->pdgId())){ mcnu= TLorentzVector(DecayProd.at(i)->p4().Px(),DecayProd.at(i)->p4().Py(),DecayProd.at(i)->p4().Pz(),DecayProd.at(i)->p4().E()); hasnu=true;}
 		}
 		if(hasnu){
 		  NuMatch_dphi.at(jak_id)->Fill(mcnu.DeltaPhi(Nu.Phi()),weight);
@@ -200,8 +199,8 @@ void KinematicTauAnalyzer::beginJob(){
     dPionMass          = dbe->book1D("dPionMass","M_{#pi}",100,-0.01,-0.01);                    dPionMass->setAxisTitle("#deltaM_{#pi} (GeV)");
     dNuMass      = dbe->book1D("dNuMass","M_{nu}",100,-0.01,-0.01);                             dNuMass->setAxisTitle("#deltaM_{#nu} (GeV)");
 
-    JAKID =dbe->book1D("JAKID","JAK ID",NJAKID_+1,-0.5,NJAKID_+0.5);
-    for(unsigned int i=0; i<NJAKID_+1;i++){
+    JAKID =dbe->book1D("JAKID","JAK ID",TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5);
+    for(unsigned int i=0; i<TauDecay::NJAKID;i++){
       TString tmp="JAKID";
       tmp+=i;
       TString axis;
