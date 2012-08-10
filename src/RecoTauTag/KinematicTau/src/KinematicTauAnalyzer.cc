@@ -53,8 +53,6 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(gensrc_, genParticles);
 
-  std::cout << "\n\nPrinting KinematicFitTauTag Summary:" << std::endl; 
-  std::cout << "====================================" << std::endl;
   for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
     bool passed=true;
     for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr){
@@ -170,7 +168,7 @@ void KinematicTauAnalyzer::beginJob(){
 
   if(dbe){
     ///Setting the DQM top directories
-    dbe->setCurrentFolder("KinematicFit");
+    dbe->setCurrentFolder("Reco/KinematicFitTau");
     
     // Number of analyzed events
     nEvt = dbe->book1D("nEvt", "n analyzed Events", 1, 0., 1.);                                nEvt->setAxisTitle("Number of Events");
@@ -179,8 +177,8 @@ void KinematicTauAnalyzer::beginJob(){
     NuMass      = dbe->book1D("NuMass","M_{nu}",100,-0.5,0.5);                                 NuMass->setAxisTitle("M_{#nu} (GeV)");
 
     VtxXChange= dbe->book1D("VtxXChange","Vtx_{X}",100,-0.5,0.5);                               VtxXChange->setAxisTitle("Vtx_{X} (mm)"); 
-    VtxYChange= dbe->book1D("TauMass","Vtx_{Y}",100,-0.5,0.5);                                  VtxYChange->setAxisTitle("Vtx_{Y} (mm)");
-    VtxZChange= dbe->book1D("TauMass","Vtx_{Z}",100,-0.5,0.5);                                  VtxZChange->setAxisTitle("Vtx_{Z} (mm)");
+    VtxYChange= dbe->book1D("VtxYChange","Vtx_{Y}",100,-0.5,0.5);                               VtxYChange->setAxisTitle("Vtx_{Y} (mm)");
+    VtxZChange= dbe->book1D("VtxZChange","Vtx_{Z}",100,-0.5,0.5);                               VtxZChange->setAxisTitle("Vtx_{Z} (mm)");
     SecVtxXChange= dbe->book1D("SecVtxXChange","Vtx_{X}^{Sec}",100,-0.5,0.5);                   SecVtxXChange->setAxisTitle("Vtx_{X}^{Sec} (mm)");
     SecVtxYChange= dbe->book1D("SecVtxYChange","Vtx_{Y}^{Sec}",100,-0.5,0.5);                   SecVtxYChange->setAxisTitle("Vtx_{Y}^{Sec} (mm)");
     SecVtxZChange= dbe->book1D("SecVtxZChange","Vtx_{Z}^{Sec}",100,-0.5,0.5);                   SecVtxZChange->setAxisTitle("Vtx_{Z}^{Sec} (mm)");
@@ -197,7 +195,7 @@ void KinematicTauAnalyzer::beginJob(){
 
     dTauMass           = dbe->book1D("dTauMass","M_{Tau}",100,-0.01,-0.01);                     dTauMass->setAxisTitle("#deltaM_{Tau} (GeV)");
     dPionMass          = dbe->book1D("dPionMass","M_{#pi}",100,-0.01,-0.01);                    dPionMass->setAxisTitle("#deltaM_{#pi} (GeV)");
-    dNuMass      = dbe->book1D("dNuMass","M_{nu}",100,-0.01,-0.01);                             dNuMass->setAxisTitle("#deltaM_{#nu} (GeV)");
+    dNuMass            = dbe->book1D("dNuMass","M_{nu}",100,-0.01,-0.01);                       dNuMass->setAxisTitle("#deltaM_{#nu} (GeV)");
 
     JAKID =dbe->book1D("JAKID","JAK ID",TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5);
     for(unsigned int i=0; i<TauDecay::NJAKID;i++){

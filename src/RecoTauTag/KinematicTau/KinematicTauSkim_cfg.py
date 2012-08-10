@@ -12,13 +12,13 @@ process.MessageLogger.categories.append('KinematicTauProducer')
 process.MessageLogger.categories.append('KinematicTauSkim')
 process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTauProducer', 'KinematicTauSkim')
 process.MessageLogger.cerr = cms.untracked.PSet(
-    threshold = cms.untracked.string('DEBUG'),
-	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
-	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),
-	InputTrackSelector = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-	KinematicTauProducer = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-	KinematicTauSkim = cms.untracked.PSet(limit = cms.untracked.int32(-1))
-)
+    threshold = cms.untracked.string('ERROR'),
+    FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+    DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+    InputTrackSelector = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
+    KinematicTauProducer = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
+    KinematicTauSkim = cms.untracked.PSet(limit = cms.untracked.int32(-1))
+    )
 
 numberOfEvents = -1
 
