@@ -76,8 +76,19 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
     discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFitQuality",dicriminatorByKinematicFitQuality(kinTauCreator,fitStatus,KFTau)));
     
     if(fitStatus==1){
-      //modify tau in selected list
-      KFTau.SetKFSecondaryVertex(kinTauCreator->getModifiedPrimaryVertex());
+      
+      //Get the secondary vertx from fit 
+      kinTauCreator->getKinematicTree()->movePointerToTheTop();
+      reco::Vertex sec_vertex;
+      RefCountedKinematicParticle the_top = kinTauCreator->getKinematicTree()->currentParticle();                                           
+      if (the_top->currentState().isValid()){   
+	KinematicVertex the_vertex = (*kinTauCreator->getKinematicTree()->currentDecayVertex());
+	if(the_vertex.vertexIsValid() ){
+	  sec_vertex = reco::Vertex(reco::Vertex::Point(the_vertex.vertexState().position()),the_vertex.vertexState().error().matrix_new(),the_vertex.chiSquared(), the_vertex.degreesOfFreedom(),0);
+	}
+      }
+      KFTau.SetKFSecondaryVertex(sec_vertex);
+      // Add KFTau
       KinematicFitTauDecays_.push_back(KFTau);
       std::vector<reco::TrackRef> usedTracks = kinTauCreator->getSelectedTracks();
       saveSelectedTracks(usedTracks, daughterCollection);

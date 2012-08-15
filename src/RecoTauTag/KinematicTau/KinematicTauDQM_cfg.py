@@ -71,18 +71,11 @@ process.options = cms.untracked.PSet(
 )
 
 
-process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
-process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cff")
-process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_Step2_cfi")
-process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_Step1_cfi")
-process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
-process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
 process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
+process.load("RecoTauTag.KinematicTau.KinematicTauPostProcessing_cfi")
 
 process.load('Configuration.StandardSequences.EDMtoMEAtJobEnd_cff')
 process.load("Validation.Configuration.postValidation_cff")
-
-process.KinematicTauSkim.discriminators = cms.vstring("PFRecoTauDiscriminationByKinematicFit","PFRecoTauDiscriminationByKinematicFitQuality")
 
 process.schedule = cms.Schedule()
 
@@ -95,9 +88,9 @@ process.dqmSaver.convention = 'Offline'
 process.dqmSaver.saveByRun = cms.untracked.int32(-1)
 process.dqmSaver.saveAtJobEnd = cms.untracked.bool(True)
 process.dqmSaver.forceRunNumber = cms.untracked.int32(1)
-process.dqmSaver.workflow = "/KinematicFitSequencewithDQM/val/RECO"
+process.dqmSaver.workflow = "/KinematicFitSequencewithDQM/VAL/RECO"
 #process.DQMStore.verbose=1
 
 process.endjob_step = cms.Path(process.endOfProcess)
-process.KinFitSkim  = cms.Path(process.PFTau*process.KinematicFitSequencewithDQM*process.MEtoEDMConverter*process.EDMtoME*process.dqmSaver)
+process.KinFitSkim  = cms.Path(process.PFTau*process.KinematicFitSequencewithDQM*process.MEtoEDMConverter*process.EDMtoME*process.postProcessorKinematicFitValidation*process.dqmSaver)
 process.schedule = cms.Schedule(process.KinFitSkim,process.endjob_step)

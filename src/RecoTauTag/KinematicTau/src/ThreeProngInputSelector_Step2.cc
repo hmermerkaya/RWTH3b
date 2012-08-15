@@ -59,12 +59,10 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
       double sig=1e13;// use high value to prevent missing tau
       SelectedKinematicDecay bestTau;
       bool hasTau=false;
-      edm::LogInfo("ThreeProngInputSelector_Step2")<<"InputTrackSelector::select: i = " << i;
       for(unsigned int j=0; j<KinematicTauCandidate->at(i).size();j++){
 	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
 	if(j==0){
 	  const reco::PFTauRef pfiter=KTau.PFTauRef();
-	  edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::select:  PFTau "<< i <<" (Px,Py,Pz,E)=("<<(pfiter)->p4().Px() << ","<<(pfiter)->p4().Px() << ","<<(pfiter)->p4().Pz() << ","<<(pfiter)->p4().E() << ")";
 	}
 	SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
 	if(SVH.hasSecondaryVertex()){
@@ -76,14 +74,6 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	  TransientVertex SecondaryVertex=SVH.InitalSecondaryVertex();
 	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitalRefittedTracks();
 	  double s = VertexRotationAndSignificance(KTau.InitalTrackTriplet(),SecondaryVertex,RefittedTracks,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
-	  edm::LogInfo("ThreeProngInputSelector_Step2")<<"ThreeProngInputSelector_Step2::select: significance " << s 
-						       << " PVertexFit and Rotate (" <<  primaryVertexReFitAndRotated.position().x() 
-						       << "," <<  primaryVertexReFitAndRotated.position().y() 
-						       << "," <<  primaryVertexReFitAndRotated.position().z() << ")" 
-						       << " SV (" <<  SVH.InitalSecondaryVertex().position().x()
-						       << "," <<  SVH.InitalSecondaryVertex().position().y()
-						       << "," <<  SVH.InitalSecondaryVertex().position().z() << ")";
-	  
 	  if(s<sig && s>=0){// prevent nan
 	    KTau.SetInitalVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.InitalRefittedTracks(),SVH.InitalSecondaryVertex());
 	    KTau.SetInitalKinematics(tauFlghtDir,SVH.Inital_pions(),a1_p4,initThetaGJ,ThetaMax);

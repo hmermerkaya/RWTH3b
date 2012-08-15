@@ -81,8 +81,8 @@ void SelectedKinematicDecay::SetInitalVertexProperties(reco::Vertex primaryVerte
   initalSecVtx_=secVtx;
 }
 
-void SelectedKinematicDecay::SetKFSecondaryVertex(reco::Vertex SecVtx_){
-  SecVtx_=SecVtx_;
+void SelectedKinematicDecay::SetKFSecondaryVertex(reco::Vertex SecVtx){
+  SecVtx_=SecVtx;
 }
 
 void SelectedKinematicDecay::SetInitalKinematics(TVector3 tauFlghtDir,std::vector<TLorentzVector> initalpions,TLorentzVector intial_a1_p4,double initThetaGJ, double ThetaMax){
@@ -148,6 +148,17 @@ std::vector<TLorentzVector> SelectedKinematicDecay::Pions(unsigned int ambiguity
     }
   }
   return pions;
+}
+
+
+TLorentzVector SelectedKinematicDecay::a1_p4(unsigned int ambiguity){
+  TLorentzVector a1(0,0,0,0);
+  for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
+    if(iParticle->name()=="pion"){
+      a1+=iParticle->p4();
+    }
+  }
+  return a1;
 }
 
 

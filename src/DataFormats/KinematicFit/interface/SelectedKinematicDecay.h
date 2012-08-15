@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.19 2012/08/01 09:22:13 inugent Exp $
+// $Id: SelectedKinematicDecay.h,v 1.20 2012/08/08 16:04:05 inugent Exp $
 //
 //
 
@@ -63,7 +63,7 @@ class SelectedKinematicDecay {
   /// store quality discriminators that cannot directly be calculated from stored members only (e.g. conversion into reco::Vertex format would be needed). FIXME: replace this by  a dynamic calculation (depending on the decay mode)
   void SetMissingQualityCriteria(const double vtxSignPVRotSV, const double vtxSignPVRotPVRed, const double a1Mass, const double energyTFraction); 
   void SetInitalGuess(std::vector<TLorentzVector> &TauGuessLV,std::vector<TLorentzVector> &NuGuessLV);
-  void SetKFSecondaryVertex(reco::Vertex SecVtx_);
+  void SetKFSecondaryVertex(reco::Vertex SecVtx);
 
   //////////////////////////////////////////////////////////////////////////
   //
@@ -93,6 +93,7 @@ class SelectedKinematicDecay {
   TLorentzVector                         Tau(unsigned int ambiguity);
   TLorentzVector                         Neutrino(unsigned int ambiguity);
   std::vector<TLorentzVector>            Pions(unsigned int ambiguity);
+  TLorentzVector                         a1_p4(unsigned int ambiguity);
   const reco::Vertex                   & PrimaryVertexReFitAndRotated()const{return initalPrimaryVertexReFitAndRotated_;}
   reco::Vertex                           SecondaryVertex(unsigned int ambiguity){return SecVtx_;}
       

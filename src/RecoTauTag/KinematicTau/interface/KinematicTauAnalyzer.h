@@ -23,6 +23,10 @@
 #include "DQMServices/Core/interface/MonitorElement.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include <map>
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
+
 
 class KinematicTauAnalyzer : public edm::EDAnalyzer {
  public:
@@ -33,10 +37,13 @@ private:
   virtual void beginJob();
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob();
+
+  virtual bool doJAKID(unsigned int i);
+  virtual bool isTruthTauInAcceptance(const reco::GenParticle &cand);
   
   std::vector<std::string> discriminators_;
   edm::InputTag KinematicFitTauTag_,gensrc_,GenEventInfo_;
-  float TauMatchingDR_,tau_pdgid;
+  float TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
   int tau_pdgid_;
   unsigned int NJAKID_;
   float TauM_,PionM_,NuM_;
@@ -52,9 +59,9 @@ private:
     *SecVtxXChange, *SecVtxYChange, *SecVtxZChange,
     *TauPhiChange, *TauThetaChange, *TauEChange,
     *PionPhiChange, *PionThetaChange, *PionEChange,
-    *NuPhiChange, *NuThetaChange, *NuEChange,*JAKID;
+    *NuPhiChange, *NuThetaChange, *NuEChange,*JAKID,*JAKIDall,*JAKIDeff,*TauMatched;
   std::vector<MonitorElement*>  TauMatch_dphi, TauMatch_dtheta, TauMatch_e, PionMatch_dphi, PionMatch_dtheta, PionMatch_e, NuMatch_dphi, NuMatch_dtheta, NuMatch_e;
-
+  std::map<unsigned int,unsigned int> JAKIDtoIndex;
  
 
 };
