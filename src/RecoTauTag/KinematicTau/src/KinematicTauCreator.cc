@@ -1,9 +1,10 @@
 #include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 
 
-KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder)
+KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder):
+  modifiedPV_(),
+  transientTrackBuilder_(transTrackBuilder)
 {
-  Set_TransientTrackBuilder(transTrackBuilder);
   kcvFitter_ = new KinematicConstrainedVertexFitter();
   edm::ParameterSet defaultConfig;
   defaultConfig.addParameter("maxDelta", .001);
@@ -14,12 +15,12 @@ KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &
   modifiedPV_ = reco::Vertex();
 }
 
-KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg)
+KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg):
+  modifiedPV_(),
+  transientTrackBuilder_(transTrackBuilder)
 {
-  Set_TransientTrackBuilder(transTrackBuilder);
   kcvFitter_ = new KinematicConstrainedVertexFitter();
   kcvFitter_->setParameters(cfg);
-  modifiedPV_ = reco::Vertex();
 }
 
 KinematicTauCreator::~KinematicTauCreator()

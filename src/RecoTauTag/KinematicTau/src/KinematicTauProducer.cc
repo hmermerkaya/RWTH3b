@@ -34,9 +34,7 @@ void KinematicTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   std::auto_ptr<reco::RecoChargedCandidateCollection> daughterCollection_ = std::auto_ptr<reco::RecoChargedCandidateCollection>(new reco::RecoChargedCandidateCollection);
   reco::RecoChargedCandidateCollection & daughterCollection = * daughterCollection_;
 
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
-
-  filterValue = select(KinematicFitTauDecays_,daughterCollection);
+  filterValue = select(KinematicFitTauDecays_,daughterCollection,iSetup);
   if(filterValue) edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Passed";
   else edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Failed";
 
@@ -58,13 +56,16 @@ void KinematicTauProducer::endJob(){
   edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] asks for >= 1 kinTau per event. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
-bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection){
+bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection,const edm::EventSetup& iSetup){
   bool success = false;
 
   edm::Handle<SelectedKinematicDecayCollection > KinematicTauCandidates;
   iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidates);
 
+  edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
   KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_);
+
   for(unsigned int i=0;i<KinematicTauCandidates->size();i++){
     SelectedKinematicDecay KFTau=KinematicTauCandidates->at(i);
     int fitStatus = kinTauCreator->create(KFTau);

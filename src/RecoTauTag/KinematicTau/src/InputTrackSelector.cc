@@ -33,10 +33,6 @@ void InputTrackSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     NonTauTracksLists_.push_back(reco::TrackCollection());
   }
 
-  edm::ESHandle<TransientTrackBuilder> transTrackBuilder;
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder);
-  Set_TransientTrackBuilder(transTrackBuilder);
-
   select(KFCandidates,NonTauTracksLists_);
 
   iEvent_->put(KFCandidates_,"PreKinematicDecaysStep1");
@@ -85,7 +81,7 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
 	KFCandidates.push_back(std::vector<SelectedKinematicDecay>());
 	std::vector<reco::TrackRef> input;
 	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk) input.push_back(*trk);
-	vVTrackRef combis=choose3Prongs(input);
+	std::vector<std::vector<reco::TrackRef> > combis=choose3Prongs(input);
 	if(NonTauTracksLists_.size()==1 || nTauPerVtx_==0){
 	  for(unsigned int i=0;i<combis.size();i++){
 	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(0),nTauPerVtx_));
@@ -159,6 +155,95 @@ reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau
   return trkVct;
 }
 
+bool  InputTrackSelector::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks){
+  edm::Handle<reco::TrackCollection> trackCollection;
+  iEvent_->getByLabel(trackCollectionTag_,trackCollection);
+  if (!trackCollection.isValid()) {
+    edm::LogError("ThreeProngInputSelector_Step1") << "ThreeProngInputSelector_Step1::select: no track collection found!";
+    return false;
+  }
+  unsigned int idx = 0;
+  for (reco::TrackCollection::const_iterator iTrk = trackCollection->begin(); iTrk != trackCollection->end(); ++iTrk, idx++) {
+    reco::TrackRef tmpRef(trackCollection, idx);
+    bool isTauTrk = false;
+    for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
+      if (tmpRef == *tauTrk) {
+        isTauTrk = true;
+        break;
+      }
+    }
+    if (!isTauTrk) nonTauTracks.push_back(*iTrk);
+  }
+  return true;
+}
+
+// Compute the charge of the triplet
+bool InputTrackSelector::sumCharge(const std::vector<reco::TrackRef> & input){
+  return (1== abs(input.at(0)->charge() + input.at(1)->charge() + input.at(2)->charge()));
+}
+
+// compute all permutations
+std::vector<std::vector<reco::TrackRef> > InputTrackSelector::permuteCombinations(const std::vector<reco::TrackRef> & vect){
+  std::vector<std::vector<reco::TrackRef> > combis;
+  std::vector<reco::TrackRef>::const_iterator iter1, iter2, iter3;
+  for (iter1 = vect.begin(); iter1 != vect.end(); ++iter1) {
+    iter2 = iter1;
+    ++iter2;
+    for (; iter2 != vect.end(); ++iter2) {
+      iter3 = iter2;
+      ++iter3;
+      for (; iter3 != vect.end(); ++iter3) {
+	std::vector<reco::TrackRef> newCombi;
+        newCombi.push_back(*iter1);
+        newCombi.push_back(*iter2);
+        newCombi.push_back(*iter3);
+        combis.push_back(newCombi);
+      }
+    }
+  }
+  return combis;
+}
+
+// Select 3 prong based on mass and charge       
+std::vector<std::vector<reco::TrackRef> > InputTrackSelector::choose3Prongs(std::vector<reco::TrackRef> &input){
+  sort(input.begin(), input.end(), cmpPt<reco::TrackRef>);                                                                                      
+  std::vector<std::vector<reco::TrackRef> > combis = permuteCombinations(input);
+  for (std::vector<std::vector<reco::TrackRef> >::iterator iter = combis.begin(); iter != combis.end();) {  
+    if (!sumCharge(*iter)) { 
+      iter = combis.erase(iter); 
+      LogTrace("ThreeProngInputSelector_Step1") << "ThreeProngInputSelector_Step1::choose3Prongs: erased combi due to wrong charge sum. " << combis.size() << " combis left.";
+      continue;  
+    }                              
+    double massA1 = getInvariantMass(*iter);  
+    if (massA1 > 2.0 || massA1 < 3*PMH.Get_piMass()) { //soft upper value     
+      iter = combis.erase(iter);
+      LogTrace("ThreeProngInputSelector_Step1") << "ThreeProngInputSelector_Step1::choose3Prongs: erased combi due to wrong mass. " << combis.size() << " combis left.";  
+      continue;
+    } 
+    ++iter; 
+  }  
+  return combis; 
+}                   
+
+double InputTrackSelector::getInvariantMass(std::vector<reco::TrackRef> &tracks){
+  double SumPx(0),SumPy(0),SumPz(0),SumE(0); 
+  for(unsigned int i=0; i<tracks.size(); i++){
+    SumPx += tracks.at(i)->px();              
+    SumPy += tracks.at(i)->py();              
+    SumPz += tracks.at(i)->pz();              
+    SumE += sqrt(pow(tracks.at(i)->p(),2)+pow(PMH.Get_piMass(),2)); 
+  }
+  return sqrt(pow(SumE,2)-pow(SumPx,2)-pow(SumPy,2)-pow(SumPz,2));
+}
+
+template <typename T>  bool InputTrackSelector::cmpPt(const T & a, const T & b){
+  return a->pt() > b->pt();
+}
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(InputTrackSelector);
+
+
+
+

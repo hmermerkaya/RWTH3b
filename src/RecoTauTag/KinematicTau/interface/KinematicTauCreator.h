@@ -21,10 +21,9 @@
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
-class KinematicTauCreator : protected  KinematicTauTools {
+class KinematicTauCreator {
 public:
   /**
      default constructor
@@ -98,6 +97,8 @@ protected:
      Fake vertex. The primary vertex can be rotated within its errors around the secondary vertex. Errors are copied from the original vertex as they have not been modified.
   */
     reco::Vertex modifiedPV_;
+
+  edm::ESHandle<TransientTrackBuilder> transientTrackBuilder_;
 };
 
 #endif

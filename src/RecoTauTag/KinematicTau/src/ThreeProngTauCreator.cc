@@ -44,7 +44,7 @@ bool ThreeProngTauCreator::createStartScenario(SelectedKinematicDecay &KFTau, st
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Now setup Fit parameters
   for(unsigned int i = 0; i!=transTrkVect.size();i++){
-    pions.push_back(kinFactory.particle(transTrkVect[i],Get_piMass(),piChi,piNdf,secVtx.position(),piMassSigma));
+    pions.push_back(kinFactory.particle(transTrkVect[i],PMH.Get_piMass(),piChi,piNdf,secVtx.position(),piMassSigma));
   }
   
   if(theta0>TMath::Pi()/2){
@@ -59,7 +59,7 @@ bool ThreeProngTauCreator::createStartScenario(SelectedKinematicDecay &KFTau, st
 
   LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<modifiedPV_.x()<<","<<modifiedPV_.y()<<","<<modifiedPV_.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-modifiedPV_.position().y())/(secVtx.position().x()-modifiedPV_.position().x()))<<", theta "<<theta0;
   
-  std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),Get_tauMass(),theta0);//use a pair to prepare for ambiguities
+  std::pair<double,double> tauSolutions = getTauMomentumMagnitudes(lorentzA1.M(),lorentzA1.P(),PMH.Get_tauMass(),theta0);//use a pair to prepare for ambiguities
   if (tauSolutions.first < 0. || tauSolutions.second < 0.) {
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Skip invalid tau solutions = "<<tauSolutions.first<<", "<<tauSolutions.second;
     return false;
@@ -74,12 +74,12 @@ bool ThreeProngTauCreator::createStartScenario(SelectedKinematicDecay &KFTau, st
   if(fabs(tauSolutions.first-tauSolutions.second) > pow(10.0,-6)) ambiguity = true;
   TLorentzVector tauGuess1;
   tauFlghtDir = tauFlghtDir.Unit();
-  tauGuess1.SetXYZM(tauFlghtDir.X()*tauSolutions.first , tauFlghtDir.Y()*tauSolutions.first , tauFlghtDir.Z()*tauSolutions.first , Get_tauMass());
+  tauGuess1.SetXYZM(tauFlghtDir.X()*tauSolutions.first , tauFlghtDir.Y()*tauSolutions.first , tauFlghtDir.Z()*tauSolutions.first , PMH.Get_tauMass());
   TauGuessLV.push_back(tauGuess1);
   neutrinos.push_back(unknownNu(tauGuess1, lorentzA1, secVtx,NuGuessLV));
   if(ambiguity==true){
     TLorentzVector tauGuess2;
-    tauGuess2.SetXYZM(tauFlghtDir.X()*tauSolutions.second, tauFlghtDir.Y()*tauSolutions.second, tauFlghtDir.Z()*tauSolutions.second, Get_tauMass());
+    tauGuess2.SetXYZM(tauFlghtDir.X()*tauSolutions.second, tauFlghtDir.Y()*tauSolutions.second, tauFlghtDir.Z()*tauSolutions.second, PMH.Get_tauMass());
     neutrinos.push_back(unknownNu(tauGuess2, lorentzA1, secVtx,NuGuessLV));
   }
   ///////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
   }
   
   std::vector<MultiTrackKinematicConstraint* > constraintVector;
-  MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(Get_tauMass(), unfitDaughters.size());
+  MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size());
   constraintVector.push_back(tauMass_c);
   GlobalPoint linP(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
   //MultiTrackKinematicConstraint *pointing_c = new MultiTrackPointingKinematicConstraint(linP);

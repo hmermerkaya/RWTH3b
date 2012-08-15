@@ -24,10 +24,13 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
-#include  "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
+
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-class SecondaryVertexHelper : protected KinematicTauTools {
+class SecondaryVertexHelper {
 public:
   SecondaryVertexHelper(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,const SelectedKinematicDecay &KTau);
   ~SecondaryVertexHelper();
@@ -39,6 +42,8 @@ public:
   std::vector<TLorentzVector>       Inital_pions(){return pions_;}
 
 private:
+  bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
+
   bool hasSecondaryVertex_;
   TransientVertex tmpVtx_;
   std::vector<reco::TransientTrack> trks_;

@@ -36,13 +36,13 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
-#include  "RecoTauTag/KinematicTau/interface/KinematicTauTools.h"
+#include "RecoTauTag/KinematicTau/interface/ParticleMassHelper.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 #include "TString.h"
 
-class InputTrackSelector : public edm::EDProducer, protected KinematicTauTools {
+class InputTrackSelector : public edm::EDProducer {
 public:
   explicit InputTrackSelector(const edm::ParameterSet&);
   ~InputTrackSelector();
@@ -53,6 +53,12 @@ private:
   virtual void endJob();
   bool select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_);
   reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
+  bool GetNonTauTracks(edm::Event *iEvent,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks);
+  bool sumCharge(const std::vector<reco::TrackRef> & input);
+  std::vector<std::vector<reco::TrackRef> > choose3Prongs(std::vector<reco::TrackRef> & input);
+  std::vector<std::vector<reco::TrackRef> > permuteCombinations(const std::vector<reco::TrackRef> & vect);
+  double getInvariantMass(std::vector<reco::TrackRef> &tracks);
+  template <typename T> static bool cmpPt(const T & a, const T & b);
   
   edm::Event * iEvent_;
   std::string tauType_;
@@ -61,6 +67,8 @@ private:
   unsigned int minTracks_, minTau_, nTauPerVtx_, cnt_, cntFound_;
   double minTauPt_;
   std::vector<std::string> TauVtxList_;
+  ParticleMassHelper PMH;
+
 };
 
 #endif

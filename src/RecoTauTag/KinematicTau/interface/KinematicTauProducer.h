@@ -55,7 +55,7 @@ private:
   virtual void endJob();
   
   //Execute the kinematic fit and in case of success modify the taus parameters
-  bool select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection);
+  bool select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection,const edm::EventSetup& iSetup);
   //combine a discriminator of important quality cuts of a refitted tau decay
   bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, SelectedKinematicDecay &KFTau);
   int  saveKinParticles(const KinematicTauCreator * kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, std::map<std::string, bool> tauDiscriminators);
@@ -66,7 +66,6 @@ private:
   
   const edm::ParameterSet fitParameters_;
   edm::Event * iEvent_;
-  edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;  
   edm::InputTag KinematicTauCandTag_;
   unsigned int cnt_, cntFound_;
 	

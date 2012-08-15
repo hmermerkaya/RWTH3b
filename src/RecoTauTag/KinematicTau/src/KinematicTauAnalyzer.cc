@@ -8,12 +8,7 @@
 #include "RecoTauTag/KinematicTau/interface/KinematicTauAnalyzer.h"
 // object includes
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
-#include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
-#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
-#include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
@@ -26,6 +21,7 @@
 #include "Validation/EventGenerator/interface/TauDecay.h"
 #include "RecoTauTag/KinematicTau/interface/TauDecay_CMSSWReco.h"
 #include "TVectorT.h"
+#include <iostream>
 
 KinematicTauAnalyzer::KinematicTauAnalyzer(const edm::ParameterSet& iConfig):
   discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") ),
@@ -34,10 +30,7 @@ KinematicTauAnalyzer::KinematicTauAnalyzer(const edm::ParameterSet& iConfig):
   GenEventInfo_(iConfig.getParameter<edm::InputTag>("GenEventInfo")),
   TauMatchingDR_( iConfig.getParameter<double>("TauMatchingDR")),
   TauPtMin_( iConfig.getParameter<double>("TauPtMin")),
-  TauEtaMax_( iConfig.getParameter<double>("TauEtaMax")),
-  TauM_(1.77682),     // temp solution untill particle helper made
-  PionM_(0.13957018), // temp solution untill particle helper made
-  NuM_(0.0)           // temp solution untill particle helper made
+  TauEtaMax_( iConfig.getParameter<double>("TauEtaMax"))
 {
   dbe = 0;
   dbe = edm::Service<DQMStore>().operator->();

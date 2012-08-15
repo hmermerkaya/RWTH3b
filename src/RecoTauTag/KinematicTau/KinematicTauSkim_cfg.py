@@ -50,13 +50,9 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
-process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
-process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
-process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cff")
-process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
-process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
+process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
 
-process.skim_QualityTau = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*process.KinematicTauProducer*process.KinematicTauSkim)
+process.skim_QualityTau = cms.Path(process.KinematicFitSequencewithSkim)
 process.out_step = cms.EndPath(process.output)
 
 # Schedule definition

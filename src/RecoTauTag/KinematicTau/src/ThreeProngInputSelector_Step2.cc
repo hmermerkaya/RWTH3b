@@ -2,7 +2,6 @@
 #include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
 
 ThreeProngInputSelector_Step2::ThreeProngInputSelector_Step2(const edm::ParameterSet & iConfig):
-  KinematicTauTools(),
   primVtxTag_(iConfig.getParameter<edm::InputTag>("primVtx")),
   KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
   minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)) //filter returns true if more/equal than minTau_ taus were selected
@@ -19,14 +18,11 @@ ThreeProngInputSelector_Step2::~ThreeProngInputSelector_Step2() {
 void ThreeProngInputSelector_Step2::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   cnt_++;
   iEvent_ = &iEvent;
-
-  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
-  Set_TransientTrackBuilder(transTrackBuilder_);
   
   std::auto_ptr<std::vector<SelectedKinematicDecay> > PreKinematicDecaysStep2 =  std::auto_ptr<std::vector<SelectedKinematicDecay> >(new std::vector<SelectedKinematicDecay>);
   std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_=*PreKinematicDecaysStep2;
 
-  select(PreKinematicDecaysStep2_);
+  select(PreKinematicDecaysStep2_,iSetup);
   
   iEvent_->put(PreKinematicDecaysStep2,"PreKinematicDecaysStep2");
 }
@@ -44,7 +40,10 @@ void ThreeProngInputSelector_Step2::endJob() {
   edm::LogVerbatim("ThreeProngInputSelector_Step2") << "--> [ThreeProngInputSelector_Step2] found at least " << minTau_ << " 3-prongs per event. Efficiency: " << cntFound_ << "/" << cnt_ << " = " << std::setprecision(4) << ratio*100.0 << "%";
 }
 
-bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_) {
+bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_,const edm::EventSetup& iSetup) {
+  edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
+
   //load primary vertex collection created w/o tau tracks (needs to be moved later)
   edm::Handle<reco::VertexCollection > primaryVertexCollection;
   iEvent_->getByLabel(primVtxTag_, primaryVertexCollection);
@@ -69,7 +68,7 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	  reco::Vertex primaryVertexReFit=primaryVertices.front();
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
 	  TVector3 tauFlghtDir;
-	  TLorentzVector a1_p4;
+	  TLorentzVector a1_p4=SVH.Inital_a1_p4();
 	  double initThetaGJ,ThetaMax;
 	  TransientVertex SecondaryVertex=SVH.InitalSecondaryVertex();
 	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitalRefittedTracks();
@@ -97,6 +96,14 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
   LogTrace("ThreeProngInputSelector_Step2") << "ThreeProngInputSelector_Step2::select: Unable to calculate a new primary vertex. No tau candidates reconstructed.";
   return false;
 }
+
+double ThreeProngInputSelector_Step2::VertexRotationAndSignificance(const std::vector<reco::TrackRef> &input,TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,reco::Vertex &pVtx,
+								    TLorentzVector &lorentzA1, TVector3 &tauFlghtDir, double &theta0, double &thetaMax){
+  VertexRotation vtxC(lorentzA1);
+  thetaMax=fabs(vtxC.calcThetaMax());
+  return vtxC.rotatePV(pVtx,tmpVtx,theta0, tauFlghtDir);
+}
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ThreeProngInputSelector_Step2);

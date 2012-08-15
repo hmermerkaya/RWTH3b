@@ -46,7 +46,6 @@ private:
   float TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
   int tau_pdgid_;
   unsigned int NJAKID_;
-  float TauM_,PionM_,NuM_;
 
   /////////////////////////////////
   //
