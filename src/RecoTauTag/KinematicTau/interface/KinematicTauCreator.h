@@ -38,7 +38,7 @@ public:
   /**
      main function of the KinematicTau algorithm. It will call the Fitter and provide the fitted results. It returns true if the fit was successfull.
   */
-  virtual int create(SelectedKinematicDecay &KFTau) = 0;
+  virtual int create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau) = 0;
   /**
      visible tau constructed from refitted tracks excluding neutrals (the stored primary vertex might be rotated)
   */

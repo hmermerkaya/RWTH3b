@@ -35,10 +35,6 @@ class VertexRotation {
   VertexRotation(TLorentzVector & a1, int verbosity = 0);
   ~VertexRotation();
   
-  /**
-     rotates both primary and secondary vertex
-  */
-  bool tryCorrection(reco::Vertex & pVtx, TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir, bool forceRotation = true);
   double rotatePV(reco::Vertex & pVtx, const TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir);
   reco::Vertex newPrimVertex(TVector3 & newPoint, reco::Vertex & oldVtx);  
   TransientVertex newSecVertex(TVector3 & newPoint, TransientVertex & oldVtx);
@@ -46,9 +42,6 @@ class VertexRotation {
   bool isValid();
   double unsignedAngle(const TVector3& v1, const TVector3& v2);
   double calcThetaMax();
-  void dumpEvt(const TVector3 & pv, const TVector3 & sv, double thetaMax);  
-  void dumpEvt(const reco::Vertex & pVtx, const TransientVertex & sVtx, double thetaMax);
-  void dumpEvt(const TVector3 & pv, const TVector3 & pvE, const TVector3 & sv, const TVector3 & svE, double thetaMax);
 	
 private:
   bool valid_, success_;

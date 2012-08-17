@@ -20,13 +20,17 @@ bool KinematicTauSkim::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   unsigned int ntaus(0);  
   for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
-    bool passed=true;
-    for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr){
-      if(kinFitTau->discriminators().count(*discr)>0){
-	if(!(kinFitTau->discriminators().find(*discr)->second))passed=false;
+    bool hasgoodfit=false;
+    for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
+      unsigned int npassed=0;
+      for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr){
+	if(kinFitTau->discriminators(ambiguity).count(*discr)>0){
+	  if(kinFitTau->discriminators(ambiguity).find(*discr)->second) npassed++;
+	}
       }
+      if(npassed==discriminators_.size())hasgoodfit=true;
     }
-    if(passed)ntaus++;		
+    if(hasgoodfit)ntaus++;
   }
   edm::LogInfo("KinematicTauSkim")<<"ntaus " << ntaus << " required " << minTau_ << " inputsize " << KinematicFitTaus->size();
   if(ntaus >= minTau_){

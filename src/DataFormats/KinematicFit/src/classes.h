@@ -36,6 +36,8 @@ namespace {
  
     std::map<std::string, bool> map1;
     edm::Wrapper<std::map<std::string, bool> > wmap1;
+    std::vector<std::map<std::string, bool> > vmap1;
+    edm::Wrapper<std::vector<std::map<std::string, bool> > > wvmap1;
 
     std::vector<TLorentzVector> vlv;
     edm::Wrapper<std::vector<TLorentzVector> > wvlv;

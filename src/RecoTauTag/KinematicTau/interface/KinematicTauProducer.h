@@ -57,11 +57,10 @@ private:
   //Execute the kinematic fit and in case of success modify the taus parameters
   bool select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection,const edm::EventSetup& iSetup);
   //combine a discriminator of important quality cuts of a refitted tau decay
-  bool dicriminatorByKinematicFitQuality(const KinematicTauCreator *kinTauCrtr, const int & fitStatus, SelectedKinematicDecay &KFTau);
-  int  saveKinParticles(const KinematicTauCreator * kinTauCrtr, SelectedKinematicDecayCollection &refitDecays, std::map<std::string, bool> tauDiscriminators);
-  void saveSelectedTracks(const std::vector<reco::TrackRef> & usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
+  bool dicriminatorByKinematicFitQuality(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
+  int  saveKinParticles(unsigned int &ambiguity,const KinematicTauCreator * kinTauCreator, SelectedKinematicDecay &KFTau);
+  void saveSelectedTracks(const std::vector<reco::TrackRef> usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
   void correctReferences(SelectedKinematicDecayCollection & selected, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
-  void setMissingQualityCriteria(SelectedKinematicDecayCollection &decay, const KinematicTauCreator * kinTauCrtr);
 
   
   const edm::ParameterSet fitParameters_;

@@ -45,12 +45,12 @@ public:
   virtual int ndf() const;
   
 private:
-  virtual int create(SelectedKinematicDecay &KFTau);
-  bool createStartScenario(SelectedKinematicDecay &KFTau, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos);
+  virtual int create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau);
+  bool createStartScenario(unsigned int& ambiguity,SelectedKinematicDecay &KFTau, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos);
 
   bool kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex);
-  std::pair<double,double> getTauMomentumMagnitudes(double ma1,double pa1,double M,double theta);
-  RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,std::vector<TLorentzVector> &NuGuessLV);
+  double getTauMomentumMagnitudes(unsigned int& ambiguity,double ma1,double pa1,double M,double theta);
+  RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,TLorentzVector &NuGuessLV);
   RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
 
   ParticleMassHelper PMH;

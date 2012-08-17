@@ -62,8 +62,11 @@ private:
   virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
   bool select(std::vector<SelectedKinematicDecay> &PreKinematicDecaysStep2_,const edm::EventSetup& iSetup);
-  double VertexRotationAndSignificance(const std::vector<reco::TrackRef> &input,TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,reco::Vertex &pVtx,
-				       TLorentzVector &lorentzA1, TVector3 &tauFlghtDir, double &theta0, double &thetaMax);
+  double VertexRotationAndSignificance(TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,
+				       TVector3 &tauFlghtDirNoCorr,
+				       reco::Vertex &pVtx, TLorentzVector &lorentzA1,
+				       TVector3 &tauFlghtDir,double &theta0, double &thetaMax);
+
   
   edm::Event * iEvent_;
   edm::ParameterSet iConfig_;

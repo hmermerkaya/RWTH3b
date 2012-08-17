@@ -41,7 +41,7 @@ const std::string & SelectedKinematicParticle::name() const {
 const int SelectedKinematicParticle::charge() const {
   return charge_;
 }
-const int SelectedKinematicParticle::ambiguity() const {
+const unsigned int SelectedKinematicParticle::ambiguity() const {
   return ambiguity_;
 }
 

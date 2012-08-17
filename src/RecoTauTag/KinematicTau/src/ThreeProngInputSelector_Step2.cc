@@ -67,15 +67,19 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	if(SVH.hasSecondaryVertex()){
 	  reco::Vertex primaryVertexReFit=primaryVertices.front();
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
+	  TVector3 tauFlghtDirNoCorr;
 	  TVector3 tauFlghtDir;
 	  TLorentzVector a1_p4=SVH.Inital_a1_p4();
 	  double initThetaGJ,ThetaMax;
 	  TransientVertex SecondaryVertex=SVH.InitalSecondaryVertex();
 	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitalRefittedTracks();
-	  double s = VertexRotationAndSignificance(KTau.InitalTrackTriplet(),SecondaryVertex,RefittedTracks,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
+	  double s = VertexRotationAndSignificance(SecondaryVertex,RefittedTracks,tauFlghtDirNoCorr,
+						   primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
 	  if(s<sig && s>=0){// prevent nan
-	    KTau.SetInitalVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.InitalRefittedTracks(),SVH.InitalSecondaryVertex());
-	    KTau.SetInitalKinematics(tauFlghtDir,SVH.Inital_pions(),a1_p4,initThetaGJ,ThetaMax);
+	    KTau.SetInitalVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,
+					   SVH.InitalRefittedTracks(),SVH.InitalSecondaryVertex());
+	    KTau.SetInitalKinematics(tauFlghtDirNoCorr.Unit(),SVH.Inital_pions(),a1_p4,tauFlghtDir.Unit(),initThetaGJ,ThetaMax);
+
 	    bestTau=KTau;
 	    hasTau=true;
 	  }
@@ -97,8 +101,14 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
   return false;
 }
 
-double ThreeProngInputSelector_Step2::VertexRotationAndSignificance(const std::vector<reco::TrackRef> &input,TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,reco::Vertex &pVtx,
-								    TLorentzVector &lorentzA1, TVector3 &tauFlghtDir, double &theta0, double &thetaMax){
+double ThreeProngInputSelector_Step2::VertexRotationAndSignificance(TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks, 
+								    TVector3 &tauFlghtDirNoCorr,
+								    reco::Vertex &pVtx, TLorentzVector &lorentzA1, 
+								    TVector3 &tauFlghtDir,double &theta0, double &thetaMax){
+  TVector3 pv(pVtx.position().x(), pVtx.position().y(), pVtx.position().z());
+  TVector3 sv(tmpVtx.position().x(), tmpVtx.position().y(), tmpVtx.position().z());
+  tauFlghtDirNoCorr = sv - pv;
+
   VertexRotation vtxC(lorentzA1);
   thetaMax=fabs(vtxC.calcThetaMax());
   return vtxC.rotatePV(pVtx,tmpVtx,theta0, tauFlghtDir);

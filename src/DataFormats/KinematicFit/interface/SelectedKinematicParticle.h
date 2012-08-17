@@ -36,7 +36,7 @@ class SelectedKinematicParticle {
   const int status() const;
   const std::string & name() const;
   const int charge() const;
-  const int ambiguity() const;
+  const unsigned int ambiguity() const;
   
   const TVectorT<double> & parameters() const;
   const TVectorT<double> & input_parameters() const;

@@ -69,7 +69,7 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
     edm::Handle<reco::TrackCollection> trkCollection;
     iEvent_->getByLabel(trkCollectionTag_, trkCollection);
     trkCollectionID_ = trkCollection.id();
-    
+    unsigned int p=0;
     for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
       reco::PFTauRef thePFTau(inputCollection, iPFTau);
       // filter candidates
@@ -82,14 +82,23 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
 	std::vector<reco::TrackRef> input;
 	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk) input.push_back(*trk);
 	std::vector<std::vector<reco::TrackRef> > combis=choose3Prongs(input);
-	if(NonTauTracksLists_.size()==1 || nTauPerVtx_==0){
-	  for(unsigned int i=0;i<combis.size();i++){
+	for(unsigned int i=0;i<combis.size();i++){
+	  if(NonTauTracksLists_.size()==1 && NonTauTracksLists_.size()==TauVtxList_.size() && nTauPerVtx_==0){
 	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(0),nTauPerVtx_));
+	  }
+	  else if(NonTauTracksLists_.size()>1 && TauVtxList_.size()==NonTauTracksLists_.size() && nTauPerVtx_==1){
+	    //Code to find best vertex would go here
+	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(p),nTauPerVtx_));
+	    p++;
+	  }
+	  else{
+	    edm::LogWarning("InputTrackSelector")<<"InputTrackSelector::select WARNING!!! Number of allowed verticies out of range size: " <<  TauVtxList_.size() << " value: " << p
+						   <<"Skipping Tau candidate ";
 	  }
 	}
       }
     }
-    
+      
     // remove duplicates
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
@@ -118,7 +127,20 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
     }
     
     // Get Vertex Tracks List
-    if(NonTauTracksLists_.size()==1)GetNonTauTracks(iEvent_,trkCollectionTag_,NonTauTracksLists_.at(0),tautracks);
+    if(NonTauTracksLists_.size()==1){
+      GetNonTauTracks(iEvent_,trkCollectionTag_,NonTauTracksLists_.at(0),tautracks);
+    }
+    else {
+      unsigned int p=0;
+      for(unsigned int i=0;i<KFCandidates.size();i++){
+	for(unsigned int j=0;j<KFCandidates.at(i).size();j++){
+	  if(p<NonTauTracksLists_.size()){
+	    GetNonTauTracksFromVertex(KFCandidates.at(i).at(j),NonTauTracksLists_.at(p));
+	  }
+	  p++;
+	}
+      }
+    }
   }
   unsigned int ntaus(0);
   for(unsigned int i=0;i<KFCandidates.size();i++){
@@ -141,7 +163,6 @@ reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau
   const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands(); //candidates in signal cone 
   //isolationPFChargedHadrCands stores tracks in isolation/veto cone
   for (reco::PFCandidateRefVector::const_iterator iter = cands.begin(); iter!=cands.end(); ++iter) {
-    //LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::getPFTauDaughters: PFTau daughter pt "<<iter->get()->pt()<<", eta "<<iter->get()->eta()<<", vtx("<<iter->get()->vx()<<","<<iter->get()->vy()<<","<<iter->get()->vz()<<")";
     if(iter->get()->trackRef().isNonnull()) {
       if ((*iter)->trackRef().id() != trkCollectionID_) {
 	// ignore tracks that do not origin from the desired track collection (e.g. ignore conversionStepTracks) for now
@@ -176,6 +197,28 @@ bool  InputTrackSelector::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &tra
   }
   return true;
 }
+
+
+bool InputTrackSelector::GetNonTauTracksFromVertex(SelectedKinematicDecay cand, reco::TrackCollection &nonTauTracks){
+  const std::vector<reco::TrackRef> tautracks =cand.InitalTrackTriplet();
+  const reco::Vertex match=cand.InitalPrimaryVertex();
+  //
+  for(std::vector<reco::TrackBaseRef>::const_iterator tmpRef=match.tracks_begin();tmpRef<match.tracks_end();tmpRef++){
+    if(match.trackWeight(*tmpRef)>0 ){
+      bool nottau=true;
+      const reco::Track theTrk=(**tmpRef);
+      for(std::vector<reco::TrackRef>::const_iterator tauTrk=tautracks.begin();tauTrk<tautracks.end();tauTrk++){
+	if((*tmpRef)==reco::TrackBaseRef(*tauTrk)) nottau=false;
+      }
+      if(nottau){
+	nonTauTracks.push_back(theTrk);
+      }
+    }
+  }
+  return true;
+}
+
+
 
 // Compute the charge of the triplet
 bool InputTrackSelector::sumCharge(const std::vector<reco::TrackRef> & input){

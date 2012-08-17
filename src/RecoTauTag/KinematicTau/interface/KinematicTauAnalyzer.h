@@ -53,13 +53,12 @@ private:
   //
   // Check constraints
   DQMStore *dbe;
-  MonitorElement *nEvt, *TauMass, *PionMass, *NuMass, *dTauMass, *dPionMass, *dNuMass;
-  MonitorElement *VtxXChange, *VtxYChange, *VtxZChange,
-    *SecVtxXChange, *SecVtxYChange, *SecVtxZChange,
-    *TauPhiChange, *TauThetaChange, *TauEChange,
-    *PionPhiChange, *PionThetaChange, *PionEChange,
-    *NuPhiChange, *NuThetaChange, *NuEChange,*JAKID,*JAKIDall,*JAKIDeff,*TauMatched;
-  std::vector<MonitorElement*>  TauMatch_dphi, TauMatch_dtheta, TauMatch_e, PionMatch_dphi, PionMatch_dtheta, PionMatch_e, NuMatch_dphi, NuMatch_dtheta, NuMatch_e;
+  std::vector<MonitorElement*> nEvt, TauMass, PionMass, NuMass, dTauMass, dPionMass, dNuMass,
+    VtxXChange, VtxYChange, VtxZChange, SecVtxXChange, SecVtxYChange, SecVtxZChange,
+    TauPhiChange, TauThetaChange, TauEChange, PionPhiChange, PionThetaChange, PionEChange,
+    NuPhiChange, NuThetaChange, NuEChange, JAKID, JAKIDall, JAKIDeff, TauMatched;
+  std::vector<std::vector<MonitorElement*> >  TauMatch_dphi, TauMatch_dtheta, TauMatch_e, 
+    PionMatch_dphi, PionMatch_dtheta, PionMatch_e, NuMatch_dphi, NuMatch_dtheta, NuMatch_e;
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  
 
