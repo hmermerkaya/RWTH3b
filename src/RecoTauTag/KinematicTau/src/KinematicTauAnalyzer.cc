@@ -223,9 +223,9 @@ void KinematicTauAnalyzer::beginJob(){
     dbe->setCurrentFolder("Tau/KinematicFitTau");
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
       TString amb="";
-      if(SelectedKinematicDecay::ZeroAmbiguitySolution) amb="ZeroAmbiguity";
-      if(SelectedKinematicDecay::PlusSolution)          amb="PlusSolution";
-      if(SelectedKinematicDecay::MinusSolution)         amb="MinusSolution";
+      if(ambiguity==SelectedKinematicDecay::ZeroAmbiguitySolution) amb="ZeroAmbiguity";
+      if(ambiguity==SelectedKinematicDecay::PlusSolution)          amb="PlusSolution";
+      if(ambiguity==SelectedKinematicDecay::MinusSolution)         amb="MinusSolution";
       // Number of analyzed events
       nEvt.push_back(dbe->book1D("nEvt"+amb,"n analyzed Events "+amb, 1, 0., 1.));  nEvt.at(ambiguity)->setAxisTitle("Number of Events");
       TauMass.push_back(dbe->book1D("TauMass"+amb,"M_{Tau} "+amb,100,1.7,1.8));      TauMass.at(ambiguity)->setAxisTitle("M_{Tau} (GeV)");
