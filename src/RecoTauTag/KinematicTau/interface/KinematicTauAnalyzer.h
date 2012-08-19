@@ -56,9 +56,13 @@ private:
   std::vector<MonitorElement*> nEvt, TauMass, PionMass, NuMass, dTauMass, dPionMass, dNuMass,
     VtxXChange, VtxYChange, VtxZChange, SecVtxXChange, SecVtxYChange, SecVtxZChange,
     TauPhiChange, TauThetaChange, TauEChange, PionPhiChange, PionThetaChange, PionEChange,
-    NuPhiChange, NuThetaChange, NuEChange, JAKID, JAKIDall, JAKIDeff, TauMatched;
+    NuPhiChange, NuThetaChange, NuEChange, JAKID, JAKIDall, JAKIDeff, TauMatched,
+    vtxSignPVRotSV, vtxSignPVRotPVRed, a1Mass, energyTFraction, iterations, maxiterations,
+    chi2, constraints, ndf, csum, mincsum, chi2prob;
+
   std::vector<std::vector<MonitorElement*> >  TauMatch_dphi, TauMatch_dtheta, TauMatch_e, 
     PionMatch_dphi, PionMatch_dtheta, PionMatch_e, NuMatch_dphi, NuMatch_dtheta, NuMatch_e;
+
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  
 

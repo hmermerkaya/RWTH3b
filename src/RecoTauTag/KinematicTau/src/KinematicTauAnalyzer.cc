@@ -72,29 +72,6 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	reco::Vertex Secvtx=KFTau.SecondaryVertex(ambiguity);
 	reco::Vertex Secvtx_orig=KFTau.InitalSecondaryVertex();
 	
-	///////////////////////////////
-	
-	/*	const SelectedKinematicParticleCollection& Particles =KFTau.particles();
-	for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = Particles.begin(); iParticle != Particles.end(); ++iParticle){
-	  if(iParticle->name()=="tau"){
-	    TVectorT<double> intauParam;
-	    TVectorT<double> parameters;
-	    intauParam.ResizeTo(7);
-	    parameters.ResizeTo(7);
-	    intauParam=iParticle->SelectedKinematicParticle::input_parameters();
-	    parameters=iParticle->SelectedKinematicParticle::parameters();
-	    for(unsigned int i=0;i<7;i++){
-	      std::cout << i << " Input: " << intauParam[i] << " Final " << parameters[i] << std::endl;
-	    }
-	  }
-	}
-	std::cout << "Tau (" <<  Tau.Px() << ","  << Tau.Py() << "," << Tau.Pz() << "," << Tau.E() << ")" << std::endl;
-	std::cout << "Sec vertex initial (" << Secvtx_orig.position().x() << "," << Secvtx_orig.position().y() << "," << Secvtx_orig.position().z() 
-		  << ") final (" << Secvtx.position().x() << "," << Secvtx.position().y() << "," << Secvtx.position().z() << ")" << std::endl;
-	*/
-	///////////////////////////////
-	
-	
 	nEvt.at(ambiguity)->Fill(0.5,weight);
 	TauMatched.at(ambiguity)->Fill(0.0,weight);
 	TauMass.at(ambiguity)->Fill(Tau.M(),weight);
@@ -124,8 +101,20 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	SecVtxXChange.at(ambiguity)->Fill(Secvtx.position().x()-Secvtx_orig.position().x(),weight);
 	SecVtxYChange.at(ambiguity)->Fill(Secvtx.position().y()-Secvtx_orig.position().y(),weight);
 	SecVtxZChange.at(ambiguity)->Fill(Secvtx.position().z()-Secvtx_orig.position().z(),weight);
-
 	
+	vtxSignPVRotSV.at(ambiguity)->Fill(KFTau.vtxSignPVRotSV(ambiguity),weight);
+	vtxSignPVRotPVRed.at(ambiguity)->Fill(KFTau.vtxSignPVRotPVRed(ambiguity),weight);
+	a1Mass.at(ambiguity)->Fill(KFTau.a1Mass(ambiguity),weight);
+	energyTFraction.at(ambiguity)->Fill(KFTau.energyTFraction(ambiguity),weight);
+	iterations.at(ambiguity)->Fill(KFTau.iterations(ambiguity),weight);
+        maxiterations.at(ambiguity)->Fill(KFTau.maxiterations(ambiguity),weight);
+        chi2.at(ambiguity)->Fill(KFTau.chi2(ambiguity),weight);
+        constraints.at(ambiguity)->Fill(KFTau.constraints(ambiguity),weight);
+        ndf.at(ambiguity)->Fill(KFTau.ndf(ambiguity),weight);
+        csum.at(ambiguity)->Fill(KFTau.csum(ambiguity),weight);
+	mincsum.at(ambiguity)->Fill(KFTau.mincsum(ambiguity),weight);
+	chi2prob.at(ambiguity)->Fill(KFTau.chi2prob(ambiguity),weight);
+
 	// If Truth is valid run truth comparison
 	if(genParticles.isValid()){
 	  for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end(); ++itr){
@@ -251,6 +240,22 @@ void KinematicTauAnalyzer::beginJob(){
       dTauMass.push_back(dbe->book1D("dTauMass"+amb,"M_{Tau} "+amb,100,-0.01,0.01));                     dTauMass.at(ambiguity)->setAxisTitle("#deltaM_{Tau} (GeV)");
       dPionMass.push_back(dbe->book1D("dPionMass"+amb,"M_{#pi} "+amb,100,-0.01,0.01));                    dPionMass.at(ambiguity)->setAxisTitle("#deltaM_{#pi} (GeV)");
       dNuMass.push_back(dbe->book1D("dNuMass"+amb,"M_{nu} "+amb,100,-0.05,0.05));                         dNuMass.at(ambiguity)->setAxisTitle("#deltaM_{#nu} (GeV)");
+
+
+      vtxSignPVRotSV.push_back(dbe->book1D("vtxSignPVRotSV"+amb,"vtxSignPVRotSV "+amb,100,0.0,20));  vtxSignPVRotSV.at(ambiguity)->setAxisTitle("#sigma(V_{Prime,Rot},V_{Secondary}) ");
+      vtxSignPVRotPVRed.push_back(dbe->book1D("vtxSignPVRotPVRed"+amb,"vtxSignPVRotPVRed "+amb,100,0.0,20.0));  vtxSignPVRotPVRed.at(ambiguity)->setAxisTitle("#sigma(V_{Prime,Rot},V_{Prime}) ");
+      a1Mass.push_back(dbe->book1D("a1Mass"+amb,"M_{a1}"+amb,100,0.0,10.0));  a1Mass.at(ambiguity)->setAxisTitle("M_{a1} (GeV)");
+      energyTFraction.push_back(dbe->book1D("energyTFraction"+amb,"energyTFraction"+amb,100,0.0,2.0));  energyTFraction.at(ambiguity)->setAxisTitle("E_{a1}/E_{#tau}");
+      iterations.push_back(dbe->book1D("iterations"+amb,"iterations"+amb,51,-0.5,50.5));  iterations.at(ambiguity)->setAxisTitle("Number of Iterations");
+      maxiterations.push_back(dbe->book1D("maxiterations"+amb,"maxiterations"+amb,51,0.5,50.5));  maxiterations.at(ambiguity)->setAxisTitle("Max Number of Iterations");
+      chi2.push_back(dbe->book1D("chi2"+amb,"chi2"+amb,100,0.0,100.0));  chi2.at(ambiguity)->setAxisTitle("#chi^{2}");
+      constraints.push_back(dbe->book1D("constraints"+amb,"constraints"+amb,51,-0.5,50.5));  constraints.at(ambiguity)->setAxisTitle("Number of Constraints");
+      ndf.push_back(dbe->book1D("ndf"+amb,"ndf"+amb,51,-0.5,50.5));  ndf.at(ambiguity)->setAxisTitle("N.D.F");
+      csum.push_back(dbe->book1D("csum"+amb,"csum"+amb,51,-0.5,50.5));  csum.at(ambiguity)->setAxisTitle("csum");
+      mincsum.push_back(dbe->book1D("mincsum"+amb,"mincsum"+amb,51,-0.5,50.5));  mincsum.at(ambiguity)->setAxisTitle("mincsum");
+      chi2prob.push_back(dbe->book1D("chi2prob"+amb,"chi2prob"+amb,100,0.0,1.0));  chi2prob.at(ambiguity)->setAxisTitle("#chi^{2} Probabilty");
+
+
       
       JAKID.push_back(dbe->book1D("JAKID"+amb,"JAK ID "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));            JAKID.at(ambiguity)->setAxisTitle("JAK ID");
       JAKIDall.push_back(dbe->book1D("JAKIDall"+amb,"JAK ID All "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5)); JAKIDall.at(ambiguity)->setAxisTitle("JAK ID");
