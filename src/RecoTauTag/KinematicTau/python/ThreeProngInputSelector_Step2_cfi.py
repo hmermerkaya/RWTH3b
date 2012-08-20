@@ -4,7 +4,7 @@ from Configuration.StandardSequences.Geometry_cff import *
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 
 ThreeProngInputSelectorStep2 = cms.EDProducer("ThreeProngInputSelector_Step2",
-                                              primVtx = cms.InputTag("reducedPrimaryVertices"),
+                                              primVtx = cms.InputTag("offlinePrimaryVertices"),
                                               KinematicTauCandTag = cms.InputTag("InputTrackSelector","PreKinematicDecaysStep1"),
                                               minVtxTracks = cms.untracked.int32(3),
                                               maxChi2ndf = cms.untracked.double(10.0),

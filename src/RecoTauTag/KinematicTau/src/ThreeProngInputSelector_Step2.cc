@@ -4,6 +4,8 @@
 ThreeProngInputSelector_Step2::ThreeProngInputSelector_Step2(const edm::ParameterSet & iConfig):
   primVtxTag_(iConfig.getParameter<edm::InputTag>("primVtx")),
   KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
+  VertexTags_(iConfig.getUntrackedParameter< std::vector<std::string> >("VertexTags")),
+  TauVtxList_(iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks")),
   minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)) //filter returns true if more/equal than minTau_ taus were selected
 {
     iConfig_ = iConfig;
@@ -65,7 +67,19 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	}
 	SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
 	if(SVH.hasSecondaryVertex()){
-	  reco::Vertex primaryVertexReFit=primaryVertices.front();
+	  TString vertexName=KTau.PrimaryVertexReFitCollectionTag();
+	  TString VTag;
+	  for(unsigned int v=0;v<VertexTags_.size() && VertexTags_.size()==TauVtxList_.size();v++){
+	    if(vertexName==TauVtxList_.at(v)) VTag=VertexTags_.at(v);
+	  }
+	  edm::Handle<reco::VertexCollection > CurrentTauPrimaryVtx;
+	  std::cout << "|reducedPrimaryVerticesNonTauTracks/" << VTag << "|" << std::endl;
+	  iEvent_->getByLabel(edm::InputTag(VTag.Data()),CurrentTauPrimaryVtx);
+	  if(!CurrentTauPrimaryVtx.isValid()) continue;
+	  std::cout << "isvalid " << CurrentTauPrimaryVtx->size()<<  std::endl;
+	  if(CurrentTauPrimaryVtx->size()==0) continue;
+	  std::cout << "size " << CurrentTauPrimaryVtx->size()  << std::endl;
+	  reco::Vertex primaryVertexReFit=CurrentTauPrimaryVtx->front();
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
 	  TVector3 tauFlghtDirNoCorr;
 	  TVector3 tauFlghtDir;

@@ -13,6 +13,6 @@ InputTrackSelector = cms.EDProducer("InputTrackSelector",#creates PFTauRefVector
                                     minTauPt = cms.untracked.double(0.),   #ignore pftaus below this pt threshold (default is 0.)
                                     tauDaughterTracks = cms.InputTag("generalTracks"),   #ignore tracks that do not origin from this desired track collection (e.g. ignore conversionStepTracks)
                                     primVtx = cms.InputTag("offlinePrimaryVertices"),
-                                    NonTauTracks = cms.untracked.vstring("NonTauTracks")
-                                    #reimplement optional application of common PFDiscriminators. hint: cvs revert ;-)
+                                    NonTauTracks = cms.untracked.vstring("NonTauTracks"),
+                                    nTauPerVtx = cms.untracked.uint32(0)
                                     )

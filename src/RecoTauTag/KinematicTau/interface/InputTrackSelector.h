@@ -54,7 +54,7 @@ private:
   bool select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_);
   reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
   bool GetNonTauTracks(edm::Event *iEvent,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks);
-  bool GetNonTauTracksFromVertex(SelectedKinematicDecay cand, reco::TrackCollection &nonTauTracks);
+  bool GetNonTauTracksFromVertex(SelectedKinematicDecay cand,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks);
   bool sumCharge(const std::vector<reco::TrackRef> & input);
   std::vector<std::vector<reco::TrackRef> > choose3Prongs(std::vector<reco::TrackRef> & input);
   std::vector<std::vector<reco::TrackRef> > permuteCombinations(const std::vector<reco::TrackRef> & vect);

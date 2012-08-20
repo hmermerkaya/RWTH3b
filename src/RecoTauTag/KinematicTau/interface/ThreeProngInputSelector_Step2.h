@@ -71,6 +71,8 @@ private:
   edm::Event * iEvent_;
   edm::ParameterSet iConfig_;
   edm::InputTag primVtxTag_,KinematicTauCandTag_;
+  std::vector<std::string> VertexTags_;
+  std::vector<std::string> TauVtxList_;
   unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
   double maxChi2ndf_;    
 };
