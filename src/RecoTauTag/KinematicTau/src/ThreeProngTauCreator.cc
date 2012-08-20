@@ -93,9 +93,9 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad neutrino size = "<<neutrinos.size();
     return false;
   }
-  std::cout << ambiguity << " Tau E " << TauGuessLV.E() << " (" <<  TauGuessLV.Px() << "," <<  TauGuessLV.Py() << "," <<  TauGuessLV.Pz() 
+  /*std::cout << ambiguity << " Tau E " << TauGuessLV.E() << " (" <<  TauGuessLV.Px() << "," <<  TauGuessLV.Py() << "," <<  TauGuessLV.Pz() 
 	    << ") Nu E " << NuGuessLV.E()  << " (" << NuGuessLV.Px() << "," << NuGuessLV.Py() << "," << NuGuessLV.Pz() << ")" 
-	    << std::endl;
+	    << std::endl;*/
   return true;
 }
 
@@ -230,11 +230,9 @@ int ThreeProngTauCreator::ndf() const {
 
 void ThreeProngTauCreator::quadratic(double &x_plus,double &x_minus,double a, double b, double c){
   double R=b*b-4*a*c;
-  std::cout << "a " << a << " b " << b << " c " << c << " R " << R << std::endl;
   if(R<0){R=0;}
   x_minus=(-b-sqrt(R))/(2.0*a);
   x_plus=(-b+sqrt(R))/(2.0*a);
-  std::cout << x_minus << " " << x_plus << std::endl;  
 }
 
 void ThreeProngTauCreator::ESolver(double &Enu1,double &Enu2,double Ea1,double ma1, double Pz, double Pt){

@@ -37,23 +37,23 @@ if nTauPerVtx == 1:
 VertexSequence   = cms.Sequence()
 VertexTags       = cms.untracked.vstring()
 NonTauTracksList = cms.untracked.vstring()
+VertexSequences  = [cms.Sequence()]
 
 index=0
 for item in ListofVertices:
     index+=1
     NonTauTracks="NonTauTracks"
     NonTauTracks+=str(index) 
-    print NonTauTracks
     NonTauTracksList.append(NonTauTracks)
     item.TrackLabel = cms.InputTag("InputTrackSelector",NonTauTracks)
-    name = "reducedPrimaryVtx"
     name+=str(index)
     print name
     VertexTags.append(name)
-    oldVertexSequence=VertexSequence
-    VertexSequence=cms.Sequence(oldVertexSequence*item)
+    currentSequence = cms.Sequence(VertexSequences[0]*item)
+    VertexSequences[0] = currentSequence
 
-cms.Sequence(reducedPrimaryVtx1*reducedPrimaryVtx2*reducedPrimaryVtx3*reducedPrimaryVtx4)    
+VertexSequence=VertexSequences[0]
+
 InputTrackSelector.NonTauTracks = NonTauTracksList
 InputTrackSelector.nTauPerVtx = cms.untracked.uint32(nTauPerVtx)
 

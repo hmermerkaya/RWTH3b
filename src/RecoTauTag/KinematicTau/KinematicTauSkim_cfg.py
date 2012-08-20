@@ -61,7 +61,7 @@ process.source = cms.Source("PoolSource",
                             )
 
 
-numberOfEvents = 20
+numberOfEvents = -1
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
@@ -91,7 +91,7 @@ process.output.outputCommands.extend(
 
 process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
 
-process.skim_QualityTau = cms.Path(process.PFTau*process.KinematicFitSequence)
+process.skim_QualityTau = cms.Path(process.PFTau*process.KinematicFitSequencewithSkim)
 process.out_step = cms.EndPath(process.output)
 
 # Schedule definition

@@ -73,12 +73,9 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	    if(vertexName==TauVtxList_.at(v)) VTag=VertexTags_.at(v);
 	  }
 	  edm::Handle<reco::VertexCollection > CurrentTauPrimaryVtx;
-	  std::cout << "|reducedPrimaryVerticesNonTauTracks/" << VTag << "|" << std::endl;
 	  iEvent_->getByLabel(edm::InputTag(VTag.Data()),CurrentTauPrimaryVtx);
 	  if(!CurrentTauPrimaryVtx.isValid()) continue;
-	  std::cout << "isvalid " << CurrentTauPrimaryVtx->size()<<  std::endl;
 	  if(CurrentTauPrimaryVtx->size()==0) continue;
-	  std::cout << "size " << CurrentTauPrimaryVtx->size()  << std::endl;
 	  reco::Vertex primaryVertexReFit=CurrentTauPrimaryVtx->front();
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
 	  TVector3 tauFlghtDirNoCorr;

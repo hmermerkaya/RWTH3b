@@ -88,7 +88,6 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
 	  }
 	  else if(NonTauTracksLists_.size()>1 && TauVtxList_.size()==NonTauTracksLists_.size() && nTauPerVtx_==1){
 	    //Code to find best vertex would go here
-	    //std::cout << "Adding new vertex " << TauVtxList_.at(p) << std::endl; 
 	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(p),nTauPerVtx_));
 	    p++;
 	  }
@@ -129,18 +128,14 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
     
     // Get Vertex Tracks List
     if(NonTauTracksLists_.size()==1 && nTauPerVtx_==0){
-      //std::cout << "Adding Clasical Vertex " << std::endl; 
       GetNonTauTracks(iEvent_,trkCollectionTag_,NonTauTracksLists_.at(0),tautracks);
     }
     else if(nTauPerVtx_==1){
-      //std::cout << "Adding One Vertex per tau" << std::endl;
       unsigned int p=0;
       for(unsigned int i=0;i<KFCandidates.size();i++){
 	for(unsigned int j=0;j<KFCandidates.at(i).size();j++){
 	  if(p<NonTauTracksLists_.size()){
-	    //std::cout << "Adding One Vertex per tau" << p << std::endl;
 	    GetNonTauTracksFromVertex(KFCandidates.at(i).at(j),trkCollectionTag_,NonTauTracksLists_.at(p));
-	    //std::cout << "NTracks " << NonTauTracksLists_.at(p).size() << std::endl;
 	  }
 	  p++;
 	}
