@@ -46,7 +46,7 @@ private:
   float TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
   int tau_pdgid_;
   unsigned int NJAKID_;
-
+  std::vector<int> JAKID_;
   /////////////////////////////////
   //
   // Valdiation Histograms
@@ -56,13 +56,17 @@ private:
   std::vector<MonitorElement*> nEvt, TauMass, PionMass, NuMass, dTauMass, dPionMass, dNuMass,
     VtxXChange, VtxYChange, VtxZChange, SecVtxXChange, SecVtxYChange, SecVtxZChange,
     TauPhiChange, TauThetaChange, TauEChange, PionPhiChange, PionThetaChange, PionEChange,
-    NuPhiChange, NuThetaChange, NuEChange, JAKID, JAKIDall, JAKIDeff, TauMatched,
+    NuPhiChange, NuThetaChange, NuEChange, JAKID, JAKIDall, JAKIDeff, Truth_TauMatched,
     vtxSignPVRotSV, vtxSignPVRotPVRed, a1Mass, energyTFraction, iterations, maxiterations,
-    chi2, constraints, ndf, csum, mincsum, chi2prob;
+    chi2, constraints, ndf, csum, mincsum, chi2prob, TauFlightDir, TauFlightDirInitial,
+    GFAngleInitial,GFAngle;
 
-  std::vector<std::vector<MonitorElement*> >  TauMatch_dphi, TauMatch_dtheta, TauMatch_e, 
-    PionMatch_dphi, PionMatch_dtheta, PionMatch_e, NuMatch_dphi, NuMatch_dtheta, NuMatch_e;
-
+  std::vector<std::vector<MonitorElement*> >  Truth_TauMatch_dPhi, Truth_TauMatch_dTheta, Truth_TauMatch_dE, 
+    Truth_PionMatch_dPhi, Truth_PionMatch_dTheta, Truth_PionMatch_dE,Truth_NuMatch_dPhi,Truth_NuMatch_dTheta,Truth_NuMatch_dE,
+    TruthVtxXChange, TruthVtxYChange, TruthVtxZChange, TruthSecVtxXChange, TruthSecVtxYChange, 
+    TruthSecVtxZChange, TruthPVtxSig, TruthSecVtxSig, TruthTauFlightDir, TruthTauFlightDirCheck,
+    Truth_TauMatch_dPt,Truth_TauMatch_dPz, Truth_TauMatch_dPtvsL, Truth_TauMatch_dEvsL,Truth_TauMatch_dGFAnglevsL, 
+    Truth_TauMatch_dGFAngle;
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  
 

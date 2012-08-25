@@ -33,15 +33,17 @@
 class VertexRotation {
  public:
   VertexRotation(TLorentzVector & a1, int verbosity = 0);
+  VertexRotation(int verbosity = 0);
   ~VertexRotation();
   
-  double rotatePV(reco::Vertex & pVtx, const TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir);
+  double rotatePV(reco::Vertex & pVtx, const TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir,double reduceThetamax=1.0);
   reco::Vertex newPrimVertex(TVector3 & newPoint, reco::Vertex & oldVtx);  
   TransientVertex newSecVertex(TVector3 & newPoint, TransientVertex & oldVtx);
   double movement();
   bool isValid();
   double unsignedAngle(const TVector3& v1, const TVector3& v2);
   double calcThetaMax();
+  double vtxDistanceSignificance(TVector3 & pv,TMatrixDSym & pvE,TVector3 & sv, TMatrixDSym & svE);
 	
 private:
   bool valid_, success_;
@@ -50,7 +52,6 @@ private:
   int verbosity_;
   
   void clear();  
-  double vtxDistanceSignificance(const TVector3 & pv, const TMatrixDSym & pvE, const TVector3 & sv, const TMatrixDSym & svE, TVector3 * correction = 0);
   double projectedError(const TVector3 & axis, const TMatrixDSym & error);	
 	
 };

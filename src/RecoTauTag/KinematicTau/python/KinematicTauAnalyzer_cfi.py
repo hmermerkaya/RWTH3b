@@ -6,6 +6,7 @@ KinematicTauAnalyzer = cms.EDAnalyzer("KinematicTauAnalyzer",
                                       gensrc = cms.InputTag('genParticles'),
                                       GenEventInfo  = cms.InputTag('generator'),
                                       TauMatchingDR = cms.double(0.1),
+                                      jakid = cms.vint32(5),
                                       TauPtMin = cms.double(15.0),
                                       TauEtaMax = cms.double(2.0)                                      
                                       )

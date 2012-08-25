@@ -74,5 +74,6 @@ private:
   std::vector<std::string> VertexTags_;
   std::vector<std::string> TauVtxList_;
   unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
+  double etacut_, sigcut_;
   double maxChi2ndf_;    
 };

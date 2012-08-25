@@ -1,9 +1,8 @@
 import FWCore.ParameterSet.Config as cms
-from RecoTauTag.KinematicTau.InputTrackSelector_cfi import *
+from RecoTauTag.KinematicTau.ThreeProngInputSelector_Step1_cfi import *
 from RecoTauTag.KinematicTau.ThreeProngInputSelector_Step2_cfi import *
-from RecoTauTag.KinematicTau.kinematictau_cfi import *
+from RecoTauTag.KinematicTau.KinematicTauProducer_cfi import *
 from RecoTauTag.KinematicTau.KinematicTauSkim_cfi import *
-from RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi import *
 from RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi import *
 from RecoTauTag.KinematicTau.KinematicTauPostProcessing_cfi import *
 from RecoVertex.PrimaryVertexProducer.OfflinePrimaryVertices_cfi import *
@@ -45,22 +44,22 @@ for item in ListofVertices:
     NonTauTracks="NonTauTracks"
     NonTauTracks+=str(index) 
     NonTauTracksList.append(NonTauTracks)
-    item.TrackLabel = cms.InputTag("InputTrackSelector",NonTauTracks)
+    item.TrackLabel = cms.InputTag("ThreeProngInputSelectorStep1",NonTauTracks)
+    name="reducedPrimaryVtx"
     name+=str(index)
-    print name
     VertexTags.append(name)
     currentSequence = cms.Sequence(VertexSequences[0]*item)
     VertexSequences[0] = currentSequence
 
 VertexSequence=VertexSequences[0]
 
-InputTrackSelector.NonTauTracks = NonTauTracksList
-InputTrackSelector.nTauPerVtx = cms.untracked.uint32(nTauPerVtx)
+ThreeProngInputSelectorStep1.NonTauTracks = NonTauTracksList
+ThreeProngInputSelectorStep1.nTauPerVtx = cms.untracked.uint32(nTauPerVtx)
 
 ThreeProngInputSelectorStep2.VertexTags = VertexTags
 ThreeProngInputSelectorStep2.NonTauTracks = NonTauTracksList
     
 #define sequences for Kinematic Fit with Classic single vertex
-KinematicFitSequence         = cms.Sequence(InputTrackSelector*VertexSequence*ThreeProngInputSelectorStep2*KinematicTauProducer)
-KinematicFitSequencewithSkim = cms.Sequence(InputTrackSelector*VertexSequence*ThreeProngInputSelectorStep2*KinematicTauProducer*KinematicTauSkim)
-KinematicFitSequencewithDQM  = cms.Sequence(InputTrackSelector*VertexSequence*ThreeProngInputSelectorStep2*KinematicTauProducer*KinematicTauAnalyzer)
+KinematicFitSequence         = cms.Sequence(ThreeProngInputSelectorStep1*VertexSequence*ThreeProngInputSelectorStep2*KinematicTauProducer)
+KinematicFitSequencewithSkim = cms.Sequence(ThreeProngInputSelectorStep1*VertexSequence*ThreeProngInputSelectorStep2*KinematicTauProducer*KinematicTauSkim)
+KinematicFitSequencewithDQM  = cms.Sequence(ThreeProngInputSelectorStep1*VertexSequence*ThreeProngInputSelectorStep2*KinematicTauProducer*KinematicTauAnalyzer)

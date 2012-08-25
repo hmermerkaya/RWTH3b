@@ -103,7 +103,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCreator->getRefittedNeutralDaughters();
 
   //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
-  reco::Vertex primaryVtx =KFTau.InitalPrimaryVertexReFit();
+  reco::Vertex primaryVtx =KFTau.InitialPrimaryVertexReFit();
   reco::Vertex modifiedPV = kinTauCreator->getModifiedPrimaryVertex();
   VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
   VertexDistance3D vtxdist;
@@ -176,7 +176,7 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const Kinemat
     LogTrace("KinematicTauProducer")<<"KinematicTauProducer::saveKinParticles: neutral tau detected. tau skipped.";
     return 0;
   }
-  reco::PFTauRef tauRef=KFTau.PFTauRef(); // Fix this is not the real inital state
+  reco::PFTauRef tauRef=KFTau.PFTauRef(); // Fix this is not the real initial state
   SelectedKinematicParticleCollection refitTauDecay;
   refitTauDecay.push_back( SelectedKinematicParticle(tree->currentParticle(), status, name, ambiguity, emptyCandRef) );
   refitTauDecay.back().setInitialState(TLorentzVector(tauRef->px(), tauRef->py(), tauRef->pz(), tauRef->energy()), kinTauCreator->getModifiedPrimaryVertex());//initial tau state consists of rotated primVtx (+init. err) and the pftau par. 

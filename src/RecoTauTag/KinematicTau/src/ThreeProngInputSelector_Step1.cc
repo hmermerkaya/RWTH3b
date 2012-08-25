@@ -1,6 +1,6 @@
-#include "RecoTauTag/KinematicTau/interface/InputTrackSelector.h"
+#include "RecoTauTag/KinematicTau/interface/ThreeProngInputSelector_Step1.h"
 
-InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
+ThreeProngInputSelector_Step1::ThreeProngInputSelector_Step1(const edm::ParameterSet& iConfig):
   tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "hps") ),
   trkCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauDaughterTracks" ) ),  // Restrict tau daughters to origin from a certain track collection
   //  vtxtrackCollectionTag_(iConfig.getParameter<edm::InputTag>("vtxtracks")),            // Track collection for the vertices
@@ -18,11 +18,11 @@ InputTrackSelector::InputTrackSelector(const edm::ParameterSet& iConfig):
 }
 
 
-InputTrackSelector::~InputTrackSelector(){
+ThreeProngInputSelector_Step1::~ThreeProngInputSelector_Step1(){
 }
 
 // ------------ method called on each new Event  ------------
-void InputTrackSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
+void ThreeProngInputSelector_Step1::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   cnt_++;
   iEvent_ = &iEvent;
   std::auto_ptr<std::vector<std::vector<SelectedKinematicDecay> > > KFCandidates_ = std::auto_ptr<std::vector<std::vector<SelectedKinematicDecay> > >(new std::vector<std::vector<SelectedKinematicDecay> >);
@@ -45,19 +45,19 @@ void InputTrackSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSet
 }
 
 // ------------ method called once each job just before starting event loop  ------------
-void InputTrackSelector::beginJob(){
+void ThreeProngInputSelector_Step1::beginJob(){
   cnt_ = 0;
   cntFound_ = 0;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void InputTrackSelector::endJob(){
+void ThreeProngInputSelector_Step1::endJob(){
   float ratio = 0.0;
   if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-  edm::LogVerbatim("InputTrackSelector")<<"--> [InputTrackSelector] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks and pt > "<<minTauPt_<<") per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
+  edm::LogVerbatim("ThreeProngInputSelector_Step1")<<"--> [ThreeProngInputSelector_Step1] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks and pt > "<<minTauPt_<<") per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
-bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_){
+bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_){
   bool found = false;
   edm::Handle<reco::VertexCollection > primaryVertexCollection;
   iEvent_->getByLabel(primVtx_,primaryVertexCollection);
@@ -92,7 +92,7 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
 	    p++;
 	  }
 	  else{
-	    edm::LogWarning("InputTrackSelector")<<"InputTrackSelector::select WARNING!!! Number of allowed verticies out of range size: " <<  TauVtxList_.size() << " value: " << p
+	    edm::LogWarning("ThreeProngInputSelector_Step1")<<"ThreeProngInputSelector_Step1::select WARNING!!! Number of allowed verticies out of range size: " <<  TauVtxList_.size() << " value: " << p
 						   <<"Skipping Tau candidate ";
 	  }
 	}
@@ -103,14 +103,14 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
       for(unsigned int j=0;j<KFCandidates.at(i).size();j++){
-	std::vector<reco::TrackRef> Triplet_ij=KFCandidates.at(i).at(j).InitalTrackTriplet();
+	std::vector<reco::TrackRef> Triplet_ij=KFCandidates.at(i).at(j).InitialTrackTriplet();
 	std::vector<reco::TrackRef>::iterator track_ij;
 	for (track_ij = Triplet_ij.begin(); track_ij != Triplet_ij.end(); track_ij++) tautracks.push_back(*track_ij);
 	for(unsigned int k=0;k<KFCandidates.size();k++){
 	  for(unsigned int l=0;l<KFCandidates.at(k).size();l++){
 	    if(!(i==k && j==l)){
 	      unsigned int duplicates=0;
-	      std::vector<reco::TrackRef> Triplet_kl=KFCandidates.at(k).at(l).InitalTrackTriplet();
+	      std::vector<reco::TrackRef> Triplet_kl=KFCandidates.at(k).at(l).InitialTrackTriplet();
 	      std::vector<reco::TrackRef>::iterator track_kl;
 	      for (track_ij = Triplet_ij.begin(); track_ij != Triplet_ij.end(); track_ij++){
 		for (track_kl = Triplet_kl.begin(); track_kl != Triplet_kl.end(); track_kl++){
@@ -151,14 +151,14 @@ bool InputTrackSelector::select(std::vector<std::vector<SelectedKinematicDecay> 
   if(ntaus>= minTau_){
     cntFound_++;
     found = true;
-    LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: "<< ntaus <<" tau candidate(s) reconstructed.";
+    LogTrace("ThreeProngInputSelector_Step1")<<"evt "<<iEvent_->id().event()<<" ThreeProngInputSelector_Step1::select: "<< ntaus <<" tau candidate(s) reconstructed.";
   }
-  else LogTrace("InputTrackSelector")<<"evt "<<iEvent_->id().event()<<" InputTrackSelector::select: Only "<< ntaus <<" tau candidate(s) reconstructed. Skip Evt.";
+  else LogTrace("ThreeProngInputSelector_Step1")<<"evt "<<iEvent_->id().event()<<" ThreeProngInputSelector_Step1::select: Only "<< ntaus <<" tau candidate(s) reconstructed. Skip Evt.";
     
   return found;
 }
 
-reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau){
+reco::TrackRefVector ThreeProngInputSelector_Step1::getPFTauDaughters(reco::PFTauRef &PFTau){
   reco::TrackRefVector trkVct;
   const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands(); //candidates in signal cone 
   //isolationPFChargedHadrCands stores tracks in isolation/veto cone
@@ -167,7 +167,7 @@ reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau
       if ((*iter)->trackRef().id() != trkCollectionID_) {
 	// ignore tracks that do not origin from the desired track collection (e.g. ignore conversionStepTracks) for now
 	const edm::Provenance & prov = iEvent_->getProvenance((*iter)->trackRef().id());
-	edm::LogInfo("InputTrackSelector")<<"InputTrackSelector::getPFTauDaughters: Skip PFTau daughter from collection "<<prov.moduleLabel();
+	edm::LogInfo("ThreeProngInputSelector_Step1")<<"ThreeProngInputSelector_Step1::getPFTauDaughters: Skip PFTau daughter from collection "<<prov.moduleLabel();
 	continue;
       }
       trkVct.push_back( (*iter)->trackRef() );
@@ -176,7 +176,7 @@ reco::TrackRefVector InputTrackSelector::getPFTauDaughters(reco::PFTauRef &PFTau
   return trkVct;
 }
 
-bool  InputTrackSelector::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks){
+bool  ThreeProngInputSelector_Step1::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks){
   edm::Handle<reco::TrackCollection> trackCollection;
   iEvent_->getByLabel(trackCollectionTag_,trackCollection);
   if (!trackCollection.isValid()) {
@@ -199,9 +199,9 @@ bool  InputTrackSelector::GetNonTauTracks(edm::Event *iEvent_,edm::InputTag &tra
 }
 
 
-bool InputTrackSelector::GetNonTauTracksFromVertex(SelectedKinematicDecay cand,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks){
-  const std::vector<reco::TrackRef> tautracks =cand.InitalTrackTriplet();
-  const reco::Vertex match=cand.InitalPrimaryVertex();
+bool ThreeProngInputSelector_Step1::GetNonTauTracksFromVertex(SelectedKinematicDecay cand,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks){
+  const std::vector<reco::TrackRef> tautracks =cand.InitialTrackTriplet();
+  const reco::Vertex match=cand.InitialPrimaryVertex();
   // Get track list
   edm::Handle<reco::TrackCollection> trackCollection;
   iEvent_->getByLabel(trackCollectionTag_,trackCollection);
@@ -232,12 +232,12 @@ bool InputTrackSelector::GetNonTauTracksFromVertex(SelectedKinematicDecay cand,e
 
 
 // Compute the charge of the triplet
-bool InputTrackSelector::sumCharge(const std::vector<reco::TrackRef> & input){
+bool ThreeProngInputSelector_Step1::sumCharge(const std::vector<reco::TrackRef> & input){
   return (1== abs(input.at(0)->charge() + input.at(1)->charge() + input.at(2)->charge()));
 }
 
 // compute all permutations
-std::vector<std::vector<reco::TrackRef> > InputTrackSelector::permuteCombinations(const std::vector<reco::TrackRef> & vect){
+std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector_Step1::permuteCombinations(const std::vector<reco::TrackRef> & vect){
   std::vector<std::vector<reco::TrackRef> > combis;
   std::vector<reco::TrackRef>::const_iterator iter1, iter2, iter3;
   for (iter1 = vect.begin(); iter1 != vect.end(); ++iter1) {
@@ -259,7 +259,7 @@ std::vector<std::vector<reco::TrackRef> > InputTrackSelector::permuteCombination
 }
 
 // Select 3 prong based on mass and charge       
-std::vector<std::vector<reco::TrackRef> > InputTrackSelector::choose3Prongs(std::vector<reco::TrackRef> &input){
+std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector_Step1::choose3Prongs(std::vector<reco::TrackRef> &input){
   sort(input.begin(), input.end(), cmpPt<reco::TrackRef>);                                                                                      
   std::vector<std::vector<reco::TrackRef> > combis = permuteCombinations(input);
   for (std::vector<std::vector<reco::TrackRef> >::iterator iter = combis.begin(); iter != combis.end();) {  
@@ -279,7 +279,7 @@ std::vector<std::vector<reco::TrackRef> > InputTrackSelector::choose3Prongs(std:
   return combis; 
 }                   
 
-double InputTrackSelector::getInvariantMass(std::vector<reco::TrackRef> &tracks){
+double ThreeProngInputSelector_Step1::getInvariantMass(std::vector<reco::TrackRef> &tracks){
   double SumPx(0),SumPy(0),SumPz(0),SumE(0); 
   for(unsigned int i=0; i<tracks.size(); i++){
     SumPx += tracks.at(i)->px();              
@@ -290,13 +290,13 @@ double InputTrackSelector::getInvariantMass(std::vector<reco::TrackRef> &tracks)
   return sqrt(pow(SumE,2)-pow(SumPx,2)-pow(SumPy,2)-pow(SumPz,2));
 }
 
-template <typename T>  bool InputTrackSelector::cmpPt(const T & a, const T & b){
+template <typename T>  bool ThreeProngInputSelector_Step1::cmpPt(const T & a, const T & b){
   return a->pt() > b->pt();
 }
 
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(InputTrackSelector);
+DEFINE_FWK_MODULE(ThreeProngInputSelector_Step1);
 
 
 

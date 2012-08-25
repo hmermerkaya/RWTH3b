@@ -10,7 +10,7 @@ SecondaryVertexHelper::SecondaryVertexHelper(edm::ESHandle<TransientTrackBuilder
   a1_p4_(0,0,0,0)
 {
   ParticleMassHelper PMH;
-  std::vector<reco::TrackRef> input=KTau.InitalTrackTriplet();
+  std::vector<reco::TrackRef> input=KTau.InitialTrackTriplet();
   for(unsigned int i=0; i<input.size();i++){
     pions_.push_back(TLorentzVector(input.at(i)->px(),input.at(i)->py(),input.at(i)->pz(),sqrt(pow(input.at(i)->p(),2.0)+pow(PMH.Get_piMass(),2.0))));
   }

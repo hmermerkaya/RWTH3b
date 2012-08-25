@@ -6,7 +6,9 @@ ThreeProngInputSelector_Step2::ThreeProngInputSelector_Step2(const edm::Paramete
   KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
   VertexTags_(iConfig.getUntrackedParameter< std::vector<std::string> >("VertexTags")),
   TauVtxList_(iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks")),
-  minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)) //filter returns true if more/equal than minTau_ taus were selected
+  minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)), //filter returns true if more/equal than minTau_ taus were selected
+  etacut_(iConfig.getUntrackedParameter<double>("etacut",2.1)),
+  sigcut_(iConfig.getUntrackedParameter<double>("sigcut",3.0))
 {
     iConfig_ = iConfig;
     produces<std::vector<SelectedKinematicDecay> >("PreKinematicDecaysStep2");
@@ -57,7 +59,6 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
     iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidate);
     
     for(unsigned int i=0; i<KinematicTauCandidate->size();i++){
-      double sig=1e13;// use high value to prevent missing tau
       SelectedKinematicDecay bestTau;
       bool hasTau=false;
       for(unsigned int j=0; j<KinematicTauCandidate->at(i).size();j++){
@@ -80,19 +81,21 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
 	  TVector3 tauFlghtDirNoCorr;
 	  TVector3 tauFlghtDir;
-	  TLorentzVector a1_p4=SVH.Inital_a1_p4();
+	  TLorentzVector a1_p4=SVH.Initial_a1_p4();
 	  double initThetaGJ,ThetaMax;
-	  TransientVertex SecondaryVertex=SVH.InitalSecondaryVertex();
-	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitalRefittedTracks();
+	  TransientVertex SecondaryVertex=SVH.InitialSecondaryVertex();
+	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitialRefittedTracks();
 	  double s = VertexRotationAndSignificance(SecondaryVertex,RefittedTracks,tauFlghtDirNoCorr,
 						   primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
-	  if(s<sig && s>=0){// prevent nan
-	    KTau.SetInitalVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,
-					   SVH.InitalRefittedTracks(),SVH.InitalSecondaryVertex());
-	    KTau.SetInitalKinematics(tauFlghtDirNoCorr.Unit(),SVH.Inital_pions(),a1_p4,tauFlghtDir.Unit(),initThetaGJ,ThetaMax);
+	  if(s<sigcut_ && s>=0 ){// prevent nan
+	    if(fabs(tauFlghtDirNoCorr.Eta())<etacut_ || fabs(tauFlghtDir.Eta())<etacut_){
+	      KTau.SetInitialVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,
+					      SVH.InitialRefittedTracks(),SVH.InitialSecondaryVertex());
+	      KTau.SetInitialKinematics(tauFlghtDirNoCorr.Unit(),SVH.Initial_pions(),a1_p4,tauFlghtDir.Unit(),initThetaGJ,ThetaMax);
 
-	    bestTau=KTau;
-	    hasTau=true;
+	      bestTau=KTau;
+	      hasTau=true;
+	    }
 	  }
 	}
       }

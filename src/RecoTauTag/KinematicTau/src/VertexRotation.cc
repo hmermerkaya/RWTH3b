@@ -6,6 +6,13 @@ VertexRotation::VertexRotation(TLorentzVector & a1, int verbosity):
 {
   clear();
 }
+
+VertexRotation::VertexRotation(int verbosity):
+  a1_(0,0,0,0)
+{
+  clear();
+}
+
   
 VertexRotation::~VertexRotation(){
 }
@@ -13,7 +20,9 @@ VertexRotation::~VertexRotation(){
 /**
    rotates primary vertex around secondary one and returns the vertex significance of the modification (PV-PVrot [sigma])
 */
-double VertexRotation::rotatePV(reco::Vertex & pVtx, const TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir){
+double VertexRotation::rotatePV(reco::Vertex & pVtx, const TransientVertex & sVtx, double & theta, TVector3 & tauFlghtDir,
+				double reduceThetamax){
+  if(a1_==TLorentzVector(0,0,0,0))return 0.0;
   double significance = 0.0;
   
   TVector3 pv(pVtx.x(), pVtx.y(), pVtx.z());
@@ -21,8 +30,7 @@ double VertexRotation::rotatePV(reco::Vertex & pVtx, const TransientVertex & sVt
   
   TVector3 ps = sv - pv;
   theta = unsignedAngle(ps, a1_.Vect());
-  double thetaMax = fabs(calcThetaMax());//can only be negative for too heavy a1
-  
+  double thetaMax = fabs(calcThetaMax())*reduceThetamax;//can only be negative for too heavy a1
   TVector3 norm = ps.Cross(a1_.Vect());//norm vect of surface in which theta is defined
   if(norm.Mag() == 0.0) return significance;
   TRotation rot;
@@ -86,14 +94,12 @@ void VertexRotation::clear(){
   movement_ = 0.0;
 }
   
-double VertexRotation::vtxDistanceSignificance(const TVector3 & pv, const TMatrixDSym & pvE, const TVector3 & sv, const TMatrixDSym & svE, TVector3 * correction){
+double VertexRotation::vtxDistanceSignificance(TVector3 & pv,TMatrixDSym & pvE,TVector3 & sv, TMatrixDSym & svE){
   //if correction=0 the distance between both vertices is calculated in units of their projected errorsum
   //otherwise it expresses correction in units of the projected errorsum of the vertices
   TMatrixDSym matrix = pvE + svE;
-  TVector3 corr;
-  if(correction==0) corr = sv - pv;
-  else corr = *correction;
-  double error = projectedError(corr, matrix);
+  TVector3 corr = sv - pv;
+    double error = projectedError(corr, matrix);
   double significance = -1.;
   if(error!=0.) significance = corr.Mag()/error;
   return significance;

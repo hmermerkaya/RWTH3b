@@ -93,5 +93,5 @@ process.dqmSaver.workflow = "/KinematicFitSequencewithDQM/VAL/RECO"
 #process.DQMStore.verbose=1
 
 process.endjob_step = cms.Path(process.endOfProcess)
-process.KinFitSkim  = cms.Path(process.TauJAKIDFilter*process.PFTau*process.KinematicFitSequencewithDQM*process.MEtoEDMConverter*process.EDMtoME*process.postProcessorKinematicFitValidation*process.dqmSaver)
+process.KinFitSkim  = cms.Path(process.TauJAKIDFilter*process.PFTau*process.KinematicFitSequencewithDQM*process.MEtoEDMConverter*process.EDMtoME*process.dqmSaver)
 process.schedule = cms.Schedule(process.KinFitSkim,process.endjob_step)

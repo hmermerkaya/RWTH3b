@@ -1,10 +1,10 @@
 // -*- C++ -*-
 //
 // Package:    KinematicTau
-// Class:      InputTrackSelector
+// Class:      ThreeProngInputSelector_Step1
 // 
 /**
- The InputTrackSelector selects tracks from within a PFTaus signal cone and stores combinations of these according to the required number of tracks defined by the user.
+ The ThreeProngInputSelector_Step1 selects tracks from within a PFTaus signal cone and stores combinations of these according to the required number of tracks defined by the user.
  
  This framework module returns a boolean whether the minimum number of taus was found with enough daughters.
  For convenience a reference to the taus is also stored in case of success.
@@ -14,8 +14,8 @@
  @date 2009
  */
 
-#ifndef InputTrackSelector_h
-#define InputTrackSelector_h
+#ifndef ThreeProngInputSelector_Step1_h
+#define ThreeProngInputSelector_Step1_h
 
 
 // system include files
@@ -42,10 +42,10 @@
 
 #include "TString.h"
 
-class InputTrackSelector : public edm::EDProducer {
+class ThreeProngInputSelector_Step1 : public edm::EDProducer {
 public:
-  explicit InputTrackSelector(const edm::ParameterSet&);
-  ~InputTrackSelector();
+  explicit ThreeProngInputSelector_Step1(const edm::ParameterSet&);
+  ~ThreeProngInputSelector_Step1();
   
 private:
   virtual void beginJob();
