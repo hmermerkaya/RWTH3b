@@ -44,7 +44,7 @@ double VertexRotation::rotatePV(reco::Vertex & pVtx, const TransientVertex & sVt
   significance = vtxDistanceSignificance(pv, matrixP, pvRot, matrixP);//modification in units of sigma
   //		if(verbosity_>=2) LogTrace("VertexRotation")<<"significance [sigma] = "<<significance;
   tauFlghtDir = psRot;
-  theta = unsignedAngle(tauFlghtDir, a1_.Vect());
+  //theta = unsignedAngle(tauFlghtDir, a1_.Vect());
   pVtx = newPrimVertex(pvRot, pVtx);
   return significance;
 }

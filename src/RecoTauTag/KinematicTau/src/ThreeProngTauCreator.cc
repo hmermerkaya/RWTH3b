@@ -70,7 +70,7 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Now setup the tau and the neutrino
   // clasical configuration
-  double tauSolutions = getTauMomentumMagnitudes(ambiguity,lorentzA1.M(),lorentzA1.P(),PMH.Get_tauMass(),theta0);
+  double tauSolutions = getTauMomentumMagnitudes(ambiguity,lorentzA1.M(),lorentzA1.P(),PMH.Get_tauMass(),thetaMax);
   if (tauSolutions< 0. ) {
     return false;
   } 
