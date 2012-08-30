@@ -36,6 +36,7 @@ private:
   virtual bool isTruthTauInAcceptance(const reco::GenParticle &cand);
 
   std::vector<int> JAKID_;
+  std::vector<int> nprongs_;
   edm::InputTag gensrc_;
   double TauPtMin_,TauEtaMax_; 
   int cnt_,cntFound_; 

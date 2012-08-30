@@ -66,7 +66,8 @@ private:
     TruthVtxXChange, TruthVtxYChange, TruthVtxZChange, TruthSecVtxXChange, TruthSecVtxYChange, 
     TruthSecVtxZChange, TruthPVtxSig, TruthSecVtxSig, TruthTauFlightDir, TruthTauFlightDirCheck,
     Truth_TauMatch_dPt,Truth_TauMatch_dPz, Truth_TauMatch_dPtvsL, Truth_TauMatch_dEvsL,Truth_TauMatch_dGFAnglevsL, 
-    Truth_TauMatch_dGFAngle;
+    Truth_TauMatch_dGFAngle, TruthTauFlightDirInitial, Truth_TauMatch_dGFInitialAngle,
+    Truth_TauMatch_dPhiInitial, Truth_TauMatch_dThetaInitial, Truth_TauMatch_dEInitial;
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  
 

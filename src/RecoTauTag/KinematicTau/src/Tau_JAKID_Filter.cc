@@ -7,6 +7,7 @@
 
 Tau_JAKID_Filter::Tau_JAKID_Filter(const edm::ParameterSet& iConfig):
   JAKID_( iConfig.getParameter< std::vector<int> >("jakid") ),
+  nprongs_( iConfig.getParameter< std::vector<int> >("nprongs") ),
   gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
   TauPtMin_( iConfig.getParameter<double>("TauPtMin")),
   TauEtaMax_( iConfig.getParameter<double>("TauEtaMax"))
@@ -30,8 +31,8 @@ bool Tau_JAKID_Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	TauDecay_CMSSWReco TD;
 	unsigned int jak_id, TauBitMask;
 	TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
-	for(unsigned int i=0;i<JAKID_.size();i++){
-	  if(((unsigned int)JAKID_.at(i))==jak_id){ filterValue=true; break;}
+	for(unsigned int i=0;i<JAKID_.size() && i<nprongs_.size();i++){
+	  if(((unsigned int)JAKID_.at(i))==jak_id && TD.nProng(TauBitMask)==(unsigned int)nprongs_.at(i)){ filterValue=true; break;}
 	}
 	if(filterValue) break;
       }

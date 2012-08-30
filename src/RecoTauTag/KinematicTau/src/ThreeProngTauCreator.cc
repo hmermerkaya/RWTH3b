@@ -15,7 +15,7 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   daughters->push_back(neutrinos->at(0));
 
   bool fitWorked=false;
-  fitWorked=kinematicRefit(*daughters, modifiedPV_);
+  fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
     
   delete daughters;
   delete neutrinos;
@@ -46,7 +46,7 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
     tauFlghtDir=KFTau.InitialTauFlightDirectionReFitandRotatedPvtxToSvtx();
     modifiedPV_=KFTau.InitialPrimaryVertexReFitAndRotated();
   }
-
+  TVector3 startingtauFlghtDir=tauFlghtDir;
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Now setup Fit parameters
   for(unsigned int i = 0; i!=transTrkVect.size();i++){
@@ -84,7 +84,6 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
 
   // Physical configuration
   if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
-    TVector3 startingtauFlghtDir=tauFlghtDir;
     if(fabs(lorentzA1.Angle(tauFlghtDir))>=fabs(thetaMax)){
       //case when initial conditions are unphysical reset with 0.XX theta_{GF,max} for starting condition only  
       reco::Vertex tmppVtx=modifiedPV_;
@@ -98,12 +97,14 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
     if(ambiguity==SelectedKinematicDecay::PlusSolution)  TauGuessLV=TauGuessLV1;
     if(ambiguity==SelectedKinematicDecay::MinusSolution) TauGuessLV=TauGuessLV2;
       if(TauGuessLV1.E()!=TauGuessLV2.E()){
-	//std::cout << "E new: Px " <<  TauGuessLV.Px() << " Py " << TauGuessLV.Py() << " Pz " << TauGuessLV.Pz() << " E " << TauGuessLV.E() 
-	//<<  "ambiguity  " << ambiguity << " angle " << TauGuessLV.Angle(tauFlghtDir) << std::endl;
+	std::cout << "E new: Px " <<  TauGuessLV.Px() << " Py " << TauGuessLV.Py() << " Pz " << TauGuessLV.Pz() << " E " << TauGuessLV.E() 
+		  << " ambiguity  " << ambiguity << " angle " << TauGuessLV.Angle(startingtauFlghtDir) 
+		  << " thetaGF " << fabs(lorentzA1.Angle(tauFlghtDir)) << " thetaGFmax " << fabs(thetaMax) 
+		  << " Dir " <<  startingtauFlghtDir.X() << " " << startingtauFlghtDir.Y() << " " << startingtauFlghtDir.Z() << std::endl;
     }
   }
   neutrinos.push_back(unknownNu(TauGuessLV, lorentzA1, secVtx,NuGuessLV));
-  KFTau.SetInitialGuess(ambiguity,TauGuessLV,NuGuessLV); 
+  KFTau.SetInitialGuess(ambiguity,TauGuessLV,NuGuessLV,startingtauFlghtDir); 
   ///////////////////////////////////////////////////////
   if(neutrinos.size() != 1){
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad neutrino size = "<<neutrinos.size();
@@ -115,7 +116,7 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
   return true;
 }
 
-bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex){
+bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex){
   if(unfitDaughters.size()!=4){
     edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
     return false;
@@ -125,21 +126,27 @@ bool ThreeProngTauCreator::kinematicRefit(std::vector<RefCountedKinematicParticl
   MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size());
   constraintVector.push_back(tauMass_c);
   GlobalPoint linP(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
-  //MultiTrackKinematicConstraint *pointing_c = new MultiTrackPointingKinematicConstraint(linP);
-  MultiTrackKinematicConstraint *pointing_c = new MultiTrackVertexLinkKinematicConstraint(linP);
+  MultiTrackKinematicConstraint *pointing_c;
+    if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
+    pointing_c = new MultiTrackPointingKinematicConstraint(linP);
+  }
+  else{
+    pointing_c = new MultiTrackVertexLinkKinematicConstraint(linP);
+  }
+  
   constraintVector.push_back(pointing_c);
   MultiTrackKinematicConstraint *combiC = new CombinedKinematicConstraint(constraintVector);
   
   GlobalPoint vtxGuess = unfitDaughters[3]->currentState().globalPosition();//nu was created at common/corrected vertex of pions
   try{
-    kinTree_ = kcvFitter_->fit(unfitDaughters, combiC);
+    kinTree_ = kcvFitter_->fit(unfitDaughters,combiC,&vtxGuess);
   }
   catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: VertexException. Skip tau candidate.";
     return false;
   }
   
-  delete combiC;
+  //delete combiC;
   delete pointing_c;
   delete tauMass_c;
   
@@ -194,7 +201,7 @@ RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauG
 RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess){
   VirtualKinematicParticleFactory factory;
   //(x,y,z,p_x,p_y,p_z,m)
-  const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),nuGuess.Px(),nuGuess.Py(),nuGuess.Pz(),nuGuess.M()));//Use MET as initial guess for pt?
+  const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),nuGuess.Px(),nuGuess.Py(),nuGuess.Pz(),nuGuess.M()));
   ROOT::Math::SVector<double,28> svector28;
   for(unsigned int i=1; i!=22; i++) svector28(i-1) = 0.0;
   for(unsigned int i=22; i!=28; i++) svector28(i-1) = 0.0;//correlation between mass and momentum/vertex
@@ -239,7 +246,7 @@ int ThreeProngTauCreator::ndf() const {
   int freeParameters = 28-15-4-3;
   int constraints = (int)kinTree_->topParticle()->degreesOfFreedom();
   int ndf = constraints - freeParameters;
-  if(ndf != 2) printf("ThreeProngTauCreator::ndf: Warning! Unexpected ndf of %i. Expected 2.\n", ndf );
+  //if(ndf != 2) printf("ThreeProngTauCreator::ndf: Warning! Unexpected ndf of %i. Expected 2.\n", ndf );
   return ndf;
 }
 
