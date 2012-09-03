@@ -104,6 +104,8 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
     }
   }
   neutrinos.push_back(unknownNu(TauGuessLV, lorentzA1, secVtx,NuGuessLV));
+  std::cout << "Sec Vtx " <<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()
+	    << " in " << neutrinos.at(0)->currentState().globalPosition().x() << " " << neutrinos.at(0)->currentState().globalPosition().y() << " " << neutrinos.at(0)->currentState().globalPosition().z() << std::endl;
   KFTau.SetInitialGuess(ambiguity,TauGuessLV,NuGuessLV,startingtauFlghtDir); 
   ///////////////////////////////////////////////////////
   if(neutrinos.size() != 1){

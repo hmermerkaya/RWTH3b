@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.21 2012/08/15 09:56:27 inugent Exp $
+// $Id: SelectedKinematicDecay.h,v 1.22 2012/08/17 17:33:19 inugent Exp $
 //
 //
 
@@ -49,9 +49,9 @@ class SelectedKinematicDecay {
   void SetTauDecayMode(unsigned int tauDecayMode){tauDecayMode_=tauDecayMode;}
   void SetInitialProperties(unsigned int tauDecayMode, const reco::PFTauRef tauRefOrig, std::vector<reco::TrackRef> TrackTriplet, 
 			    const reco::Vertex primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx);
-  void SetInitalVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
+  void SetInitialVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
 			      std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx);
-  void SetInitalKinematics(TVector3 tauFlghtDirNoCorr,std::vector<TLorentzVector> initalpions,TLorentzVector intial_a1_p4,
+  void SetInitialKinematics(TVector3 tauFlghtDirNoCorr,std::vector<TLorentzVector> initialpions,TLorentzVector initial_a1_p4,
 			   TVector3 tauFlghtDir,double initThetaGJ, double ThetaMax);
   void SetKinematicFitStatus(unsigned int ambiguity, const std::map<std::string, bool> discriminators);
   void SetKinematicFitProperties(unsigned int ambiguity,const SelectedKinematicParticleCollection particles, 
@@ -60,7 +60,7 @@ class SelectedKinematicDecay {
 				 const float chi2);
   /// store quality discriminators that cannot directly be calculated from stored members only (e.g. conversion into reco::Vertex format would be needed). FIXME: replace this by  a dynamic calculation (depending on the decay mode)
   void SetQualityCriteria(unsigned int ambiguity, const double vtxSignPVRotSV, const double vtxSignPVRotPVRed, const double a1Mass, const double energyTFraction); 
-  void SetInitalGuess(unsigned int ambiguity,TLorentzVector &TauGuessLV,TLorentzVector &NuGuessLV);
+  void SetInitialGuess(unsigned int ambiguity,TLorentzVector &TauGuessLV,TLorentzVector &NuGuessLV,TVector3 &TauFlghtDirGuess);
   void SetKFSecondaryVertex(unsigned int ambiguity,reco::Vertex SecVtx);
 
   //////////////////////////////////////////////////////////////////////////
@@ -71,24 +71,25 @@ class SelectedKinematicDecay {
   unsigned int                        NumberOfTauPerVtx()const{return nTauPerVtx_;}
   std::string                         PrimaryVertexReFitCollectionTag(){return primVtxReFitTag_;}
 
-  // Inital variables
+  // Initial variables
   const reco::PFTauRef              & PFTauRef() const { return PFTauRefOrig_;}
   const int                           sgnlConeTrkSize() const;                                  /// size of tracks in the signal cone of the initial PFTau candidate     
-  const std::vector<reco::TrackRef> & InitalTrackTriplet()const{return initalTrackTriplet_;}
-  const reco::Vertex                & InitalPrimaryVertex() const{return initalPrimVtx_;}
-  std::vector<reco::Track>            InitalSecondaryVertexTracks(){return initalSecVtxTracks_;}
-  reco::Vertex                        InitalSecondaryVertex(){return initalSecVtx_;};
-  const reco::Vertex                & InitalPrimaryVertexReFit()const{return initalPrimaryVertexReFit_;}
-  const reco::Vertex                & InitalPrimaryVertexReFitAndRotated()const{return initalPrimaryVertexReFitAndRotated_;}
-  TLorentzVector                      Inital_a1_p4();
-  double                              InitalThetaMax(){return initalThetaMax_;}
-  double                              InitalThetaGJ(){return initalThetaGJ_;}
-  TVector3                            InitalTauFlightDirectionReFitandRotatedPvtxToSvtx(){return initalTauFlghtDir_;}
-  TVector3                            InitalTauFlightDirectionReFitPvtxToSvtx(){return initalTauFlghtDirNoCorr_;}
+  const std::vector<reco::TrackRef> & InitialTrackTriplet()const{return initialTrackTriplet_;}
+  const reco::Vertex                & InitialPrimaryVertex() const{return initialPrimVtx_;}
+  std::vector<reco::Track>            InitialSecondaryVertexTracks(){return initialSecVtxTracks_;}
+  reco::Vertex                        InitialSecondaryVertex(){return initialSecVtx_;};
+  const reco::Vertex                & InitialPrimaryVertexReFit()const{return initialPrimaryVertexReFit_;}
+  const reco::Vertex                & InitialPrimaryVertexReFitAndRotated()const{return initialPrimaryVertexReFitAndRotated_;}
+  TLorentzVector                      Initial_a1_p4();
+  double                              InitialThetaMax(){return initialThetaMax_;}
+  double                              InitialThetaGJ(){return initialThetaGJ_;}
+  TVector3                            InitialTauFlightDirectionReFitandRotatedPvtxToSvtx(){return initialTauFlghtDir_;}
+  TVector3                            InitialTauFlightDirectionReFitPvtxToSvtx(){return initialTauFlghtDirNoCorr_;}
   TLorentzVector                      InitialTauGuess(unsigned int ambiguity);
-  TLorentzVector                      InitalNeutrinoGuess(unsigned int ambiguity);
-  std::vector<TLorentzVector>         InitalPions();
-  const reco::Vertex                & PrimaryVertexReFitAndRotated()const{return initalPrimaryVertexReFitAndRotated_;}
+  TLorentzVector                      InitialNeutrinoGuess(unsigned int ambiguity);
+  TVector3                            InitialTauFlghtDirGuess(unsigned int ambiguity); 
+  std::vector<TLorentzVector>         InitialPions();
+  const reco::Vertex                & PrimaryVertexReFitAndRotated()const{return initialPrimaryVertexReFitAndRotated_;}
 
   ///////////////////////////////////////////////////////////////////////
   // KF Info
@@ -126,22 +127,23 @@ class SelectedKinematicDecay {
   // internal variables
   unsigned int                 tauDecayMode_;
   reco::PFTauRef               PFTauRefOrig_;
-  std::vector<reco::TrackRef>  initalTrackTriplet_;
-  reco::Vertex                 initalPrimVtx_;
+  std::vector<reco::TrackRef>  initialTrackTriplet_;
+  reco::Vertex                 initialPrimVtx_;
   std::string                  primVtxReFitTag_;
   unsigned int                 nTauPerVtx_;
-  std::vector<reco::Track>     initalSecVtxTracks_; 
-  reco::Vertex                 initalSecVtx_;
-  reco::Vertex                 initalPrimaryVertexReFit_;
-  reco::Vertex                 initalPrimaryVertexReFitAndRotated_;
-  double                       initalThetaMax_;
-  double                       initalThetaGJ_;
-  TVector3                     initalTauFlghtDir_;
-  TVector3                     initalTauFlghtDirNoCorr_;
-  std::vector<TLorentzVector>  initalTauGuess_;
-  std::vector<TLorentzVector>  initalNuGuess_;
-  std::vector<TLorentzVector>  initalpions_;
-  TLorentzVector               intial_a1_p4_;
+  std::vector<reco::Track>     initialSecVtxTracks_; 
+  reco::Vertex                 initialSecVtx_;
+  reco::Vertex                 initialPrimaryVertexReFit_;
+  reco::Vertex                 initialPrimaryVertexReFitAndRotated_;
+  double                       initialThetaMax_;
+  double                       initialThetaGJ_;
+  TVector3                     initialTauFlghtDir_;
+  TVector3                     initialTauFlghtDirNoCorr_;
+  std::vector<TLorentzVector>  initialTauGuess_;
+  std::vector<TLorentzVector>  initialNuGuess_;
+  std::vector<TVector3>        TauFlghtDirGuess_;
+  std::vector<TLorentzVector>  initialpions_;
+  TLorentzVector               initial_a1_p4_;
 
   // KF variables
   std::vector<reco::Vertex>                 SecVtx_;             /// secondary vertex from kinematic fit
@@ -159,7 +161,7 @@ class SelectedKinematicDecay {
   std::vector<double>                       vtxSignPVRotSV_;     /// vertex significance between the rotated primary vertex and the secondary vertex of the tau decay 
   std::vector<double>                       vtxSignPVRotPVRed_;  /// vertex significance of the primary vertex rotation w.r.t. the initial primary vertex (already w/o tracks assigned to the tau decay)
   std::vector<double>                       a1Mass_;             /// mass of the a1 system
-  std::vector<double>                       energyTFraction_;    /// transversal energy fraction between the intial PFTau and the final kinematic tau
+  std::vector<double>                       energyTFraction_;    /// transversal energy fraction between the initial PFTau and the final kinematic tau
 
 };
 

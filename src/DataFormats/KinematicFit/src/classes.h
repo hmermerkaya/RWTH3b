@@ -42,6 +42,11 @@ namespace {
     std::vector<TLorentzVector> vlv;
     edm::Wrapper<std::vector<TLorentzVector> > wvlv;
 
+
+    std::vector<TVector3> vtdv;
+    edm::Wrapper<std::vector<TVector3> > wvtdv;
+
+
   };
 }
 

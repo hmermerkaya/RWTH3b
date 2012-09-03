@@ -21,4 +21,6 @@
   <class name="edm::Wrapper<std::vector<std::map<std::string, bool> > >"/>
   <class name="std::vector<TLorentzVector>"/> 
   <class name="edm::Wrapper<std::vector<TLorentzVector> >"/>
+  <class name="std::vector<TVector3>"/>
+  <class name="edm::Wrapper<std::vector<TVector3> >"/>
 </lcgdict>

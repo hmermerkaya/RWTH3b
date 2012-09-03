@@ -5,8 +5,8 @@ SelectedKinematicDecay::SelectedKinematicDecay() {
   SetKinematicFitProperties(NAmbiguity,SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0);
   SetKinematicFitStatus(NAmbiguity,std::map<std::string, bool>());
   SetQualityCriteria(NAmbiguity,-1,-1,-1,-1);
-  SetInitalVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());  
-  SetInitalKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),TVector3(),0.0,0.0);
+  SetInitialVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());  
+  SetInitialKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),TVector3(),0.0,0.0);
 }
 
 SelectedKinematicDecay::SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRefOrig, std::vector<reco::TrackRef> &TrackTriplet,
@@ -15,8 +15,8 @@ SelectedKinematicDecay::SelectedKinematicDecay(unsigned int tauDecayMode, const 
   SetKinematicFitProperties(NAmbiguity,SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0);
   SetKinematicFitStatus(NAmbiguity,std::map<std::string, bool>());
   SetQualityCriteria(NAmbiguity,-1,-1,-1,-1);
-  SetInitalVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
-  SetInitalKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),TVector3(),0.0,0.0);
+  SetInitialVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
+  SetInitialKinematics(TVector3(),std::vector<TLorentzVector>(),TLorentzVector(),TVector3(),0.0,0.0);
 }
 
 
@@ -32,8 +32,8 @@ void SelectedKinematicDecay::SetInitialProperties(unsigned int tauDecayMode,reco
   PFTauRefOrig_=tauRefOrig;
   primVtxReFitTag_=primVtxReFitTag;
 
-  initalTrackTriplet_=TrackTriplet;
-  initalPrimVtx_=primaryVertex;
+  initialTrackTriplet_=TrackTriplet;
+  initialPrimVtx_=primaryVertex;
 }
 
 void SelectedKinematicDecay::SetKinematicFitStatus(unsigned int ambiguity, const std::map<std::string, bool> discriminators){
@@ -96,14 +96,14 @@ void SelectedKinematicDecay::SetQualityCriteria(unsigned int ambiguity,const dou
 }
 
 
-void SelectedKinematicDecay::SetInitalVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
+void SelectedKinematicDecay::SetInitialVertexProperties(reco::Vertex primaryVertexReFit,reco::Vertex primaryVertexReFitAndRotated,
 						    std::vector<reco::TransientTrack> secVtxTracks, TransientVertex secVtx){
-  initalPrimaryVertexReFit_=primaryVertexReFit;
-  initalPrimaryVertexReFitAndRotated_=primaryVertexReFitAndRotated;
+  initialPrimaryVertexReFit_=primaryVertexReFit;
+  initialPrimaryVertexReFitAndRotated_=primaryVertexReFitAndRotated;
   for(unsigned int i=0;i<secVtxTracks.size();i++){
-    initalSecVtxTracks_.push_back(secVtxTracks.at(i).track());
+    initialSecVtxTracks_.push_back(secVtxTracks.at(i).track());
   }
-  initalSecVtx_=secVtx;
+  initialSecVtx_=secVtx;
 }
 
 void SelectedKinematicDecay::SetKFSecondaryVertex(unsigned int ambiguity,reco::Vertex SecVtx){
@@ -111,41 +111,48 @@ void SelectedKinematicDecay::SetKFSecondaryVertex(unsigned int ambiguity,reco::V
   if(ambiguity<NAmbiguity)SecVtx_.at(ambiguity)=SecVtx;
 }
 
-void SelectedKinematicDecay::SetInitalKinematics(TVector3 tauFlghtDirNoCorr,std::vector<TLorentzVector> initalpions,
-						 TLorentzVector intial_a1_p4,TVector3 tauFlghtDir,double initThetaGJ, double ThetaMax){
-  initalTauFlghtDirNoCorr_=tauFlghtDirNoCorr;
-  initalTauFlghtDir_=tauFlghtDir;
-  initalpions_=initalpions;
-  intial_a1_p4_=intial_a1_p4;
-  initalThetaGJ_=initThetaGJ;
-  initalThetaMax_=ThetaMax;
+void SelectedKinematicDecay::SetInitialKinematics(TVector3 tauFlghtDirNoCorr,std::vector<TLorentzVector> initialpions,
+						 TLorentzVector initial_a1_p4,TVector3 tauFlghtDir,double initThetaGJ, double ThetaMax){
+  initialTauFlghtDirNoCorr_=tauFlghtDirNoCorr;
+  initialTauFlghtDir_=tauFlghtDir;
+  initialpions_=initialpions;
+  initial_a1_p4_=initial_a1_p4;
+  initialThetaGJ_=initThetaGJ;
+  initialThetaMax_=ThetaMax;
 }
 
-void SelectedKinematicDecay::SetInitalGuess(unsigned int ambiguity,TLorentzVector &TauGuessLV,TLorentzVector &NuGuessLV){
-  if(initalTauGuess_.size()!=NAmbiguity){initalTauGuess_.clear();initalTauGuess_.resize(NAmbiguity);}
-  if(initalNuGuess_.size()!=NAmbiguity){initalNuGuess_.clear();initalNuGuess_.resize(NAmbiguity);}
+void SelectedKinematicDecay::SetInitialGuess(unsigned int ambiguity,TLorentzVector &TauGuessLV,TLorentzVector &NuGuessLV,TVector3 &TauFlghtDirGuess){
+  if(initialTauGuess_.size()!=NAmbiguity){initialTauGuess_.clear();initialTauGuess_.resize(NAmbiguity);}
+  if(initialNuGuess_.size()!=NAmbiguity){initialNuGuess_.clear();initialNuGuess_.resize(NAmbiguity);}
+  if(TauFlghtDirGuess_.size()!=NAmbiguity){TauFlghtDirGuess_.clear();TauFlghtDirGuess_.resize(NAmbiguity);}
   if(ambiguity<NAmbiguity){
-    initalTauGuess_.at(ambiguity)=TauGuessLV;
-    initalNuGuess_.at(ambiguity)=NuGuessLV;
+    initialTauGuess_.at(ambiguity)=TauGuessLV;
+    initialNuGuess_.at(ambiguity)=NuGuessLV;
+    TauFlghtDirGuess_.at(ambiguity)=TauFlghtDirGuess;
   }
 }
 
 TLorentzVector SelectedKinematicDecay::InitialTauGuess(unsigned int ambiguity){ 
-  if(ambiguity<initalTauGuess_.size()) return initalTauGuess_.at(ambiguity);
+  if(ambiguity<initialTauGuess_.size()) return initialTauGuess_.at(ambiguity);
   return TLorentzVector(0,0,0,0);
 }
 
-TLorentzVector SelectedKinematicDecay::InitalNeutrinoGuess(unsigned int ambiguity){
-  if(ambiguity<initalNuGuess_.size())return initalNuGuess_.at(ambiguity);
+TLorentzVector SelectedKinematicDecay::InitialNeutrinoGuess(unsigned int ambiguity){
+  if(ambiguity<initialNuGuess_.size())return initialNuGuess_.at(ambiguity);
   return TLorentzVector(0,0,0,0);
 }
 
-std::vector<TLorentzVector> SelectedKinematicDecay::InitalPions(){
-  return  initalpions_;
+TVector3 SelectedKinematicDecay::InitialTauFlghtDirGuess(unsigned int ambiguity){
+  if(ambiguity<TauFlghtDirGuess_.size())return TauFlghtDirGuess_.at(ambiguity);
+  return TVector3(0,0,0);
 }
 
-TLorentzVector SelectedKinematicDecay::Inital_a1_p4(){
-  return intial_a1_p4_;
+std::vector<TLorentzVector> SelectedKinematicDecay::InitialPions(){
+  return  initialpions_;
+}
+
+TLorentzVector SelectedKinematicDecay::Initial_a1_p4(){
+  return initial_a1_p4_;
 }
 
 TLorentzVector SelectedKinematicDecay::Tau(unsigned int ambiguity){
