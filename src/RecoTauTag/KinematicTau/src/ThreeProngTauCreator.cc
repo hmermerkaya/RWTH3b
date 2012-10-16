@@ -13,9 +13,37 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
     return 0;
   }
   daughters->push_back(neutrinos->at(0));
-
+  for(unsigned int i=0;i<daughters->size();i++){
+    std::cout << "Inital " 
+	      << daughters->at(i)->currentState().globalPosition().x() << " " 
+	      << daughters->at(i)->currentState().globalPosition().y() << " " 
+	      << daughters->at(i)->currentState().globalPosition().z() << " "
+	      << daughters->at(i)->currentState().globalMomentum().x() << " "
+              << daughters->at(i)->currentState().globalMomentum().y() << " "
+              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl; 
+    }
   bool fitWorked=false;
   fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
+
+  for(unsigned int i=0;i<daughters->size();i++){
+    std::cout << "Inital "
+              << daughters->at(i)->initialState().globalPosition().x() << " "
+              << daughters->at(i)->initialState().globalPosition().y() << " "
+              << daughters->at(i)->initialState().globalPosition().z() << " "
+              << daughters->at(i)->initialState().globalMomentum().x() << " "
+              << daughters->at(i)->initialState().globalMomentum().y() << " "
+              << daughters->at(i)->initialState().globalMomentum().z() << " " << std::endl;
+    std::cout << "Current "
+              << daughters->at(i)->currentState().globalPosition().x() << " "
+              << daughters->at(i)->currentState().globalPosition().y() << " "
+              << daughters->at(i)->currentState().globalPosition().z() << " "
+              << daughters->at(i)->currentState().globalMomentum().x() << " "
+              << daughters->at(i)->currentState().globalMomentum().y() << " "
+              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl;
+
+  }
+
+
     
   delete daughters;
   delete neutrinos;
@@ -66,6 +94,7 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
 
   LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<modifiedPV_.x()<<","<<modifiedPV_.y()<<","<<modifiedPV_.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-modifiedPV_.position().y())/(secVtx.position().x()-modifiedPV_.position().x()))<<", theta "<<theta0;
   
+  std::cout <<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<modifiedPV_.x()<<","<<modifiedPV_.y()<<","<<modifiedPV_.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-modifiedPV_.position().y())/(secVtx.position().x()-modifiedPV_.position().x()))<<", theta "<<theta0 << std::endl;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Now setup the tau and the neutrino
@@ -104,17 +133,17 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
     }
   }
   neutrinos.push_back(unknownNu(TauGuessLV, lorentzA1, secVtx,NuGuessLV));
-  std::cout << "Sec Vtx " <<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()
-	    << " in " << neutrinos.at(0)->currentState().globalPosition().x() << " " << neutrinos.at(0)->currentState().globalPosition().y() << " " << neutrinos.at(0)->currentState().globalPosition().z() << std::endl;
+  //std::cout << "Sec Vtx " <<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()
+  //    << " in " << neutrinos.at(0)->currentState().globalPosition().x() << " " << neutrinos.at(0)->currentState().globalPosition().y() << " " << neutrinos.at(0)->currentState().globalPosition().z() << std::endl;
   KFTau.SetInitialGuess(ambiguity,TauGuessLV,NuGuessLV,startingtauFlghtDir); 
   ///////////////////////////////////////////////////////
   if(neutrinos.size() != 1){
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad neutrino size = "<<neutrinos.size();
     return false;
   }
-  /*std::cout << ambiguity << " Tau E " << TauGuessLV.E() << " (" <<  TauGuessLV.Px() << "," <<  TauGuessLV.Py() << "," <<  TauGuessLV.Pz() 
+  std::cout << ambiguity << " Tau E " << TauGuessLV.E() << " (" <<  TauGuessLV.Px() << "," <<  TauGuessLV.Py() << "," <<  TauGuessLV.Pz() 
 	    << ") Nu E " << NuGuessLV.E()  << " (" << NuGuessLV.Px() << "," << NuGuessLV.Py() << "," << NuGuessLV.Pz() << ")" 
-	    << std::endl;*/
+	    << std::endl;
   return true;
 }
 
@@ -125,17 +154,10 @@ bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<Re
   }
   
   std::vector<MultiTrackKinematicConstraint* > constraintVector;
-  MultiTrackKinematicConstraint *tauMass_c = new  MultiTrackMassKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size());
+  MultiTrackKinematicConstraint *tauMass_c = new MultiTrackMassNumericalKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size(),1.0); //MultiTrackMassKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size());
   constraintVector.push_back(tauMass_c);
   GlobalPoint linP(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
-  MultiTrackKinematicConstraint *pointing_c;
-    if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
-    pointing_c = new MultiTrackPointingKinematicConstraint(linP);
-  }
-  else{
-    pointing_c = new MultiTrackVertexLinkKinematicConstraint(linP);
-  }
-  
+  MultiTrackKinematicConstraint *pointing_c = new MultiTrackSmartPointingNumericalKinematicConstraint(linP,1000);//new MultiTrackVertexLinkKinematicConstraint(linP);
   constraintVector.push_back(pointing_c);
   MultiTrackKinematicConstraint *combiC = new CombinedKinematicConstraint(constraintVector);
   

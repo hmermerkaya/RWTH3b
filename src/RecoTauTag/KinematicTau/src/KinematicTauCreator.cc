@@ -7,9 +7,9 @@ KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &
 {
   kcvFitter_ = new KinematicConstrainedVertexFitter();
   edm::ParameterSet defaultConfig;
-  defaultConfig.addParameter("maxDelta", .0001);
-  defaultConfig.addParameter("maxNbrOfIterations", 100);
-  defaultConfig.addParameter("maxReducedChiSq", 225.0);
+  defaultConfig.addParameter("maxDelta", .001);
+  defaultConfig.addParameter("maxNbrOfIterations", 1000);
+  defaultConfig.addParameter("maxReducedChiSq", 500.0);
   defaultConfig.addParameter("minChiSqImprovement", 50.0);
   //kcvFitter_ = new KinematicParticleVertexFitter(defaultConfig);//new KinematicConstrainedVertexFitter();
   kcvFitter_->setParameters(defaultConfig);
@@ -58,10 +58,19 @@ std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedDaug
 {
   std::vector<math::XYZTLorentzVector> tmpvec;
   for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
+    std::cout << "current  px " << (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x()  
+	      << " py " << (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y()
+	      << " pz " << (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z()
+	      << " m " << (kinTree_->daughterParticles().at(i))->currentState().mass() << std::endl;
+    std::cout << "inital  px " << (kinTree_->daughterParticles().at(i))->initialState().globalMomentum().x()
+              << " py " << (kinTree_->daughterParticles().at(i))->initialState().globalMomentum().y()
+              << " pz " << (kinTree_->daughterParticles().at(i))->initialState().globalMomentum().z()
+              << " m " << (kinTree_->daughterParticles().at(i))->initialState().mass() << std::endl;
+
     if (std::abs(int((kinTree_->daughterParticles().at(i))->currentState().particleCharge())) == 1) {
       tmpvec.push_back(math::XYZTLorentzVector((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x(),
 					       (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y(),
-					       (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z(),
+					     (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z(),
 					       sqrt((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().mag2()+(kinTree_->daughterParticles().at(i))->currentState().mass()*(kinTree_->daughterParticles().at(i))->currentState().mass())));
     }
   }

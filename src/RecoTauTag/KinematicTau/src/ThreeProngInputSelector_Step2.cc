@@ -87,12 +87,12 @@ bool ThreeProngInputSelector_Step2::select(std::vector<SelectedKinematicDecay> &
 	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitialRefittedTracks();
 	  double s = VertexRotationAndSignificance(SecondaryVertex,RefittedTracks,tauFlghtDirNoCorr,
 						   primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
-	  if((s<sigcut_  || fabs(initThetaGJ)<fabs(ThetaMax)) && s>=0 ){// prevent nan
+	  if(/*(s<sigcut_  || fabs(initThetaGJ)<fabs(ThetaMax)) &&*/ s>=0 ){// prevent nan
 	    if(fabs(tauFlghtDirNoCorr.Eta())<etacut_ || fabs(tauFlghtDir.Eta())<etacut_ ){
 	      KTau.SetInitialVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,
 					      SVH.InitialRefittedTracks(),SVH.InitialSecondaryVertex());
 	      KTau.SetInitialKinematics(tauFlghtDirNoCorr.Unit(),SVH.Initial_pions(),a1_p4,tauFlghtDir.Unit(),initThetaGJ,ThetaMax);
-
+	      
 	      bestTau=KTau;
 	      hasTau=true;
 	    }

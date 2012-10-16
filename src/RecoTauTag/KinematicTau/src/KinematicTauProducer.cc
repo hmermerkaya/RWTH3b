@@ -64,16 +64,15 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
-  KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_);
 
   for(unsigned int i=0;i<KinematicTauCandidates->size();i++){
     SelectedKinematicDecay KFTau=KinematicTauCandidates->at(i);
-
     bool hasasusccessfullfit=false;
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
+      KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_);
       int fitStatus = kinTauCreator->create(ambiguity,KFTau);
       edm::LogInfo("KinematicTauProducer") <<"KinematicTauProducer::select: fitstatus " << fitStatus ;
-      
+      if(fitStatus==1)kinTauCreator->getRefittedChargedDaughters();
       //compute discriminators
       std::map<std::string,bool> discrimValues;
       discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFit",fitStatus));
@@ -85,10 +84,10 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 	hasasusccessfullfit=true;
 	success =true;
       }
+      delete kinTauCreator;
     }
     if(hasasusccessfullfit)KinematicFitTauDecays_.push_back(KFTau);
   }
-  delete kinTauCreator;
   return success; //at least one tau was fitted
 }
 
@@ -224,6 +223,7 @@ void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & 
     std::vector< SelectedKinematicParticle* > daughters;
     decay->modifiableChargedDaughters(daughters);
     for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
+      std::cout << "Solution: " << (*particle)->p4().M() << " " <<  (*particle)->p4().Px() << " " <<  (*particle)->p4().Py() << " " <<  (*particle)->p4().Pz() << std::endl; 
       if(index>=newRefs.size()){
 	edm::LogError("KinematicTauProducer")<<"evt "<<iEvent_->id().event()<<" KinematicTauProducer::correctReferences: Bad selection size! index="<<index<<", refs="<<newRefs.size();
         throw 111;

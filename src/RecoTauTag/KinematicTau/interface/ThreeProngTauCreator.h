@@ -30,6 +30,8 @@
 #include "RecoVertex/KinematicFit/interface/CombinedKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/MultiTrackVertexLinkKinematicConstraint.h"
+#include "RecoVertex/KinematicFit/interface/MultiTrackSmartPointingNumericalKinematicConstraint.h"
+#include "RecoVertex/KinematicFit/interface/MultiTrackMassNumericalKinematicConstraint.h"
 
 #include "RecoTauTag/KinematicTau/interface/ParticleMassHelper.h"
 
