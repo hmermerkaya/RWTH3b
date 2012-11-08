@@ -22,8 +22,9 @@ process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 #steering parameters#
 inputPath, outputPath, jobName, globaltag, isData, jsonFile, pileUpDistributionMC = Steering.LoadUserParameters()
 numberOfEvents = 100000
-ignoreFilter = True # but always ignore TauMotherProducer until its ready
+ignoreFilter = False # but always ignore TauMotherProducer until it is ready
 printEvents = 0	#print generator event
+prepareEvtDisplay = False # whether or not to store KinematicFit's output to edm branches for easy drawing in cmsShow
 triggerTag = "HLT"
 minTau = 1 #minimum of selected taus
 minJetPt = 10. #ignore pfjets below this pt threshold (in GeV)
@@ -80,6 +81,23 @@ process.TFileService = cms.Service("TFileService",
 if runFromCrab:
     process.TFileService.fileName = cms.string(jobName+'_'+str(numberOfEvents)+'_7TeV.root')
 
+### cleaning according to https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookCollisionsDataAnalysis#Recipes_to_get_started
+process.noscraping = cms.EDFilter("FilterOutScraping",
+	applyfilter = cms.untracked.bool(True),
+    debugOn = cms.untracked.bool(False),
+    numtrack = cms.untracked.uint32(10),
+    thresh = cms.untracked.double(0.25)
+)
+process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
+    vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+    minimumNDOF = cms.uint32(4) ,
+    maxAbsZ = cms.double(24), 
+    maxd0 = cms.double(2) 
+)
+process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
+process.cleaning = cms.Sequence(process.noscraping*process.primaryVertexFilter*process.HBHENoiseFilter)
+
+
 ### generator workflow
 process.load("ACFrameworkModules.GenSelector.GenSelector_cfi")
 process.printTree.maxEventsToPrint = cms.untracked.int32(printEvents)
@@ -103,6 +121,7 @@ process.KinematicTauProducer.selectedTauCandidates = cms.InputTag("ThreeProngInp
 process.KinematicTauProducer.inputTracks = cms.InputTag("ThreeProngInputSelectorStep2", "InputTracks")
 process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
+process.load("RecoTauTag.KinematicTau.PrepareEvtDisplay_cfi")
 
 ### event storage
 process.load("ACFrameworkModules.FinalTreeFiller.FinalTreeFiller_cfi")
@@ -140,11 +159,12 @@ if rerunTauID:
 else:
     tauIDSeq = cms.Sequence()
 
-#process.debugOutput = cms.OutputModule("PoolOutputModule",
-#    outputCommands = cms.untracked.vstring('keep *'),
-#    fileName = cms.untracked.string('debugOutput.root'),
-#)
-#process.out_step = cms.EndPath(process.debugOutput)
+if prepareEvtDisplay:
+    process.debugOutput = cms.OutputModule("PoolOutputModule",
+        outputCommands = cms.untracked.vstring('keep *'),
+        fileName = cms.untracked.string('debugOutput.root'),
+    )
+    process.out_step = cms.EndPath(process.debugOutput)
 
 #ignore filter
 process.ignorePath = cms.Path(
@@ -163,7 +183,8 @@ process.ignorePath = cms.Path(
 )
 #cumulative
 process.cumulativePath = cms.Path(
-    process.generatorSequence
+    process.cleaning
+    *process.generatorSequence
     *tauIDSeq
     *jetCorrectionProducer
     *process.producePFMETCorrections
@@ -185,4 +206,7 @@ if ignoreFilter:
 else:
 	process.schedule = cms.Schedule(process.cumulativePath)
 
-#process.schedule.append(process.out_step)
+if prepareEvtDisplay:
+    process.ignorePath *= process.PrepareEvtDisplay
+    process.cumulativePath *= process.PrepareEvtDisplay
+    process.schedule.append(process.out_step)

@@ -33,6 +33,7 @@
 #include "ACDataFormats/ACConversion/interface/ACPFTauConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACGenParticleConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACParticleConverter.h"
+#include "ACDataFormats/ACConversion/interface/ACMuonConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACGenDecayConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACFittedThreeProngDecayConverter.h"
 #include "ACDataFormats/ACConversion/interface/ACJetConverter.h"
@@ -53,6 +54,7 @@
 
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 
 #include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 #include "DataFormats/EgammaCandidates/interface/GsfElectronFwd.h"
@@ -127,7 +129,7 @@ private:
     /// branch content: (filtered) tracks collection
     std::vector<ACTrack *> * tracks_;
     /// branch content: muon collection
-    std::vector<ACParticle *> * muons_;
+    std::vector<ACMuon *> * muons_;
     /// branch content: electron collection (gsf)
     std::vector<ACParticle *> * electrons_;
     /// branch content: particle-flow jets

@@ -1,5 +1,6 @@
 <use   name="root"/>
 <use   name="DataFormats/KinematicFit"/>
+<use   name="DataFormats/MuonReco"/>
 <use   name="RecoVertex/PrimaryVertexProducer"/>
 <use   name="ACDataFormats/ACGeneral"/>
 <use   name="ACFrameworkModules/Common"/>

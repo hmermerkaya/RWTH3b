@@ -9,6 +9,7 @@
 #include "../interface/ACEventWeight.h"
 #include "../interface/ACGenParticle.h"
 #include "../interface/ACJet.h"
+#include "../interface/ACMuon.h"
 #include "../interface/ACPFTau.h"
 #include "../interface/ACParticle.h"
 #include "../interface/ACFitParticle.h"
@@ -62,6 +63,11 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 
 #pragma link C++ class ACDataset+;
 #pragma link C++ class pACDataset+;
+
+#pragma link C++ class ACMuon+;
+#pragma link C++ class pACMuon+;
+#pragma link C++ class std::vector<ACMuon >+;
+#pragma link C++ class std::vector<pACMuon >+;
 
 #pragma link C++ class ACPFTau+;
 #pragma link C++ class pACPFTau+;

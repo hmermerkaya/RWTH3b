@@ -126,7 +126,7 @@ void FinalTreeFiller::beginJob() {
     tracks_ = new std::vector<ACTrack *>();
     eventTree_->Branch("Tracks", &tracks_, 32000, 0);
 
-    muons_ = new std::vector<ACParticle *>();
+    muons_ = new std::vector<ACMuon *>();
     eventTree_->Branch("Muons", &muons_, 32000, 0);
 
     electrons_ = new std::vector<ACParticle *>();
@@ -478,10 +478,42 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     // set muon collection
     edm::Handle<reco::MuonCollection> muons;
     if (loadCollection(evt, muonTag_, muons)) {
-        *muons_ = std::vector<ACParticle *>();
+        *muons_ = std::vector<ACMuon *>();
         for (reco::MuonCollection::const_iterator imu = muons->begin(); imu != muons->end(); ++imu) {
-            ACParticleConverter tmp(*imu);
-            ACParticle * tmpP = new ACParticle();
+            // POG recommendation: 2011 baseline selection
+            bool isRecommendedMuon = true;
+            if (! muon::isGoodMuon(*imu, muon::GlobalMuonPromptTight)) {
+//                std::cout<<"muon: tight is "<<muon::isGoodMuon(*imu, muon::GlobalMuonPromptTight)<<std::endl;
+                isRecommendedMuon = false;
+            }
+            if (! imu->numberOfMatchedStations() > 1) {
+//                std::cout<<"muon: stations "<<imu->numberOfMatchedStations()<<std::endl;
+                isRecommendedMuon = false;
+            }
+            if (! beamSpot.isValid()) {
+//                std::cout<<"muon: no beamspot"<<std::endl;
+                isRecommendedMuon = false;
+            }
+            if (! imu->innerTrack()) {
+//                std::cout<<"muon: no track"<<std::endl;
+                isRecommendedMuon = false;
+            }
+            if (! (fabs(imu->innerTrack()->dxy(beamSpot->position())) < 0.2)) {
+//                std::cout<<"muon: bad dxy "<<fabs(imu->innerTrack()->dxy(beamSpot->position()))<<std::endl;
+                //usually using the PV, but 2mm is loose enough. does not make any difference.
+                isRecommendedMuon = false;
+            }
+            if (! imu->innerTrack()->hitPattern().numberOfValidPixelHits() > 0) {
+//                std::cout<<"muon: bad pixel hits "<<imu->innerTrack()->hitPattern().numberOfValidPixelHits()<<std::endl;
+                isRecommendedMuon = false;
+            }
+            if (! imu->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 8) {
+//                std::cout<<"muon: bad tracker layers "<<imu->innerTrack()->hitPattern().trackerLayersWithMeasurement()<<std::endl;
+                isRecommendedMuon = false;
+            }
+            
+            ACMuonConverter tmp(*imu, isRecommendedMuon, conversionLogTrack_);
+            ACMuon * tmpP = new ACMuon();
             *tmpP = tmp;
             muons_->push_back(tmpP);
         }

@@ -17,8 +17,7 @@
 class ACParticleConverter : public ACParticle {
 public:
     virtual std::string classname() const { return "ACParticleConverter"; }
-    /// constructor from SelectedKinematicParticle to initiate a ACParticle
-    ACParticleConverter(const reco::Muon& particle, ACGenParticleRef genRef = ACGenParticleRef());
+    /// constructor from CMSSW object to initiate a ACParticle
     ACParticleConverter(const reco::GsfElectron& particle, ACGenParticleRef genRef = ACGenParticleRef());
     virtual ~ACParticleConverter() {};
 };
