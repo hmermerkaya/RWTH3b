@@ -10,6 +10,7 @@ ACHarvester::ACHarvester(const std::string & outpath, bool modifyInputFiles) {
     modifyInputFiles_ = modifyInputFiles;
     forcedMergeAll_ = false;
     forcedMergeName_ = "";
+    validStoragePath_ = "";
 }
 ACHarvester::~ACHarvester() {
     for (std::vector<std::pair<ACDataset*, TFile*> >::iterator i = mergedDatasets_->begin(); i < mergedDatasets_->end(); ++i) {
@@ -538,7 +539,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                         //std::cout << "Work on histogram " << obj->GetName() << std::endl;
                     } else if (obj->IsA()->InheritsFrom("ACDataset") ) {
                         dataset = (ACDataset*)obj;
-                        std::cout<<"--> found first dataset: "<<dataset->name()<<std::endl;
+                        std::cout<<"--> found dataset: "<<dataset->name()<<", "<<dataset->jobType()<<std::endl;
                     }
 
                     // Loop over all source files and merge same-name object
@@ -780,25 +781,31 @@ void ACHarvester::scanDirectory(const std::string & directory, std::vector<std::
         }
     } else std::cout << (boost::filesystem::exists(directory) ? "    Found: " : "    Not found: ") << directory << '\n';
 }
-bool ACHarvester::createPlotDir(const std::string & storagePath, const std::string & path) const {
+bool ACHarvester::createPlotDir(const std::string & storagePath, const std::string & path) {
     struct stat st;
     if (stat(storagePath.c_str(), &st)!=0) {
+        if (validStoragePath_ == storagePath) {
+            std::cout<<"ACHarvester::createPlotDir: ERROR! The following path should have been created already but does not exist.\n\t"<<storagePath<<std::endl;
+            return false;
+        }
         std::cout<<"ACHarvester::createPlotDir: the following path does not exist\n\t"<<storagePath<<std::endl;
         std::cout<<"\tCreate it? (y/n)\t";
         std::string create = readInput();
         if (create=="y") {
-            if (mkdir(storagePath.c_str(), 0777) == 0) std::cout<<"\t"<<storagePath<<" was created."<<std::endl;
+            if (mkdir(storagePath.c_str(), 0777) == 0) std::cout<<"\t"<<storagePath<<" has been created."<<std::endl;
             else{
                 std::cout<<"\tFailed to create "<<storagePath<<"."<<std::endl;
                 return false;
             }
         } else return false;
-    } else {
+    } else if (validStoragePath_ != storagePath) {
+        // warning of overwriting existing paths only once
         std::cout<<"ACHarvester::createPlotDir: the following path already exists\n\t"<<storagePath<<std::endl;
         std::cout<<"\tKeep it and write into the existing folder? (y/n)\t";
         std::string create = readInput();
         if (create!="y") return false;
     }
+    validStoragePath_ = storagePath;
     
     if (path=="") return true;
 

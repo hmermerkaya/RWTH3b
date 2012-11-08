@@ -86,7 +86,8 @@ private:
     bool forcedMergeAll_;
     /// merged name stored into datasets when using forcedMergeAll_ (user defined during run time)
     std::string forcedMergeName_;
-    
+    /// latest tested and valid storage path
+    std::string validStoragePath_;
     /** read stored histograms and merge histograms according to mode, based on ROOT's hadd.C
      mode=0: combine files of one dataset from several (grid) jobs (arbitrary number of files)
      mode=1: compare histograms of different datasets (2 files)
@@ -103,7 +104,7 @@ private:
     /// recursivly read root files from directory and append them to fileNames
     void scanDirectory(const std::string & directory, std::vector<std::string> & fileNames, int level = 0);
     /// create required folders. storagePath is the path to the root file, path is the folder within
-    bool createPlotDir(const std::string & storagePath, const std::string & path = "") const;
+    bool createPlotDir(const std::string & storagePath, const std::string & path = "");
     /// prepare a writable dataset and call modifyDataset()
     bool prepareModificationOfDataset(TFile * file, TKey * key, ACDataset * dataset);
     /// test for equal binning

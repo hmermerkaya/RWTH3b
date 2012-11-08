@@ -111,11 +111,11 @@ std::vector<ACTrack *> ** ACEvent::linkTracks() {
     return &tracks_;
 }
 
-const std::vector<ACParticle *>& ACEvent::muons() const {
+const std::vector<ACMuon *>& ACEvent::muons() const {
     checkContent(muons_, "muons");
     return *muons_;
 }
-std::vector<ACParticle *> ** ACEvent::linkMuons() {
+std::vector<ACMuon *> ** ACEvent::linkMuons() {
     return &muons_;
 }
 

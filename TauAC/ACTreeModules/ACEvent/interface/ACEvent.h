@@ -18,6 +18,7 @@
 #include "../../../ACDataFormats/ACGeneral/interface/ACGenParticle.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACJet.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACPFTau.h"
+#include "../../../ACDataFormats/ACGeneral/interface/ACMuon.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACParticle.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACPileupInfo.h"
 #include "../../../ACDataFormats/ACGeneral/interface/ACTrack.h"
@@ -73,7 +74,7 @@ public:
     /// set track collection
     std::vector<ACTrack *> ** linkTracks();
 
-    const std::vector<ACParticle *>& muons() const;
+    const std::vector<ACMuon *>& muons() const;
     /// set muon collection
     std::vector<ACParticle *> ** linkMuons();
     
@@ -120,7 +121,7 @@ protected:
     /// branch content: track collection
     std::vector<ACTrack *> * tracks_;
     /// branch content: muon collection
-    std::vector<ACParticle *> * muons_;
+    std::vector<ACMuon *> * muons_;
     /// branch content: electron collection (gsf)
     std::vector<ACParticle *> * electrons_;
     /// branch content: particle-flow jets

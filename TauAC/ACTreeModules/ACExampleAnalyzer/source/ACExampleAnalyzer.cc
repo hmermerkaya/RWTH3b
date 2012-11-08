@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     ACExampleAnalyzer anlzr;
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
-    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/tauSMBrFromZ_100_7TeV.root");
+    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/SingleMuNov2011A_100_7TeV.root");
     ACTreeReader::SetVerbosity(true);
     loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
     loops.back()->loop(anlzr, -1);
@@ -78,8 +78,10 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
         printf(" pt %f\n", (*ip)->pt());
     }
     printf("number of muons: %lu\n", event.muons().size());
-    for (std::vector<ACParticle *>::const_iterator ip = event.muons().begin(); ip != event.muons().end(); ++ip) {
-        printf(" pt %f\n", (*ip)->pt());
+    for (std::vector<ACMuon *>::const_iterator ip = event.muons().begin(); ip != event.muons().end(); ++ip) {
+        std::cout<<" pt "<<(*ip)->pt()<<", isGlobalMuonPromptTight "<<(*ip)->isGlobalMuonPromptTight()<<", isRecommendedMuon "<<(*ip)->isRecommendedMuon()<<", isolation "<<(*ip)->isolation()<<" (isIsolatedLoose "<<(*ip)->isIsolatedLoose()<<", isIsolatedTight "<<(*ip)->isIsolatedTight()<<")";
+        if ((*ip)->trackRef().isValid()) std::cout<<"\ttrackRef "<<(*ip)->trackRef()->pt()<<std::endl;
+        else std::cout<<"\tinvalid trackRef"<<std::endl;
     }
     printf("number of electrons: %lu\n", event.electrons().size());
     for (std::vector<ACParticle *>::const_iterator ip = event.electrons().begin(); ip != event.electrons().end(); ++ip) {
@@ -92,6 +94,8 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
         for (std::map<std::string,bool>::const_iterator idiscr = (*decay)->PFTauRef()->discriminators().begin(); idiscr != (*decay)->PFTauRef()->discriminators().end(); ++idiscr) {
             printf("\t\t\t discr: %s pass: %i\n", idiscr->first.c_str(), idiscr->second);
         }
+        printf("\t SV (%f, %f, %f) error matrix:\n", (*decay)->tau()->vertex().X(), (*decay)->tau()->vertex().Y(), (*decay)->tau()->vertex().Z());
+        (*decay)->tau()->matrix().Print();
         for (std::vector<ACFitParticleRef>::const_iterator ip = (*decay)->particles()->begin(); ip != (*decay)->particles()->end(); ++ip) {
             printf("\t pdgID %i, pt %f\n", (*ip)->pdgId(), (*ip)->pt());
             if ((*ip)->genRef().isValid()) {

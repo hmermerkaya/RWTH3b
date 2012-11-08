@@ -24,6 +24,7 @@ ACTreeReader::ACTreeReader(const std::vector<std::string>& fileNames, const std:
             int status = fChain_->AddFile(abspath.c_str(),0);
             if (status != 1) {
                 std::cerr << "ERROR: File '" << abspath << "' could not be connected to the chain of input files! Maybe the tree '" << treeName << "' does not exist in this file?!" << std::endl;
+                throw 404;
             }
         }
     }
