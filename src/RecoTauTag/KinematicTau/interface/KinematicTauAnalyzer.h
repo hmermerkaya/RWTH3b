@@ -47,6 +47,8 @@ private:
   int tau_pdgid_;
   unsigned int NJAKID_;
   std::vector<int> JAKID_;
+  int cnt_,cntFound_;
+
   /////////////////////////////////
   //
   // Valdiation Histograms

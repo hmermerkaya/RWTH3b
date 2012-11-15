@@ -19,7 +19,7 @@ Tau_JAKID_Filter::~Tau_JAKID_Filter(){
 
 bool Tau_JAKID_Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
   bool filterValue = false;
-  cnt_++;
+  //cnt_++;
 
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(gensrc_, genParticles);
@@ -28,11 +28,13 @@ bool Tau_JAKID_Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end(); ++itr){
       const reco::GenParticle mytau=(*itr);
       if(isTruthTauInAcceptance(mytau)){
+	cnt_++;
 	TauDecay_CMSSWReco TD;
 	unsigned int jak_id, TauBitMask;
 	TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
 	for(unsigned int i=0;i<JAKID_.size() && i<nprongs_.size();i++){
-	  if(((unsigned int)JAKID_.at(i))==jak_id && TD.nProng(TauBitMask)==(unsigned int)nprongs_.at(i)){ filterValue=true; break;}
+	  std::cout << "JAKID " << JAKID_.at(i) << " " << jak_id << " " << nprongs_.at(i) << " " << TD.nProng(TauBitMask) << std::endl;
+	  if(JAKID_.at(i)==(int)jak_id && (int)TD.nProng(TauBitMask)==nprongs_.at(i)){ filterValue=true; break;}
 	}
 	if(filterValue) break;
       }
@@ -55,6 +57,10 @@ void Tau_JAKID_Filter::endJob(){
   float ratio = 0.0;
   if(cnt_!=0) ratio=(float)cntFound_/cnt_;
   edm::LogVerbatim("Tau_JAKID_Filter")<<"--> [Tau_JAKID_Filter]  Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
+  std::cout << "Tau_JAKID_Filter" <<"--> [Tau_JAKID_Filter]  Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%" << std::endl;
+  for(unsigned int i=0; i<JAKID_.size() && i<nprongs_.size();i++){
+    std::cout << "JAKID " << JAKID_.at(i) << " " << nprongs_.at(i) << std::endl;
+  }
 }
 
 // This function is duplicated... needs to be fixed!!

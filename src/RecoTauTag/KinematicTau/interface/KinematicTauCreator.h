@@ -19,10 +19,9 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TauReco/interface/PFTau.h"
-#include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
+#include "RecoTauTag/KinematicTau/interface/NumericalKinematicConstrainedFitter.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
-#include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
 
 class KinematicTauCreator {
 public:
@@ -38,16 +37,14 @@ public:
   std::vector<math::XYZTLorentzVector> getRefittedNeutralDaughters() const;
   std::vector<reco::TrackRef> getSelectedTracks() const;
   RefCountedKinematicTree getKinematicTree() const;
-  KinematicConstrainedVertexFitter * getFitter() const {return kcvFitter_;}
-  //KinematicParticleVertexFitter * getFitter() const {return kcvFitter_;}
+  NumericalKinematicConstrainedFitter * getFitter() const {return kcvFitter_;}
   reco::Vertex getModifiedPrimaryVertex() const;
   
   float chi2() const ;
   virtual int ndf() const = 0;
   
 protected:
-  KinematicConstrainedVertexFitter *kcvFitter_;
-  //KinematicParticleVertexFitter *kcvFitter_;
+  NumericalKinematicConstrainedFitter *kcvFitter_;
   RefCountedKinematicTree kinTree_;
   std::vector<reco::TrackRef> selectedTracks_;
   reco::Vertex modifiedPV_;

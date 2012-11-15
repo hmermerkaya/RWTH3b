@@ -152,7 +152,7 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const Kinemat
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Save Kinematic Fit Results and Particles
   RefCountedKinematicTree tree = kinTauCreator->getKinematicTree();
-  KinematicConstrainedVertexFitter *kcvFitter = kinTauCreator->getFitter();
+  NumericalKinematicConstrainedFitter *kcvFitter = kinTauCreator->getFitter();
   try{
     tree->movePointerToTheTop();
   }

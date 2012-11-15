@@ -14,19 +14,19 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   }
   daughters->push_back(neutrinos->at(0));
   for(unsigned int i=0;i<daughters->size();i++){
-    std::cout << "Inital " 
+    /*    std::cout << "Inital " 
 	      << daughters->at(i)->currentState().globalPosition().x() << " " 
 	      << daughters->at(i)->currentState().globalPosition().y() << " " 
 	      << daughters->at(i)->currentState().globalPosition().z() << " "
 	      << daughters->at(i)->currentState().globalMomentum().x() << " "
               << daughters->at(i)->currentState().globalMomentum().y() << " "
-              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl; 
+              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl; */
     }
   bool fitWorked=false;
   fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
 
   for(unsigned int i=0;i<daughters->size();i++){
-    std::cout << "Inital "
+    /*  std::cout << "Inital "
               << daughters->at(i)->initialState().globalPosition().x() << " "
               << daughters->at(i)->initialState().globalPosition().y() << " "
               << daughters->at(i)->initialState().globalPosition().z() << " "
@@ -40,7 +40,7 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
               << daughters->at(i)->currentState().globalMomentum().x() << " "
               << daughters->at(i)->currentState().globalMomentum().y() << " "
               << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl;
-
+    */
   }
 
 
@@ -157,7 +157,7 @@ bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<Re
   MultiTrackKinematicConstraint *tauMass_c = new MultiTrackMassNumericalKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size(),1.0); //MultiTrackMassKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size());
   constraintVector.push_back(tauMass_c);
   GlobalPoint linP(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
-  MultiTrackKinematicConstraint *pointing_c = new MultiTrackSmartPointingNumericalKinematicConstraint(linP,1000);//new MultiTrackVertexLinkKinematicConstraint(linP);
+  MultiTrackKinematicConstraint *pointing_c = new MultiTrackSmartPointingNumericalKinematicConstraint(linP,1.0);//new MultiTrackVertexLinkKinematicConstraint(linP);
   constraintVector.push_back(pointing_c);
   MultiTrackKinematicConstraint *combiC = new CombinedKinematicConstraint(constraintVector);
   
@@ -232,18 +232,18 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(const
   for(unsigned int n=1; n!=7; n++) svector28(n*(n+1)/2 - 1) = pow(10.,2.);//diagonals, huge error method
   svector28(27) = pow(10.,-12.);//mass error
   //insert 3prong vertex errors
-  svector28[ 0] = vtxGuess.positionError().cxx();
-  svector28[ 1] = vtxGuess.positionError().cyx();
-  svector28[ 2] = vtxGuess.positionError().cyy();
-  svector28[ 3] = vtxGuess.positionError().czx();
-  svector28[ 4] = vtxGuess.positionError().czy();
-  svector28[ 5] = vtxGuess.positionError().czz();
+  svector28[0] = vtxGuess.positionError().cxx()*100;
+  svector28[1] = vtxGuess.positionError().cyx()*100;
+  svector28[2] = vtxGuess.positionError().cyy()*100;
+  svector28[3] = vtxGuess.positionError().czx()*100;
+  svector28[4] = vtxGuess.positionError().czy()*100;
+  svector28[5] = vtxGuess.positionError().czz()*100;
   
   if (std::abs(nuGuess.Px()) >= 5.0) {
-    svector28[ 9] = pow(nuGuess.Px(), 2); //assume an error of 100% of the neutrino momentum component
+    svector28[9] = pow(nuGuess.Px(), 2); //assume an error of 100% of the neutrino momentum component
   } 
   else {
-    svector28[ 9] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
+    svector28[9] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
   }
   if (std::abs(nuGuess.Py()) >= 5.0) {
     svector28[14] = pow(nuGuess.Py(), 2); //assume an error of 100% of the neutrino momentum component

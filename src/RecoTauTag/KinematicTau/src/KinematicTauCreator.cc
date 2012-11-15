@@ -5,7 +5,7 @@ KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &
   modifiedPV_(),
   transientTrackBuilder_(transTrackBuilder)
 {
-  kcvFitter_ = new KinematicConstrainedVertexFitter();
+  kcvFitter_ = new NumericalKinematicConstrainedFitter();
   edm::ParameterSet defaultConfig;
   defaultConfig.addParameter("maxDelta", .001);
   defaultConfig.addParameter("maxNbrOfIterations", 1000);
@@ -20,8 +20,7 @@ KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &
   modifiedPV_(),
   transientTrackBuilder_(transTrackBuilder)
 {
-  //kcvFitter_ = new KinematicParticleVertexFitter(cfg);//new KinematicConstrainedVertexFitter();
-  kcvFitter_ = new KinematicConstrainedVertexFitter();
+  kcvFitter_ = new NumericalKinematicConstrainedFitter();
   kcvFitter_->setParameters(cfg);
 }
 

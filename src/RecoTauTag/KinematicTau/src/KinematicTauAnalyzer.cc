@@ -42,13 +42,14 @@ KinematicTauAnalyzer::~KinematicTauAnalyzer(){
 
 void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   double weight=1.0;
-
+  cnt_++;
   edm::Handle<SelectedKinematicDecayCollection> KinematicFitTaus;
   iEvent.getByLabel(KinematicFitTauTag_,KinematicFitTaus);
 
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(gensrc_, genParticles);
 
+  bool found=false;
   for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
       unsigned int npassed=0;
@@ -58,6 +59,8 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	}
       }
       if(npassed==discriminators_.size()){
+	if(found) cntFound_++;
+	found=true;
 	SelectedKinematicDecay KFTau=(*kinFitTau);
 	const TLorentzVector Tau=KFTau.Tau(ambiguity);
 	const TLorentzVector a1=KFTau.a1_p4(ambiguity);
@@ -282,6 +285,9 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 
 void KinematicTauAnalyzer::beginJob(){
+  cnt_ = 0;
+  cntFound_ = 0;
+
   if(dbe){
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
       TString amb="";
@@ -436,6 +442,9 @@ void KinematicTauAnalyzer::beginJob(){
 }
 
 void KinematicTauAnalyzer::endJob(){
+  float ratio = 0.0;
+  if(cnt_!=0) ratio=(float)cntFound_/cnt_;
+  std::cout << "Tau_JAKID_Filter" <<"--> [Tau_JAKID_Filter]  Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%" << std::endl;
 }
 
 bool KinematicTauAnalyzer::doJAKID(unsigned int i){
