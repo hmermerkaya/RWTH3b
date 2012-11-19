@@ -225,8 +225,8 @@ void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicPart
 
 void SelectedKinematicDecay::modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par,unsigned int ambiguity) {
   for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-    if ( std::abs(iter->charge()) == 1 ) {
-      if(iter != particles_.begin() && iter->name()!="tau" ) par.push_back(&(*iter));//skip mother
+    if ( std::abs(iter->charge()) == 1  ) {
+      if(iter != particles_.begin() && iter->name()!="tau"  && iter->name()!="a1") par.push_back(&(*iter));//skip mother
     }
   }
 }
