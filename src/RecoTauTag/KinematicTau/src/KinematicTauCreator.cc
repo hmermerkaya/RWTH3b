@@ -102,6 +102,10 @@ RefCountedKinematicTree KinematicTauCreator::getKinematicTree() const
 {
   return kinTree_;
 }
+std::vector<RefCountedKinematicParticle> KinematicTauCreator::getPions() const
+{
+  return PostFitPions_;
+}
 
 reco::Vertex KinematicTauCreator::getModifiedPrimaryVertex() const
 {

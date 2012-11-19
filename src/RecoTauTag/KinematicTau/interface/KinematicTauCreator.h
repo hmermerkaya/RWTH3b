@@ -37,6 +37,7 @@ public:
   std::vector<math::XYZTLorentzVector> getRefittedNeutralDaughters() const;
   std::vector<reco::TrackRef> getSelectedTracks() const;
   RefCountedKinematicTree getKinematicTree() const;
+  std::vector<RefCountedKinematicParticle> getPions() const;
   NumericalKinematicConstrainedFitter * getFitter() const {return kcvFitter_;}
   reco::Vertex getModifiedPrimaryVertex() const;
   
@@ -46,6 +47,7 @@ public:
 protected:
   NumericalKinematicConstrainedFitter *kcvFitter_;
   RefCountedKinematicTree kinTree_;
+  std::vector<RefCountedKinematicParticle> PostFitPions_;
   std::vector<reco::TrackRef> selectedTracks_;
   reco::Vertex modifiedPV_;
   edm::ESHandle<TransientTrackBuilder> transientTrackBuilder_;

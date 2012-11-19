@@ -41,6 +41,8 @@
 #include "CommonTools/Statistics/interface/ChiSquared.h"
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 
+#include "TTree.h"
+#include "TFile.h"
 
 
 
@@ -61,12 +63,21 @@ private:
   int  saveKinParticles(unsigned int &ambiguity,const KinematicTauCreator * kinTauCreator, SelectedKinematicDecay &KFTau);
   void saveSelectedTracks(const std::vector<reco::TrackRef> usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
   void correctReferences(SelectedKinematicDecayCollection & selected, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
-
+  void fillTree(std::vector<double> &QCVar);
   
   const edm::ParameterSet fitParameters_;
   edm::Event * iEvent_;
   edm::InputTag KinematicTauCandTag_;
   unsigned int cnt_, cntFound_;
+
+  TFile *output;
+  TTree *output_tree;
+
+  double BDT_vtxSignPVRotSV;
+  double BDT_vtxSignPVRotPVRed;
+  double BDT_a1Mass;
+  double BDT_energyTFraction;
+  double BDT_chiSquared;
 	
 };
 #endif

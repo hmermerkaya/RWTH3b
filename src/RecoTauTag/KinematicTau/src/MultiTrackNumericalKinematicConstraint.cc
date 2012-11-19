@@ -2,83 +2,84 @@
 #include "RecoVertex/VertexPrimitives/interface/VertexException.h"
 
 MultiTrackNumericalKinematicConstraint::MultiTrackNumericalKinematicConstraint(double weight):
-  npardim(7),
-  nposdim(3),
-  distance_epsilon(0.000001),
-  momentum_epsilon(0.00001),
+  epsilon_(0.000001),
   weight_(weight)
 {
+
 }
 
-AlgebraicVector  MultiTrackNumericalKinematicConstraint::value(const std::vector<KinematicState> states,
-                        const GlobalPoint& point) const
-{
- if(states.size()<2) throw VertexException("MultiTrackNumericalKinematicConstraint::value not enough states given");
- AlgebraicVector      value(numberOfEquations(),0);
- value=ComputeDefault(states,point);
- return  ComputeDefault(states,point);
-}
 
-AlgebraicMatrix MultiTrackNumericalKinematicConstraint::parametersDerivative(const std::vector<KinematicState> states,
-                                      const GlobalPoint& point) const
-{
-  if(states.size()<2) throw VertexException("MultiTrackNumericalKinematicConstraint::parametersDerivative not enough states given");
-  AlgebraicMatrix      res(numberOfEquations(),states.size()*npardim,0);
-  AlgebraicVector      value(numberOfEquations(),0);
-  AlgebraicVector      valueplus(numberOfEquations(),0);
-  std::vector<double>  epsilonPar(npardim*states.size(),0);
-  std::vector<double>  epsilonPos(nposdim,0);
-  for (unsigned int j=0;j<states.size();j++) {
-    for(unsigned int k=1;k<=npardim;k++){
-      value=ComputeDefault(states,point);
-      int idx=k+j*npardim-1;
-      if(k<=3) epsilonPar.at(idx)=distance_epsilon;
-      else epsilonPar.at(idx)=momentum_epsilon;
-      if(epsilonPar.at(idx)!=0){
-	valueplus=Compute(states,point,epsilonPar,epsilonPos);
-	for(unsigned int i=1;i<=(unsigned int)numberOfEquations();i++){
-	  res(i,k+j*npardim) = (valueplus(i)-value(i))/epsilonPar.at(idx); 
-	}
-      }
-      else{
-	VertexException("MultiTrackNumericalKinematicConstraint::parametersDerivative Epsilon=0 ");
-      }
-      epsilonPar.at(idx)=0;
+bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &chi_2, double &delta){
+  // get values
+  AlgebraicVector val(numberOfEquations(),0);
+  val=Value(par);  
+  // obtain the derivatives
+  AlgebraicMatrix g(numberOfEquations(),par.num_row(),0);
+  g=Derivative();
+  //copy covariance to sym. matrix
+  AlgebraicSymMatrix in_cov_sym(cov_first.num_row(),0);
+  for(int i = 1; i<=cov_first.num_row(); i++){
+    for(int j = 1; j<=cov_first.num_row(); j++){
+      if(i<=j) in_cov_sym(i,j) = cov_first(i,j);
     }
   }
-  return res;
-}
-
-AlgebraicMatrix MultiTrackNumericalKinematicConstraint::positionDerivative(const std::vector<KinematicState> states,
-								      const GlobalPoint& point) const
-{
-  if(states.size()<2) throw VertexException("MultiTrackNumericalKinematicConstraint::positionDerivative not enough states given");
-  AlgebraicMatrix      res(numberOfEquations(),nposdim,0);
-  AlgebraicVector      value(numberOfEquations(),0);
-  AlgebraicVector      valueplus(numberOfEquations(),0);
-  std::vector<double>  epsilonPar(npardim*states.size(),0);
-  std::vector<double>  epsilonPos(nposdim,0);
-
-  for(unsigned int k=1;k<=nposdim;k++){
-    value=ComputeDefault(states,point);
-    int idx=k-1;
-    epsilonPos.at(idx)=distance_epsilon;
-    if(epsilonPos.at(idx)!=0){
-      valueplus=Compute(states,point,epsilonPar,epsilonPos);
-      for(unsigned int i=1;i<=(unsigned int)numberOfEquations();i++){
-	res(i,k) = (valueplus(i)-value(i))/epsilonPos.at(idx);
-      }
-    }
-    else{
-      VertexException("MultiTrackNumericalKinematicConstraint::positionDerivative Epsilon=0 ");
-    }
-    epsilonPos.at(idx)=0;
+  // delta_alpha
+  AlgebraicVector delta_alpha=par_first-par;
+  //debug code
+  AlgebraicSymMatrix v_g_sym = in_cov_sym.similarity(g);
+  int ifl1 = 0;
+  v_g_sym.invert(ifl1);
+  if(ifl1 !=0) {
+    std::cout << "Fit failed: unable to invert SYM gain matrix\n" << std::endl;
+    return false;
   }
-  return res;
+  // v_g_sym now valid
+  //full math case now!
+  AlgebraicVector lambda = v_g_sym *(g*delta_alpha + val);
+  //final parameters
+  AlgebraicVector finPar = par -  in_cov_sym * g.T() * lambda;
+  //covariance matrix business:
+  AlgebraicMatrix mFactor = in_cov_sym *(v_g_sym.similarityT(g))* in_cov_sym;
+  //refitted covariance
+  AlgebraicMatrix rCov = in_cov_sym - mFactor;
+
+  // copy new covariance
+  // Force to be symmetric covariance (verify later)
+  AlgebraicSymMatrix r_cov_sym(cov_first.num_row(),0);
+  for(int i = 1; i<=cov_first.num_row(); i++){
+    for(int j = 1; j<=cov_first.num_row(); j++){
+      cov(i,j)=(rCov(i,j)+rCov(j,i))/2;
+    }
+  }
+  
+  //copy new par
+  delta=0;
+  for(int i = 1; i<=par.num_row(); i++){delta+=sqrt((par(i)-finPar(i))*(par(i)-finPar(i)));}
+  par=finPar;
+
+  AlgebraicVector chi  = lambda.T()*(g*delta_alpha  + val);
+  chi_2=0;
+  for(int i = 1; i<=chi.num_row(); i++){chi_2+=chi(i);}
+  chi2=chi;  
+  return true;
 }
 
-AlgebraicVector  MultiTrackNumericalKinematicConstraint::ComputeDefault(const std::vector<KinematicState> states,const GlobalPoint& point) const{
-  std::vector<double>  epsilonPar(npardim*states.size(),0);
-  std::vector<double>  epsilonPos(nposdim,0);
-  return Compute(states,point,epsilonPar,epsilonPos);
+
+AlgebraicMatrix MultiTrackNumericalKinematicConstraint::Derivative(){
+  AlgebraicMatrix d(numberOfEquations(),par.num_row(),0);
+  AlgebraicVector par_plus(par.num_row(),0);
+  AlgebraicVector value(numberOfEquations(),0);
+  AlgebraicVector value_plus(numberOfEquations(),0);
+  for(int j=0;j<value.num_row();j++){
+    par_plus=par;
+    par_plus(j)+=epsilon_;
+    value=Value(par);
+    value_plus=Value(par_plus);
+    for(int i=0; i<numberOfEquations();i++){
+      d(i,j)=(value_plus(i)-value(i))/epsilon_;
+    }
+  }
+  return d;
 }
+
+

@@ -1,31 +1,40 @@
 #ifndef MultiTrackNumericalKinematicConstraint_H
 #define MultiTrackNumericalKinematicConstraint_H
 
-#include "RecoVertex/KinematicFitPrimitives/interface/MultiTrackKinematicConstraint.h"
+#include "RecoVertex/KinematicFitPrimitives/interface/RefCountedKinematicVertex.h"
 #include "RecoVertex/KinematicFitPrimitives/interface/KinematicState.h"
 #include "DataFormats/CLHEP/interface/AlgebraicObjects.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/ParticleMass.h"
 
-class MultiTrackNumericalKinematicConstraint : public MultiTrackKinematicConstraint{
-
+class MultiTrackNumericalKinematicConstraint {
  public:
+  enum ParameterSize{npardim=7,nposdim=3};
+
   MultiTrackNumericalKinematicConstraint(double weight=1.0);
+  virtual ~MultiTrackNumericalKinematicConstraint(){};
 
-  virtual AlgebraicVector  value(const std::vector<KinematicState> states,const GlobalPoint& point) const;
+  virtual MultiTrackNumericalKinematicConstraint* clone() const=0;
 
-  virtual AlgebraicMatrix parametersDerivative(const std::vector<KinematicState> states,const GlobalPoint& point) const;
-
-  virtual AlgebraicMatrix positionDerivative(const std::vector<KinematicState> states,const GlobalPoint& point) const;
-  
   virtual double GetWeight()const{return weight_;}
 
+  virtual bool   ConfigureIntialState(const std::vector<KinematicState> inStates,const GlobalPoint& inPoint)=0;
+  bool  ApplyLagrangianConstraints(double &chi_2, double &delta);
+  virtual std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKinematicVertex > ConvertStateToParameters(const std::vector<KinematicState> &inStates,const GlobalPoint& inPoint)=0;
+  virtual int numberOfEquations()=0;
+
  protected:
-  virtual AlgebraicVector Compute(const std::vector<KinematicState> states,const GlobalPoint& point, const std::vector<double> &epsilonPar, const std::vector<double> &epsilonPos) const=0;
-  unsigned int npardim,nposdim;
+  virtual AlgebraicVector Value(AlgebraicVector &v)=0;
+  
+  AlgebraicVector par_first;
+  AlgebraicMatrix cov_first;
+  AlgebraicVector par;
+  AlgebraicMatrix cov;
+  AlgebraicVector chi2;
+  const MagneticField* field;
 
  private:
-  virtual AlgebraicVector  ComputeDefault(const std::vector<KinematicState> states,const GlobalPoint& point) const;
-  double distance_epsilon,momentum_epsilon;
-  double weight_;
+  AlgebraicMatrix Derivative();
+
+  double epsilon_, weight_;
+  
 };
 #endif
