@@ -497,19 +497,20 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             if (! imu->innerTrack()) {
 //                std::cout<<"muon: no track"<<std::endl;
                 isRecommendedMuon = false;
-            }
-            if (! (fabs(imu->innerTrack()->dxy(beamSpot->position())) < 0.2)) {
+            } else {
+                if (! (fabs(imu->innerTrack()->dxy(beamSpot->position())) < 0.2)) {
 //                std::cout<<"muon: bad dxy "<<fabs(imu->innerTrack()->dxy(beamSpot->position()))<<std::endl;
                 //usually using the PV, but 2mm is loose enough. does not make any difference.
-                isRecommendedMuon = false;
-            }
-            if (! imu->innerTrack()->hitPattern().numberOfValidPixelHits() > 0) {
+                    isRecommendedMuon = false;
+                }
+                if (! imu->innerTrack()->hitPattern().numberOfValidPixelHits() > 0) {
 //                std::cout<<"muon: bad pixel hits "<<imu->innerTrack()->hitPattern().numberOfValidPixelHits()<<std::endl;
-                isRecommendedMuon = false;
-            }
-            if (! imu->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 8) {
+                    isRecommendedMuon = false;
+                }
+                if (! imu->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 8) {
 //                std::cout<<"muon: bad tracker layers "<<imu->innerTrack()->hitPattern().trackerLayersWithMeasurement()<<std::endl;
-                isRecommendedMuon = false;
+                    isRecommendedMuon = false;
+                }
             }
             
             ACMuonConverter tmp(*imu, isRecommendedMuon, conversionLogTrack_);
