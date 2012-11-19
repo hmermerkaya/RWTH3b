@@ -73,7 +73,6 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
 }
 
 std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKinematicVertex > TauA1NuNumericalKinematicConstraint::ConvertStateToParameters(const std::vector<KinematicState> &inStates,const GlobalPoint& inPoint){
-  std::cout << "r" << inStates.size() << std::endl;
   AlgebraicSymMatrix r_cov_sym(cov_first.num_row(),0);
   for(int i = 1; i<=cov_first.num_row(); i++){
     for(int j = 1; j<=cov_first.num_row(); j++){
@@ -83,7 +82,6 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
     }
   }
   AlgebraicSymMatrix pCov = r_cov_sym.sub(1,3);
-  std::cout << "s" << inStates.size() << std::endl;
   //making resulting vertex
   float ndf=3.0;
   GlobalPoint vPos (par(1),par(2),par(3));
@@ -100,25 +98,21 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
   for(int i =1; i<3; i++){newParNu(i) = par(i);}
   for(int i =8; i<11; i++){newParNu(i-4) = par(i);}
   // newParNu(7)=0;
-  std::cout << "t" << inStates.size() << std::endl;
 
   AlgebraicMatrix ns_cov(14+3,14+3,0);
   for(unsigned int i=0; i<inStates.size();i++){
     if(inStates.at(i).particleCharge()!=0){
-      std::cout <<"a" << std::endl;
       AlgebraicSymMatrix nCovariance = r_cov_sym.sub(1,7);
       TrackCharge chl = inStates.at(0).particleCharge();
       KinematicParameters nrPar(newParA1);
       KinematicParametersError nrEr(asSMatrix<7>(nCovariance));
       KinematicState newState(nrPar,nrEr,chl, field);
       ns.push_back(newState);
-      std::cout <<"b" << std::endl;
       for(int i = 1; i<=cov.num_row(); i++){
 	for(int j = 1; j<=cov.num_row(); j++){
 	  ns_cov(i,j)=cov(i,j);
 	}
       }
-      std::cout <<"c" << std::endl;
     }
     else{
       AlgebraicSymMatrix nCovariance = r_cov_sym.sub(1,7);
@@ -131,7 +125,6 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
 	  }
 	}
 	}*/
-      std::cout <<"d" << std::endl;
       for(int i = 1; i<=cov.num_row(); i++){
         for(int j = 1; j<=cov.num_row(); j++){
           ns_cov(j+7,i+7)=cov(i,j);
@@ -142,21 +135,13 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
 	  ns_cov(j+14,i+14)=cov(i,j);
 	}
       }
-      std::cout <<"e" << std::endl;
       TrackCharge chl = inStates.at(1).particleCharge();
-      std::cout <<"f" << std::endl;
       KinematicParameters nrPar(newParNu);
-      std::cout <<"g" << std::endl;
       KinematicParametersError nrEr(asSMatrix<7>(nCovariance));
-      std::cout <<"h" << std::endl;
       KinematicState newState(nrPar,nrEr,chl,field);
-      std::cout <<"i" << std::endl;
       ns.push_back(newState);
-      std::cout <<"j" << std::endl;
     }
   }
-  std::cout << "v" << inStates.size() << std::endl;
-  std::cout << ns_cov << std::endl; 
 
   std::pair<std::vector<KinematicState>, AlgebraicMatrix> ns_m(ns,ns_cov);
   return std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix>, RefCountedKinematicVertex >(ns_m,rVtx);

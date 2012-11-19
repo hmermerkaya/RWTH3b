@@ -105,29 +105,20 @@ RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit(std::vector<Ref
   double chi2(1e6),delta(0);
   do{
     nit++;
-    std::cout << "loop " << nit << std::endl; 
     bool passed=cs->ApplyLagrangianConstraints(chi2,delta);
-    std::cout << "loopb " << nit << std::endl;
     if (!passed || (nit==theMaxStep && delta>=4.0*theMaxDelta)) {
       std::cout << "RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit end" << std::endl;
       return ReferenceCountingPointer<KinematicTree>(new KinematicTree());
     } 
-    std::cout << "loopc " << nit << std::endl;
   }while(delta<theMaxDelta || nit==theMaxStep);
-  std::cout << "d1 " <<  std::endl;
   std::pair< std::pair< std::vector<KinematicState>, AlgebraicMatrix >,RefCountedKinematicVertex> lRes =cs->ConvertStateToParameters(inStates,linPoint);  
-  std::cout << "d2 " <<  std::endl;
   const std::vector<KinematicState> &newStates = lRes.first.first;
-  std::cout << "d3 " <<  std::endl;
   lStates = newStates;
   rVtx = lRes.second;
   refCCov = lRes.first.second;
-  std::cout << "d4 " <<  std::endl;
   iterations = nit;
   csum = cs->numberOfEquations();
-  std::cout << "d5 " << lStates.size() << " " << particles.size() << " " <<refCCov << " " <<  std::endl;
   std::cout << "RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit end 1" << std::endl;
-
   return  tBuilder->buildTree(particles, lStates, rVtx, refCCov);
 }
 
