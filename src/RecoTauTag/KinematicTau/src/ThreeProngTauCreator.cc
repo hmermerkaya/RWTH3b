@@ -173,32 +173,33 @@ bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<Re
     edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
     return false;
   }
-
+  std::cout << "A" << std::endl;
   // Setup Constraint
   TVector3 pv(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
+  std::cout << "B" << std::endl;
   MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(PMH.Get_tauMass(),1.0);
-
+  std::cout << "C" << std::endl;
   try{
+    std::cout << "C1" << std::endl;
     kinTree_ = kcvFitter_->fit(unfitDaughters,TauA1NU);//,&vtxGuess);
+    std::cout << "C2" << std::endl;
   }
   catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: VertexException. Skip tau candidate.";
     return false;
   }
-
+  std::cout << "D" << std::endl;
   //delete constraint
   delete TauA1NU;
-  
+  std::cout << "E" << std::endl;
   // Test whether the fit is valid. This is mainly due to unconverged fits.
   if (kinTree_->isValid()) {
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 
-  else {
-    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Warning! Tree is not valid. Skip tauCand.";//DEBUG
-    //edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";//INFO
-    return false;
-  }
+  LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Warning! Tree is not valid. Skip tauCand.";//DEBUG
+  //edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";//INFO
+  return false;
 }
 
 double ThreeProngTauCreator::getTauMomentumMagnitudes(unsigned int& ambiguity,double ma1,double pa1,double M,double theta){
