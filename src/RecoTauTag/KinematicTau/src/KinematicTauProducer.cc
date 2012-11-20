@@ -96,6 +96,7 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
       discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFit",fitStatus));
       discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFitQuality",dicriminatorByKinematicFitQuality(ambiguity,kinTauCreator,fitStatus,KFTau)));
       KFTau.SetKinematicFitStatus(ambiguity,discrimValues);
+      std::cout<< "fitStatus "<< fitStatus << "by QC  " << dicriminatorByKinematicFitQuality(ambiguity,kinTauCreator,fitStatus,KFTau) <<std::endl;
       if(fitStatus==1){
  
 	saveKinParticles(ambiguity,kinTauCreator,KFTau);
@@ -145,10 +146,10 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   BDT_a1Mass =a1Mass;
   output_tree->Fill();
 
-  if( chiSquared.probability() < 0.03 )return false;
+  //if( chiSquared.probability() < 0.03 )return false;
   // Apply selection cuts
-  if ( vtxSignPVRotSV < 2. )return false; // Sig. of secondary vertex
-  if ( vtxSignPVRotPVRed > 2. )return false; //vertex sig. between modified and initial primary vertex
+    if ( vtxSignPVRotSV < 2. )return false; // Sig. of secondary vertex
+    //    if ( vtxSignPVRotPVRed > 2. )return false; //vertex sig. between modified and initial primary vertex
   //WARNING!!!
   //from now one we assume a tau decay into three pions and neutrino
   //other channels need their own discriminators

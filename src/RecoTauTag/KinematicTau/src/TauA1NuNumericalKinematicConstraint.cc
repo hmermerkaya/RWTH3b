@@ -18,12 +18,16 @@ AlgebraicVector TauA1NuNumericalKinematicConstraint::Value(AlgebraicVector &v){
   nurot.RotateZ(-phi);
   nurot.RotateY(-theta);
 
-  TLorentzVector nurotfixed(a1rot.Px(),a1rot.Py(),nurot.Pz(),sqrt(a1rot.Pt()*a1rot.Pt()+nurot.Pz()*nurot.Pz()));
+  TLorentzVector nurotfixed(-a1rot.Px(),-a1rot.Py(),nurot.Pz(),sqrt(a1rot.Pt()*a1rot.Pt()+nurot.Pz()*nurot.Pz()));
   AlgebraicVector res(3,0);
   TLorentzVector tau=a1rot+nurotfixed;
   res(1) = tau.M(); // mass constraint fixed to only float Pz for nu (ie only one value with huge errors per constraint) 
   res(2) = a1rot.Pt()-nurot.Pt(); // |Pt| balance constraint
   res(3) = 1+(a1rot.Px()*nurot.Px()+a1rot.Py()*nurot.Py())/(a1rot.Pt()*nurot.Pt()); // phi' constraint (back-to-back) 
+//   std::cout<< "------------>"<<std::endl;
+//   std::cout<<"nurotfixed Phi  " <<nurotfixed.Phi()<< " nurotfixed Px " <<  nurotfixed.Px() << " nurotfixed Px " << nurotfixed.Py() << " nurotfixed Pt " <<  nurotfixed.Pt() <<std::endl;
+//   std::cout<<"a1 Phi  " <<a1.Phi()<< " a1 Px " <<  a1.Px() << " a1 Px " << a1.Py() << " a1 Pt " <<  a1.Pt() <<std::endl;
+//   std::cout<<"a1rot Phi  " <<a1rot.Phi()<< " a1rot Px " <<  a1rot.Px() << " a1rot Px " << a1rot.Py() << " a1rot Pt " <<  a1rot.Pt() <<std::endl;
   return res;
 }
 

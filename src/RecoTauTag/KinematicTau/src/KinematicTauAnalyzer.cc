@@ -42,7 +42,7 @@ KinematicTauAnalyzer::~KinematicTauAnalyzer(){
 
 void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   double weight=1.0;
-  cnt_++;
+  
   edm::Handle<SelectedKinematicDecayCollection> KinematicFitTaus;
   iEvent.getByLabel(KinematicFitTauTag_,KinematicFitTaus);
 
@@ -51,7 +51,8 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
   bool found=false;
   for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
-    for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
+    cnt_++;
+   for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
       unsigned int npassed=0;
       for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr){
 	if(kinFitTau->discriminators(ambiguity).count(*discr)>0){
@@ -59,7 +60,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	}
       }
       if(npassed==discriminators_.size()){
-	if(found) cntFound_++;
+	if(found) cntFound_.at(ambiguity)+=1;
 	found=true;
 	SelectedKinematicDecay KFTau=(*kinFitTau);
 	const TLorentzVector Tau=KFTau.Tau(ambiguity);
@@ -286,7 +287,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 void KinematicTauAnalyzer::beginJob(){
   cnt_ = 0;
-  cntFound_ = 0;
+  cntFound_ = std::vector<int>(SelectedKinematicDecay::NAmbiguity,0);
 
   if(dbe){
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
@@ -335,7 +336,7 @@ void KinematicTauAnalyzer::beginJob(){
       energyTFraction.push_back(dbe->book1D("energyTFraction"+amb,"energyTFraction"+amb,100,0.0,2.0));  energyTFraction.at(ambiguity)->setAxisTitle("E_{a1}/E_{#tau}");
       iterations.push_back(dbe->book1D("iterations"+amb,"iterations"+amb,51,-0.5,50.5));  iterations.at(ambiguity)->setAxisTitle("Number of Iterations");
       maxiterations.push_back(dbe->book1D("maxiterations"+amb,"maxiterations"+amb,51,0.5,50.5));  maxiterations.at(ambiguity)->setAxisTitle("Max Number of Iterations");
-      chi2.push_back(dbe->book1D("chi2"+amb,"chi2"+amb,100,0.0,100.0));  chi2.at(ambiguity)->setAxisTitle("#chi^{2}");
+      chi2.push_back(dbe->book1D("chi2"+amb,"chi2"+amb,100,0.0,5.0));  chi2.at(ambiguity)->setAxisTitle("#chi^{2}");
       constraints.push_back(dbe->book1D("constraints"+amb,"constraints"+amb,51,-0.5,50.5));  constraints.at(ambiguity)->setAxisTitle("Number of Constraints");
       ndf.push_back(dbe->book1D("ndf"+amb,"ndf"+amb,51,-0.5,50.5));  ndf.at(ambiguity)->setAxisTitle("N.D.F");
       csum.push_back(dbe->book1D("csum"+amb,"csum"+amb,51,-0.5,50.5));  csum.at(ambiguity)->setAxisTitle("csum");
@@ -442,11 +443,12 @@ void KinematicTauAnalyzer::beginJob(){
 }
 
 void KinematicTauAnalyzer::endJob(){
-  float ratio = 0.0;
-  if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-  std::cout << "Tau_JAKID_Filter" <<"--> [Tau_JAKID_Filter]  Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%" << std::endl;
+  for(unsigned int i=0;i<SelectedKinematicDecay::NAmbiguity;i++){
+    float ratio = 0.0;
+    if(cnt_!=0) ratio=(float)cntFound_.at(i)/cnt_;
+    std::cout << "KinematicTauAnalyzer Ambiguity " << i <<"-->  Efficiency: "<< cntFound_.at(i)<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%" << std::endl;
+  }
 }
-
 bool KinematicTauAnalyzer::doJAKID(unsigned int i){
   for(unsigned int j=0;j<JAKID_.size();j++){
     if(((unsigned int)JAKID_.at(j))==i)return true;
