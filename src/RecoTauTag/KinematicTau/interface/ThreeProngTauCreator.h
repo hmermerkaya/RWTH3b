@@ -41,8 +41,8 @@
 class ThreeProngTauCreator : public KinematicTauCreator
 {
 public:
-  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder):KinematicTauCreator(transTrackBuilder){}
-  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg):KinematicTauCreator(transTrackBuilder, cfg){}
+  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,edm::Handle<reco::GenParticleCollection> &GenPart_):KinematicTauCreator(transTrackBuilder,GenPart_){}
+  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,edm::Handle<reco::GenParticleCollection> &GenPart_):KinematicTauCreator(transTrackBuilder, cfg,GenPart_){}
   
   // ndf depends on specific decay.
   virtual int ndf() const;

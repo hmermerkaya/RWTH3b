@@ -4,30 +4,63 @@
 #include "TLorentzVector.h"
 
 AlgebraicVector TauA1NuNumericalKinematicConstraint::Value(AlgebraicVector &v){
-  TLorentzVector a1(v(4),v(5),v(6), v(7));
+  std::cout << v << std::endl;
+
+  TLorentzVector a1(v(4),v(5),v(6),sqrt(v(4)*v(4)+v(5)*v(5)+v(6)*v(6)+v(7)*v(7)));
   TLorentzVector nu(v(8),v(9),v(10),sqrt(v(8)*v(8)+v(9)*v(9)+v(10)*v(10)));
+  TLorentzVector a1_d=a1;
+  std::cout<<"nu Phi  " <<nu.Phi()<< " nu Px " <<  nu.Px() << " nu Px " << nu.Py() << " nu Pt " <<  nu.Pz() <<std::endl;
+  std::cout<<"a1 Phi  " <<a1.Phi()<< " a1 Px " <<  a1.Px() << " a1 Px " << a1.Py() << " a1 Pt " <<  a1.Pz() << " mass " << a1.M() << " E " << a1.E() <<std::endl;
+
 
   TVector3 sv(v(1),v(2),v(3));
   TVector3 pv=pv_inital;
   TVector3 TauDir=sv-pv;
   double phi(TauDir.Phi()),theta(TauDir.Theta());
-  TLorentzVector a1rot=a1;
-  a1rot.RotateZ(-phi);
-  a1rot.RotateY(-theta);
-  TLorentzVector nurot=nu;
-  nurot.RotateZ(-phi);
-  nurot.RotateY(-theta);
+  a1.RotateZ(-phi);
+  a1.RotateY(-theta);
+  nu.RotateZ(-phi);
+  nu.RotateY(-theta);
 
-  TLorentzVector nurotfixed(-a1rot.Px(),-a1rot.Py(),nurot.Pz(),sqrt(a1rot.Pt()*a1rot.Pt()+nurot.Pz()*nurot.Pz()));
+  TLorentzVector nufixed(-a1.Px(),-a1.Py(),nu.Pz(),sqrt(a1.Pt()*a1.Pt()+nu.Pz()*nu.Pz()));
   AlgebraicVector res(3,0);
-  TLorentzVector tau=a1rot+nurotfixed;
-  res(1) = tau.M(); // mass constraint fixed to only float Pz for nu (ie only one value with huge errors per constraint) 
-  res(2) = a1rot.Pt()-nurot.Pt(); // |Pt| balance constraint
-  res(3) = 1+(a1rot.Px()*nurot.Px()+a1rot.Py()*nurot.Py())/(a1rot.Pt()*nurot.Pt()); // phi' constraint (back-to-back) 
-//   std::cout<< "------------>"<<std::endl;
-//   std::cout<<"nurotfixed Phi  " <<nurotfixed.Phi()<< " nurotfixed Px " <<  nurotfixed.Px() << " nurotfixed Px " << nurotfixed.Py() << " nurotfixed Pt " <<  nurotfixed.Pt() <<std::endl;
-//   std::cout<<"a1 Phi  " <<a1.Phi()<< " a1 Px " <<  a1.Px() << " a1 Px " << a1.Py() << " a1 Pt " <<  a1.Pt() <<std::endl;
-//   std::cout<<"a1rot Phi  " <<a1rot.Phi()<< " a1rot Px " <<  a1rot.Px() << " a1rot Px " << a1rot.Py() << " a1rot Pt " <<  a1rot.Pt() <<std::endl;
+  TLorentzVector tau=a1+nufixed;
+  res(1) = tau.M()-mtau_c; // mass constraint fixed to only float Pz for nu (ie only one value with huge errors per constraint) 
+  res(2) = a1.Pt()-nu.Pt(); // |Pt| balance constraint
+  res(3) = 1+(a1.Px()*nu.Px()+a1.Py()*nu.Py())/(a1.Pt()*nu.Pt()); // phi' constraint (back-to-back) 
+
+  if(debug){
+    std::cout << "------------>"<<std::endl;
+    std::cout << "nufixed Phi  " <<nufixed.Phi()<< " nufixed Px " <<  nufixed.Px() << " nufixed Px " << nufixed.Py() << " nufixed Pt " <<  nufixed.Pt() <<std::endl;
+    std::cout << "a1 Phi  " <<a1.Phi()<< " a1 Px " <<  a1.Px() << " a1 Px " << a1.Py() << " a1 Pt " <<  a1.Pt() << " mass " << a1.M()  <<std::endl;
+    std::cout << "Tau  M" << tau.M() << " E " << tau.E() <<  " Px" << tau.Px() << " Py" << tau.Py() << " Pz " << tau.Pz() << std::endl;
+    if(GenPart.isValid()){
+      double TauMatchingDR_=0.4;
+      for(reco::GenParticleCollection::const_iterator itr = GenPart->begin(); itr!= GenPart->end(); ++itr){
+	if(itr->pdgId()==15){
+	  const reco::GenParticle mytau=(*itr);
+	  TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
+	  if(a1_d.DeltaR(mc)<TauMatchingDR_){
+	    for (unsigned int i=0; i<(itr)->numberOfDaughters();i++){
+	      const reco::Candidate *dau=(itr)->daughter(i);
+	      if(fabs(dau->pdgId())==20213){
+		TVector3 TruthPvtx((itr)->vx(),(itr)->vy(),(itr)->vz());
+		TVector3 TruthSvtx(dau->vx(),dau->vy(),dau->vz());
+		TVector3 TruthDir=TruthSvtx-TruthPvtx; 
+		std::cout << " TauDir Phi " << TauDir.Phi() << " Theta " << TauDir.Theta() << " Mag " << TauDir.Mag() << " E " << tau.E() << std::endl;
+		std::cout << " Truth Dir Phi " << TruthDir.Phi() << " Theta " << TruthDir.Theta() << " Mag " << TruthDir.Mag() << " E " << mc.E() << std::endl;
+		std::cout << "PVT Truth Vx"  << TruthPvtx.Px() << " Vy " << TruthPvtx.Py() <<  " Vz " << TruthPvtx.Pz() << " " << std::endl;
+		std::cout << "PV Current Vx"  << pv.Px() << " Vy " << pv.Py() <<  " Vz " << pv.Pz() << " " << std::endl;
+		std::cout << "SVT Truth Vx"  << TruthSvtx.Px() << " Vy " << TruthSvtx.Py() <<  " Vz " << TruthSvtx.Pz() << " " << std::endl;
+		std::cout << "SV Current Vx"  << sv.Px() << " Vy " << sv.Py() <<  " Vz " << sv.Pz() << " " << std::endl;
+		
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
   return res;
 }
 

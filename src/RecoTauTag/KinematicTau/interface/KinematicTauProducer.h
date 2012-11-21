@@ -69,6 +69,7 @@ private:
   edm::Event * iEvent_;
   edm::InputTag KinematicTauCandTag_;
   unsigned int cnt_, cntFound_;
+  edm::InputTag gensrc_;
 
   TFile *output;
   TTree *output_tree;

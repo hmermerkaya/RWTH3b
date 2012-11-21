@@ -34,7 +34,7 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
     }
   bool fitWorked=false;
   // fitWorked=kinematicRefit(ambiguity,*pions, modifiedPV_);
-    fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
+  fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
 
   for(unsigned int i=0;i<daughters->size();i++){
     /*  std::cout << "Inital "
@@ -173,12 +173,9 @@ bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<Re
     edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
     return false;
   }
-  std::cout << "A" << std::endl;
   // Setup Constraint
   TVector3 pv(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
-  std::cout << "B" << std::endl;
-  MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(PMH.Get_tauMass(),1.0);
-  std::cout << "C" << std::endl;
+  MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(pv,PMH.Get_tauMass(),GenPart,1.0,true);
   try{
     std::cout << "C1" << std::endl;
     kinTree_ = kcvFitter_->fit(unfitDaughters,TauA1NU);//,&vtxGuess);

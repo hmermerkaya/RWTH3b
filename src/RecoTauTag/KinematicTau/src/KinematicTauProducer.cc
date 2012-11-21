@@ -14,7 +14,8 @@
 
 KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
-  KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag"))
+  KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
+  gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" ))
 {
   produces<reco::RecoChargedCandidateCollection>("KinematicFitTauDaughters");
   produces<SelectedKinematicDecayCollection>("KinematicFitTau");
@@ -77,6 +78,9 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
 
+  edm::Handle<reco::GenParticleCollection> genParticles;
+  iEvent_->getByLabel(gensrc_, genParticles);
+
   for(unsigned int i=0;i<KinematicTauCandidates->size();i++){
 
     SelectedKinematicDecay KFTau=KinematicTauCandidates->at(i);
@@ -84,7 +88,7 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
 
-      KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_);
+      KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
 
       int fitStatus = kinTauCreator->create(ambiguity,KFTau);
 

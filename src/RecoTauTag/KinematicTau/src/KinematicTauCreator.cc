@@ -1,9 +1,10 @@
 #include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 
 
-KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder):
+KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,edm::Handle<reco::GenParticleCollection> &GenPart_):
   modifiedPV_(),
-  transientTrackBuilder_(transTrackBuilder)
+  transientTrackBuilder_(transTrackBuilder),
+  GenPart(GenPart_)
 {
   kcvFitter_ = new NumericalKinematicConstrainedFitter();
   edm::ParameterSet defaultConfig;
@@ -16,9 +17,10 @@ KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &
   modifiedPV_ = reco::Vertex();
 }
 
-KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg):
+KinematicTauCreator::KinematicTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,edm::Handle<reco::GenParticleCollection> &GenPart_):
   modifiedPV_(),
-  transientTrackBuilder_(transTrackBuilder)
+  transientTrackBuilder_(transTrackBuilder),
+  GenPart(GenPart_)
 {
   kcvFitter_ = new NumericalKinematicConstrainedFitter();
   kcvFitter_->setParameters(cfg);

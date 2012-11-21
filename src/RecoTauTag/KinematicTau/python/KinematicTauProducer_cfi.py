@@ -11,5 +11,6 @@ KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::Cand
                                                                 maxReducedChiSq = cms.double(225.),
                                                                 minChiSqImprovement = cms.double(50.)
                                                                 ),
-                                      KinematicTauCandTag = cms.InputTag("ThreeProngInputSelectorStep2","PreKinematicDecaysStep2") # the pre-selected taudecays 
+                                      KinematicTauCandTag = cms.InputTag("ThreeProngInputSelectorStep2","PreKinematicDecaysStep2"), # the pre-selected taudecays 
+                                      gensrc = cms.InputTag('genParticles')
                                       )
