@@ -76,7 +76,7 @@ public:
 
     const std::vector<ACMuon *>& muons() const;
     /// set muon collection
-    std::vector<ACParticle *> ** linkMuons();
+    std::vector<ACMuon *> ** linkMuons();
     
     const std::vector<ACParticle *>& electrons() const;
     /// set electron collection
