@@ -235,6 +235,8 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const Kinemat
      refitTauDecay.push_back( SelectedKinematicParticle(*itr, status, name, ambiguity, emptyCandRef) );
   }
 
+  std::cout << "Found " << refitTauDecay.size() << " particles" << std::endl;
+
   if(refitTauDecay.size() != 6) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::saveKinParticles Invalid number of SelectedKinematicParticles saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
  else{
    KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2());

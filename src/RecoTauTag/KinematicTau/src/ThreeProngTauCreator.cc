@@ -3,47 +3,52 @@
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
 
 int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay &KFTau){
-
+  std::cout << "Fit start" << std::endl;
   std::vector<RefCountedKinematicParticle> *pions = new std::vector<RefCountedKinematicParticle>; //3 particles (3pi)
   std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>; //1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
 
   std::vector<RefCountedKinematicParticle> *a1 = new std::vector<RefCountedKinematicParticle>;    // a1
   std::vector<RefCountedKinematicParticle> *daughters = new std::vector<RefCountedKinematicParticle>; // nu  + a1
 
-
+  std::cout << "Fit A" << std::endl;
   if(!createStartScenario(ambiguity,KFTau, *pions, *neutrinos, *a1)) return 0;
   if (pions->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2) ){
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<daughters->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
     return 0;
   }
-
+  std::cout << "Fit A" << std::endl;
   daughters->push_back(a1->at(0));
   daughters->push_back(neutrinos->at(0));
-
+  std::cout << "Fit B" << std::endl;
   // daughters->push_back(pions->at(0));
   // pions->push_back(neutrinos->at(0));
 
   for(unsigned int i=0;i<daughters->size();i++){
-    /*    std::cout << "Inital " 
+    std::cout << "Fit C" << std::endl;
+        std::cout << "Current " 
 	      << daughters->at(i)->currentState().globalPosition().x() << " " 
 	      << daughters->at(i)->currentState().globalPosition().y() << " " 
 	      << daughters->at(i)->currentState().globalPosition().z() << " "
 	      << daughters->at(i)->currentState().globalMomentum().x() << " "
               << daughters->at(i)->currentState().globalMomentum().y() << " "
-              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl; */
+              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl; 
+	std::cout << "Fit D" << std::endl;
     }
   bool fitWorked=false;
   // fitWorked=kinematicRefit(ambiguity,*pions, modifiedPV_);
   fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
 
+  std::cout << "Fit E" << std::endl;
   for(unsigned int i=0;i<daughters->size();i++){
-    /*  std::cout << "Inital "
+    std::cout << "Fit F" << std::endl;
+    std::cout << "Inital "
               << daughters->at(i)->initialState().globalPosition().x() << " "
               << daughters->at(i)->initialState().globalPosition().y() << " "
               << daughters->at(i)->initialState().globalPosition().z() << " "
               << daughters->at(i)->initialState().globalMomentum().x() << " "
               << daughters->at(i)->initialState().globalMomentum().y() << " "
               << daughters->at(i)->initialState().globalMomentum().z() << " " << std::endl;
+    std::cout << "Fit G" << std::endl;
     std::cout << "Current "
               << daughters->at(i)->currentState().globalPosition().x() << " "
               << daughters->at(i)->currentState().globalPosition().y() << " "
@@ -51,11 +56,12 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
               << daughters->at(i)->currentState().globalMomentum().x() << " "
               << daughters->at(i)->currentState().globalMomentum().y() << " "
               << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl;
-    */
+    std::cout << "Fit H" << std::endl;
+    
   }
 
 
-    
+  std::cout << "Fit done" << std::endl;
   delete daughters;
   delete neutrinos;
   delete a1;
@@ -174,8 +180,7 @@ bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<Re
     return false;
   }
   // Setup Constraint
-  TVector3 pv(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
-  MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(pv,PMH.Get_tauMass(),GenPart,1.0,true);
+  MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(primaryVertex,PMH.Get_tauMass(),GenPart,1.0,true);
   try{
     std::cout << "C1" << std::endl;
     kinTree_ = kcvFitter_->fit(unfitDaughters,TauA1NU);//,&vtxGuess);
@@ -241,7 +246,7 @@ RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(const
   const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),nuGuess.Px(),nuGuess.Py(),nuGuess.Pz(),nuGuess.M()));
   ROOT::Math::SVector<double,28> svector28;
   for(unsigned int i=1; i!=22; i++) svector28(i-1) = 0.0;
-  for(unsigned int i=22; i!=28; i++) svector28(i-1) = 0.0;//correlation between mass and momentum/vertex
+  for(unsigned int i=22; i!=28; i++) svector28(i-1) = 0.0; //correlation between mass and momentum/vertex
   for(unsigned int n=1; n!=7; n++) svector28(n*(n+1)/2 - 1) = pow(10.,2.);//diagonals, huge error method
   svector28(27) = pow(10.,-12.);//mass error
   //insert 3prong vertex errors

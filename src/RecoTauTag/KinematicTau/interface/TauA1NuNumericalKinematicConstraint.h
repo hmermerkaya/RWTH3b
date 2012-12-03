@@ -16,16 +16,10 @@
 
 class TauA1NuNumericalKinematicConstraint : public MultiTrackNumericalKinematicConstraint{
  public:
-  TauA1NuNumericalKinematicConstraint(TVector3 pv,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight=1.0,bool debug_=false):
-    MultiTrackNumericalKinematicConstraint(weight),
-    pv_inital(pv),
-    mtau_c(mtau),
-    GenPart(GenPart_),
-    debug(debug_)
-      {
-	if(!GenPart.isValid())debug=false;
-      }
+  TauA1NuNumericalKinematicConstraint(const reco::Vertex &primaryVertex,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight=1.0,bool debug_=false);
   virtual ~TauA1NuNumericalKinematicConstraint(){}
+
+  enum Pars{tau_phi=0,tau_theta,a1_px,a1_py,a1_pz,a1_m,nu_px,nu_py,nu_pz,npar,norigpar=13};
 
   virtual TauA1NuNumericalKinematicConstraint * clone() const {return new TauA1NuNumericalKinematicConstraint(*this);}
   virtual bool   ConfigureIntialState(const std::vector<KinematicState> inStates,const GlobalPoint& inPoint);
@@ -33,12 +27,14 @@ class TauA1NuNumericalKinematicConstraint : public MultiTrackNumericalKinematicC
   virtual int numberOfEquations(){return 3;}
 
  protected:
-  virtual AlgebraicVector Value(AlgebraicVector &v);
+  virtual TVectorD Value(TVectorD &v);
     
  private:
-  TVector3 pv_inital;
+  reco::Vertex pv_inital;
+  TVector3 TauDir,sv,pv;
   double mtau_c;
   edm::Handle<reco::GenParticleCollection> &GenPart;
-  bool debug;
+
+
 };
 #endif

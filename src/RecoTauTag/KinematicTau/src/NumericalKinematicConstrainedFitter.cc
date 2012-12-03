@@ -27,8 +27,6 @@ NumericalKinematicConstrainedFitter::NumericalKinematicConstrainedFitter(const L
 NumericalKinematicConstrainedFitter::~NumericalKinematicConstrainedFitter()
 {
  delete finder;
- //delete vCons;
- //delete updator;
  delete tBuilder;
 }
 
@@ -103,14 +101,15 @@ RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit(std::vector<Ref
   cs->ConfigureIntialState(inStates,linPoint);
   int nit(0);
   double chi2(1e6),delta(0);
-  do{
-    nit++;
+  for(nit=0;nit<=theMaxStep;nit++){
     bool passed=cs->ApplyLagrangianConstraints(chi2,delta);
-    if (!passed || (nit==theMaxStep && delta>=4.0*theMaxDelta)) {
+    /*if (!passed || (nit==theMaxStep && delta>=4.0*theMaxDelta)) {
       std::cout << "RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit end" << std::endl;
       return ReferenceCountingPointer<KinematicTree>(new KinematicTree());
-    } 
-  }while(delta<theMaxDelta || nit==theMaxStep);
+      } */
+    std::cout << "Loop Iteration " << nit << " chi2 " << chi2 << " delta " << delta << std::endl; 
+    if(cs->isConverged(chi2,delta))break;
+  }
   std::pair< std::pair< std::vector<KinematicState>, AlgebraicMatrix >,RefCountedKinematicVertex> lRes =cs->ConvertStateToParameters(inStates,linPoint);  
   const std::vector<KinematicState> &newStates = lRes.first.first;
   lStates = newStates;
