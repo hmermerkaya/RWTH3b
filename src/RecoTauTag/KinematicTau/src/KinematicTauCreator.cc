@@ -59,15 +59,6 @@ std::vector<math::XYZTLorentzVector> KinematicTauCreator::getRefittedChargedDaug
 {
   std::vector<math::XYZTLorentzVector> tmpvec;
   for ( unsigned int i = 0; i < kinTree_->daughterParticles().size(); i++ ) {
-    std::cout << "current  px " << (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x()  
-	      << " py " << (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y()
-	      << " pz " << (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().z()
-	      << " m " << (kinTree_->daughterParticles().at(i))->currentState().mass() << std::endl;
-    std::cout << "inital  px " << (kinTree_->daughterParticles().at(i))->initialState().globalMomentum().x()
-              << " py " << (kinTree_->daughterParticles().at(i))->initialState().globalMomentum().y()
-              << " pz " << (kinTree_->daughterParticles().at(i))->initialState().globalMomentum().z()
-              << " m " << (kinTree_->daughterParticles().at(i))->initialState().mass() << std::endl;
-
     if (std::abs(int((kinTree_->daughterParticles().at(i))->currentState().particleCharge())) == 1) {
       tmpvec.push_back(math::XYZTLorentzVector((kinTree_->daughterParticles().at(i))->currentState().globalMomentum().x(),
 					       (kinTree_->daughterParticles().at(i))->currentState().globalMomentum().y(),

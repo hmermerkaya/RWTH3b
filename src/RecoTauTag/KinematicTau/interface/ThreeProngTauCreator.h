@@ -56,9 +56,11 @@ private:
   RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,TLorentzVector &NuGuessLV);
   RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
   std::vector<RefCountedKinematicParticle> a1maker(std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &PostFitPions);
-  void SolvebyRotation(TVector3 TauDir,TLorentzVector a1,TLorentzVector &Tau1,TLorentzVector &Tau2,TLorentzVector &nu1,TLorentzVector &nu2);
+  void SolvebyRotation(TVector3 TauDir,TLorentzVector A1,TLorentzVector &Tau1,TLorentzVector &Tau2,TLorentzVector &nu1,TLorentzVector &nu2);
   void quadratic(double &x_plus,double &x_minus,double a, double b, double c);
-  void ESolver(double &Enu1,double &Enu2,double Ea1,double ma1, double Pz, double Pt);
+  void AnalyticESolver(TLorentzVector &nu1,TLorentzVector &nu2,TLorentzVector A1);
+  void NumericalESolver(TLorentzVector &nu1,TLorentzVector &nu2,TLorentzVector A1);
+
 
   ParticleMassHelper PMH;
 

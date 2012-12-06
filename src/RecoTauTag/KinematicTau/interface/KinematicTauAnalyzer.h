@@ -66,6 +66,7 @@ private:
 
   std::vector<std::vector<MonitorElement*> >  Truth_TauMatch_dPhi, Truth_TauMatch_dTheta, Truth_TauMatch_dE, 
     Truth_PionMatch_dPhi, Truth_PionMatch_dTheta, Truth_PionMatch_dE,Truth_NuMatch_dPhi,Truth_NuMatch_dTheta,Truth_NuMatch_dE,
+    Truth_A1Match_dPhi, Truth_A1Match_dTheta, Truth_A1Match_dE, Truth_A1Match_dPt, Truth_A1Match_M,
     TruthVtxXChange, TruthVtxYChange, TruthVtxZChange, TruthSecVtxXChange, TruthSecVtxYChange, 
     TruthSecVtxZChange, TruthPVtxSig, TruthSecVtxSig, TruthTauFlightDir, TruthTauFlightDirCheck,
     Truth_TauMatch_dPt,Truth_TauMatch_dPz, Truth_TauMatch_dPtvsL, Truth_TauMatch_dEvsL,Truth_TauMatch_dGFAnglevsL, 

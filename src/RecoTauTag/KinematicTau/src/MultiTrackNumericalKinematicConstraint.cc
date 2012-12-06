@@ -87,13 +87,13 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
       dfin_C+=dfin(i)*dfin(i)*w(i);
       //std::cout << "constriants " << dfin_C << " " << dfin(i) << " " << w(i) << std::endl;
     }
-    std::cout << "constriants " << sf  << std::endl;
+    //std::cout << "constriants " << sf  << std::endl;
     delta=sqrt(dfin_C);
-    dfin.Print();
+    //dfin.Print();
     // correct step size if needed
     if(/*chi2<=chi2prev &&*/ delta<=sqrt(d_C)) break;
     sf*=0.5; 
-    std::cout << "chi or conv scale " << sf << " i= " << iter << " dchi2 " << chi2-chi2prev << " deltla " << delta-sqrt(d_C) <<  std::endl;
+    //if(debug)std::cout << "chi or conv scale " << sf << " i= " << iter << " dchi2 " << chi2-chi2prev << " deltla " << delta-sqrt(d_C) <<  std::endl;
   }
   //correct finPar to new stepsize
   finPar=par+sf*dpar;
@@ -104,17 +104,23 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
   TMatrixT<double> CovCor=VDTV_DDV;
   TMatrixT<double> V_alpha = V_alpha0-CovCor;
   //copy new par
-  std::cout << "alpha_0" << std::endl;  
-  par.Print();
+  //std::cout << "alpha_0" << std::endl;  
+  //par.Print();
   par=finPar;
   for(int i=0; i<cov.GetNrows();i++){
     for(int j=0; j<=i;j++){
       cov(i,j)=V_alpha(i,j);
     }
   }
-  std::cout << "alpha" << std::endl;
-  par.Print();
+  //std::cout << "alpha" << std::endl;
+  //par.Print();
+  /* if(debug){
   std::cout << " delta " << delta << std::endl; 
+  TVectorD dfin=Value(finPar);
+  dfin.Print();
+  par.Print();
+  debug=false;
+  }*/
   //if(debug)std::cout << "MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints end" <<std::endl;
   return true;
 }

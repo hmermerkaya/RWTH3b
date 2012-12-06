@@ -107,8 +107,8 @@ RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit(std::vector<Ref
       std::cout << "RefCountedKinematicTree NumericalKinematicConstrainedFitter::fit end" << std::endl;
       return ReferenceCountingPointer<KinematicTree>(new KinematicTree());
       } */
-    std::cout << "Loop Iteration " << nit << " chi2 " << chi2 << " delta " << delta << std::endl; 
-    if(cs->isConverged(chi2,delta))break;
+    //std::cout << "Loop Iteration " << nit << " chi2 " << chi2 << " delta " << delta << std::endl; 
+    if(cs->isConverged(chi2,delta)  ) break;
   }
   std::pair< std::pair< std::vector<KinematicState>, AlgebraicMatrix >,RefCountedKinematicVertex> lRes =cs->ConvertStateToParameters(inStates,linPoint);  
   const std::vector<KinematicState> &newStates = lRes.first.first;

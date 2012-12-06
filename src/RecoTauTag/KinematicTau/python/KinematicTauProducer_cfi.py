@@ -7,7 +7,7 @@ from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::CandidateRefVector containing refs to selected jets
                                       #parameters for KinematicConstrainedVertexFitter
                                       fitParameters = cms.PSet( maxDelta = cms.double(.0001),#stopping condition
-                                                                maxNbrOfIterations = cms.int32(1000),	#number of iterations
+                                                                maxNbrOfIterations = cms.int32(100),	#number of iterations
                                                                 maxReducedChiSq = cms.double(225.),
                                                                 minChiSqImprovement = cms.double(50.)
                                                                 ),

@@ -48,7 +48,6 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(gensrc_, genParticles);
-
   bool found=false;
   for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
     cnt_++;
@@ -60,7 +59,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	}
       }
       if(npassed==discriminators_.size()){
-	if(found) cntFound_.at(ambiguity)+=1;
+	cntFound_.at(ambiguity)+=1;
 	found=true;
 	SelectedKinematicDecay KFTau=(*kinFitTau);
 	const TLorentzVector Tau=KFTau.Tau(ambiguity);
@@ -138,24 +137,27 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 	// If Truth is valid run truth comparison
 	if(genParticles.isValid()){
-	  for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end(); ++itr){
+	  bool foundtruth=false;
+	  for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end() && !foundtruth; ++itr){
 	    const reco::GenParticle mytau=(*itr);
 	    if(isTruthTauInAcceptance(mytau)){
 	      TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
-	      if(Tau.DeltaR(mc)<TauMatchingDR_){
-  
-		if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
-		  TLorentzVector Tau_plus=KFTau.Tau(SelectedKinematicDecay::PlusSolution);
-		  TLorentzVector Tau_minus=KFTau.Tau(SelectedKinematicDecay::MinusSolution);
-		  if(fabs(mc.E()-Tau_plus.E())<fabs(mc.E()-Tau_minus.E()) && Tau_plus.E()!=Tau.E())  continue;
-		  if(fabs(mc.E()-Tau_plus.E())>fabs(mc.E()-Tau_minus.E()) && Tau_minus.E()!=Tau.E()) continue;
-		}
+	      TauDecay_CMSSWReco TD;
+	      unsigned int jak_id, TauBitMask;
+	      TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
+	      if(a1.DeltaR(mc)<TauMatchingDR_ && doJAKID(jak_id)){
+		foundtruth=true;
 		Truth_TauMatched.at(ambiguity)->Fill(1.0,weight);
-		TauDecay_CMSSWReco TD;
-		unsigned int jak_id, TauBitMask;
-		TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
+
 		JAKID.at(ambiguity)->Fill(jak_id,weight);
 		std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
+
+		if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
+                  TLorentzVector Tau_plus=KFTau.Tau(SelectedKinematicDecay::PlusSolution);
+                  TLorentzVector Tau_minus=KFTau.Tau(SelectedKinematicDecay::MinusSolution);
+                  if(fabs(mc.E()-Tau_plus.E())<fabs(mc.E()-Tau_minus.E()) && Tau_plus.E()!=Tau.E())  continue;
+                  if(fabs(mc.E()-Tau_plus.E())>fabs(mc.E()-Tau_minus.E()) && Tau_minus.E()!=Tau.E()) continue;
+                }
 
 		TVector3 TruthPvtx(itr->vx(),itr->vy(),itr->vz());
 		TVector3 TruthSvtx;
@@ -211,14 +213,22 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 		  TLorentzVector mc_a1(0,0,0,0);
 		  for(unsigned int j=0;j<DecayProd.size();j++){
-		    if(fabs(DecayProd.at(j)->pdgId())>100){
-		      TLorentzVector mc_pi(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
-		      mc_a1+=mc_pi;
+		    if(fabs(DecayProd.at(j)->pdgId())==PdtPdgMini::a_1_plus){
+		      mc_a1.SetPxPyPzE(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
 		    }
 		  }
 		  Truth_TauMatch_dGFAngle.at(ambiguity).at(idx)->Fill(a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  Truth_TauMatch_dGFAnglevsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  Truth_TauMatch_dGFInitialAngle.at(ambiguity).at(idx)->Fill(a1_initial.Angle(Tau_initial.Vect())-mc.Angle(mc_a1.Vect()),weight);
+
+
+		  std::cout << "Tau  " << ambiguity << " " << idx << std::endl;
+		  Truth_A1Match_dPhi.at(ambiguity).at(idx)->Fill(a1.Phi()-mc_a1.Phi());
+		  Truth_A1Match_dTheta.at(ambiguity).at(idx)->Fill(a1.Theta()-mc_a1.Theta());
+		  Truth_A1Match_dE.at(ambiguity).at(idx)->Fill(a1.E()-mc_a1.E());
+		  Truth_A1Match_dPt.at(ambiguity).at(idx)->Fill(a1.Pt()-mc_a1.Pt());
+		  Truth_A1Match_M.at(ambiguity).at(idx)->Fill(a1.M()-mc_a1.M());
+
 		  //charged hadrons (pi/K)
 		  for(unsigned int i=0; i<Pions.size();i++){
 		    double pidrmin=999;
@@ -360,6 +370,11 @@ void KinematicTauAnalyzer::beginJob(){
       Truth_TauMatch_dThetaInitial.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dEInitial.push_back(std::vector<MonitorElement*>());
 
+      Truth_A1Match_dPhi.push_back(std::vector<MonitorElement*>());
+      Truth_A1Match_dTheta.push_back(std::vector<MonitorElement*>());
+      Truth_A1Match_dE.push_back(std::vector<MonitorElement*>());
+      Truth_A1Match_dPt.push_back(std::vector<MonitorElement*>());
+      Truth_A1Match_M.push_back(std::vector<MonitorElement*>());
 
       Truth_PionMatch_dPhi.push_back(std::vector<MonitorElement*>());
       Truth_PionMatch_dTheta.push_back(std::vector<MonitorElement*>());
@@ -406,6 +421,13 @@ void KinematicTauAnalyzer::beginJob(){
 	  Truth_NuMatch_dE.at(ambiguity).push_back(dbe->book1D("TruthNuMatchdEnergy"+tmp+amb,"dE_{"+tmp+"}^{#nu Match} "+amb,100 ,-2.0,2.0));                      axis="dE_{"+tmp+"}^{#nu Match} (GeV)"; Truth_NuMatch_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 
 
+
+	  Truth_A1Match_dPhi.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdPhi"+tmp+amb,"d#phi_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-0.1,0.1));       axis="d#phi_{"+tmp+"}^{a_{1} Match} (rad)"; Truth_A1Match_dPhi.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  Truth_A1Match_dTheta.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdTheta"+tmp+amb,"d#theta_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-0.1,0.1)); axis="d#theta_{"+tmp+"}^{a_{1} Match} (rad)"; Truth_A1Match_dTheta.at(ambiguity).at(idx)->setAxisTitle(axis.Data()); 
+	  Truth_A1Match_dE.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdEnergy"+tmp+amb,"dE_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-15.0,15.0));       axis="dE_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  Truth_A1Match_dPt.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdEnergy"+tmp+amb,"dE_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-15.0,15.0));       axis="dE_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  Truth_A1Match_M.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdM"+tmp+amb,"dM_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-2.0,2.0));       axis="dM_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	 
 	  TruthVtxXChange.at(ambiguity).push_back(dbe->book1D("TruthPVtxXChange"+tmp+amb,"Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} "+amb,100 ,-0.1,0.1)); axis="Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} (mm)"; TruthVtxXChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	  TruthVtxYChange.at(ambiguity).push_back(dbe->book1D("TruthPVtxYChange"+tmp+amb,"Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} (mm)"; TruthVtxYChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	  TruthVtxZChange.at(ambiguity).push_back(dbe->book1D("TruthPVtxZChange"+tmp+amb,"Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} (mm)"; TruthVtxZChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
@@ -458,10 +480,10 @@ bool KinematicTauAnalyzer::doJAKID(unsigned int i){
 
 bool KinematicTauAnalyzer::isTruthTauInAcceptance(const reco::GenParticle &cand){
   if(fabs(cand.pdgId())!=fabs(PdtPdgMini::tau_minus)) return false;
-  if(cand.status()!=2) return false; // require tau that is: 2) a particle after parton showering and ISR/FSR 
+  // if(cand.status()!=2) return false; // require tau that is: 2) a particle after parton showering and ISR/FSR 
   TLorentzVector tau(cand.p4().Px(),cand.p4().Py(),cand.p4().Pz(),cand.p4().E());
-  if(tau.Pt()>TauPtMin_ && fabs(tau.Eta())<TauEtaMax_)return true; // require tau within Pt and |eta| acceptance
-  return false;
+  if(tau.Pt()<TauPtMin_ || fabs(tau.Eta())>TauEtaMax_)return false; // require tau within Pt and |eta| acceptance
+  return true;
 }
 
 //define this as a plug-in

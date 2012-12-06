@@ -76,8 +76,6 @@ TVectorD TauA1NuNumericalKinematicConstraint::Value(TVectorD &v){
 		std::cout << "A1 d Px " << a1_d.Px() << " Py " << a1_d.Py() << " Pz " << a1_d.Pz() << " E " << a1_d.E() << " M " << a1_d.M() << std::endl;
 		TVector3 TruthPvtx((itr)->vx(),(itr)->vy(),(itr)->vz());
 		TVector3 TruthSvtx(dau->vx(),dau->vy(),dau->vz());
-  */
-  /*
 		TVector3 TruthDir=TruthSvtx-TruthPvtx; 
 		std::cout << " TauDir Phi "    << phi            << " Theta " << theta << " Mag " << TauDir.Mag() << " E " << tau.E() << std::endl;
 		std::cout << " Truth Dir Phi " << TruthDir.Phi() << " Theta " << TruthDir.Theta() << " Mag " << TruthDir.Mag() << " E " << mc.E() << std::endl;
@@ -85,8 +83,6 @@ TVectorD TauA1NuNumericalKinematicConstraint::Value(TVectorD &v){
 		std::cout << "PV Current Vx"   << pv.Px()        << " Vy " << pv.Py() <<  " Vz " << pv.Pz() << " " << std::endl;
 		std::cout << "SVT Truth Vx"    << TruthSvtx.Px() << " Vy " << TruthSvtx.Py() <<  " Vz " << TruthSvtx.Pz() << " " << std::endl;
 		std::cout << "SV Current Vx"   << sv.Px()        << " Vy " << sv.Py() <<  " Vz " << sv.Pz() << " " << std::endl;
-		*/
-  /*
 	      }
 	      if(fabs(dau->pdgId())==16){
                 nu.RotateY(theta);
@@ -117,6 +113,7 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
   for(unsigned int i=0; i<inStates.size();i++){
     AlgebraicVector    inPar = asHepVector<7>(inStates.at(i).kinematicParameters().vector());
     AlgebraicSymMatrix inCov = asHepMatrix<7>(inStates.at(i).kinematicParametersError().matrix());
+
     if(inStates.at(i).particleCharge()!=0){
       hasa1=true;
       // Parameter
@@ -155,7 +152,6 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
       incov_temp(j,i)=pvCov(i,j);
     }
   }
-
   inpar(tau_phi)=TauDir.Phi();
   inpar(tau_theta)=TauDir.Theta();
 
@@ -197,7 +193,6 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
   if(hasa1 && hasnu){
     // store cov
     cov.ResizeTo(npar,npar);
-    incov_temp.Print();
     cov=incov_temp.SimilarityT(D);
     cov_first.ResizeTo(npar,npar);
     cov_first=cov;
