@@ -1,6 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 from RecoTauTag.KinematicTau.ThreeProngInputSelector_Step1_cfi import *
-from RecoTauTag.KinematicTau.ThreeProngInputSelector_Step2_cfi import *
 from RecoTauTag.KinematicTau.KinematicTauProducer_cfi import *
 from RecoTauTag.KinematicTau.KinematicTauSkim_cfi import *
 from RecoTauTag.KinematicTau.KinematicTauAnalyzer_cfi import *
