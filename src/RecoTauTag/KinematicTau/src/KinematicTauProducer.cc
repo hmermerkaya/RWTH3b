@@ -9,13 +9,19 @@
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
-
+#include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
 
 
 KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
+  primVtxTag_(iConfig.getParameter<edm::InputTag>("primVtx")),
   KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
-  gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" ))
+  VertexTags_(iConfig.getUntrackedParameter< std::vector<std::string> >("VertexTags")),
+  TauVtxList_(iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks")),
+  gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
+  minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)),
+  etacut_(iConfig.getUntrackedParameter<double>("etacut",2.1)),
+  sigcut_(iConfig.getUntrackedParameter<double>("sigcut",3.0))
 {
   produces<reco::RecoChargedCandidateCollection>("KinematicFitTauDaughters");
   produces<SelectedKinematicDecayCollection>("KinematicFitTau");
@@ -70,49 +76,107 @@ void KinematicTauProducer::endJob(){
 }
 
 bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection,const edm::EventSetup& iSetup){
-  bool success = false;
-
-  edm::Handle<SelectedKinematicDecayCollection > KinematicTauCandidates;
-  iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidates);
-
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
 
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent_->getByLabel(gensrc_, genParticles);
 
-  for(unsigned int i=0;i<KinematicTauCandidates->size();i++){
+  // Setup vertex for looking at Taus
+  edm::Handle<reco::VertexCollection > primaryVertexCollection;
+  iEvent_->getByLabel(primVtxTag_, primaryVertexCollection);
+  if (!primaryVertexCollection.isValid()) return false;
+  reco::VertexCollection primaryVertices = *primaryVertexCollection;
 
-    SelectedKinematicDecay KFTau=KinematicTauCandidates->at(i);
-    bool hasasusccessfullfit=false;
+  if(primaryVertices.size()>0){ // if event has vertex get tau candidated
+    edm::Handle<std::vector<std::vector<SelectedKinematicDecay> > > KinematicTauCandidate;
+    iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidate);
 
-    for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
-
-      KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
-
-      int fitStatus = kinTauCreator->create(ambiguity,KFTau);
-
-      edm::LogInfo("KinematicTauProducer") <<"KinematicTauProducer::select: fitstatus " << fitStatus ;
-      if(fitStatus==1)kinTauCreator->getRefittedChargedDaughters();
-      //compute discriminators
-      std::map<std::string,bool> discrimValues;
-
-      discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFit",fitStatus));
-      discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFitQuality",dicriminatorByKinematicFitQuality(ambiguity,kinTauCreator,fitStatus,KFTau)));
-      KFTau.SetKinematicFitStatus(ambiguity,discrimValues);
-      std::cout<< "fitStatus "<< fitStatus << "by QC  " << dicriminatorByKinematicFitQuality(ambiguity,kinTauCreator,fitStatus,KFTau) <<std::endl;
-      if(fitStatus==1){
- 
-	saveKinParticles(ambiguity,kinTauCreator,KFTau);
-	saveSelectedTracks(kinTauCreator->getSelectedTracks(),daughterCollection);
-	hasasusccessfullfit=true;
-	success =true;
+    for(unsigned int i=0; i<KinematicTauCandidate->size();i++){
+      std::vector<SelectedKinematicDecay>       KFTauCandidates;
+      std::vector<std::vector<reco::TrackRef> > KFTauCandidatesTracks;
+      for(unsigned int j=0; j<KinematicTauCandidate->at(i).size();j++){
+	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
+        if(j==0){
+          const reco::PFTauRef pfiter=KTau.PFTauRef();
+        }
+        SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
+        if(SVH.hasSecondaryVertex()){
+          TString vertexName=KTau.PrimaryVertexReFitCollectionTag();
+          TString VTag;
+          for(unsigned int v=0;v<VertexTags_.size() && VertexTags_.size()==TauVtxList_.size();v++){
+            if(vertexName==TauVtxList_.at(v)) VTag=VertexTags_.at(v);
+          }
+	  edm::Handle<reco::VertexCollection > CurrentTauPrimaryVtx;
+          iEvent_->getByLabel(edm::InputTag(VTag.Data()),CurrentTauPrimaryVtx);
+          if(!CurrentTauPrimaryVtx.isValid()) continue;
+          if(CurrentTauPrimaryVtx->size()==0) continue;
+	  reco::Vertex primaryVertexReFit=CurrentTauPrimaryVtx->front();
+	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
+          TVector3 tauFlghtDirNoCorr;
+          TVector3 tauFlghtDir;
+          TLorentzVector a1_p4=SVH.Initial_a1_p4();
+          double initThetaGJ,ThetaMax;
+          TransientVertex SecondaryVertex=SVH.InitialSecondaryVertex();
+	  std::vector<reco::TransientTrack> RefittedTracks=SVH.InitialRefittedTracks();
+          double s = VertexRotationAndSignificance(SecondaryVertex,RefittedTracks,tauFlghtDirNoCorr,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
+	  if(/*(s<sigcut_  || fabs(initThetaGJ)<fabs(ThetaMax)) &&*/ s>=0 ){
+	    if(fabs(tauFlghtDirNoCorr.Eta())<etacut_ || fabs(tauFlghtDir.Eta())<etacut_ ){
+	      KTau.SetInitialVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.InitialRefittedTracks(),SVH.InitialSecondaryVertex());
+	      KTau.SetInitialKinematics(tauFlghtDirNoCorr,SVH.Initial_pions(),a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
+	      std::vector<reco::TrackRef> Tracks;
+	      bool FitOK=FitKinematicTauCandidate(KTau,Tracks,transTrackBuilder_,genParticles);
+	      if(FitOK){
+		KFTauCandidates.push_back(KTau);
+		KFTauCandidatesTracks.push_back(Tracks);
+	      }
+	    }
+	  }
+	}
       }
-      delete kinTauCreator;
+      if(KFTauCandidates.size()>0){
+	KinematicFitTauDecays_.push_back(KFTauCandidates.at(0));
+	saveSelectedTracks(KFTauCandidatesTracks.at(0),daughterCollection);
+      }
     }
-    if(hasasusccessfullfit)KinematicFitTauDecays_.push_back(KFTau);
+    if (KinematicFitTauDecays_.size() >= minTau_) {
+      LogTrace("KinematicTauProducer") << "KinematicTauProducer::select: " << KinematicFitTauDecays_.size() << " tau candidate(s) reconstructed.";
+      cntFound_++;
+      return true;
+    }
+    else {
+      LogTrace("KinematicTauProducer") << "KinematicTauProducer::select: Warning! Only " << KinematicFitTauDecays_.size() << " tau candidate(s) reconstructed. Skip Event.";
+      return false;
+    }
   }
-  return success; //at least one tau was fitted
+  LogTrace("KinematicTauProducer") << "KinematicTauProducer::select: Unable to calculate a new primary vertex. No tau candidates reconstructed.";
+  return false;
+}
+
+
+bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTau,std::vector<reco::TrackRef> &usedTracks, edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles){
+  bool hasasusccessfullfit=false;
+  for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
+    KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
+    int fitStatus = kinTauCreator->create(ambiguity,KFTau);
+    edm::LogInfo("KinematicTauProducer") <<"KinematicTauProducer::select: fitstatus " << fitStatus ;
+    if(fitStatus==1)kinTauCreator->getRefittedChargedDaughters();
+    //compute discriminators
+    std::map<std::string,bool> discrimValues;
+    
+    discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFit",fitStatus));
+    discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFitQuality",dicriminatorByKinematicFitQuality(ambiguity,kinTauCreator,fitStatus,KFTau)));
+    KFTau.SetKinematicFitStatus(ambiguity,discrimValues);
+
+    if(fitStatus==1){
+      saveKinParticles(ambiguity,kinTauCreator,KFTau);
+      std::vector<reco::TrackRef> Tracks=kinTauCreator->getSelectedTracks();
+      for(unsigned int i=0;i<Tracks.size();i++){usedTracks.push_back(Tracks.at(i));}
+      hasasusccessfullfit=true;
+    }
+    delete kinTauCreator;
+  }
+  return hasasusccessfullfit;
 }
 
 bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
@@ -216,27 +280,15 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const Kinemat
   std::vector<RefCountedKinematicParticle> daughters = tree->daughterParticles();
 
   for (std::vector<RefCountedKinematicParticle>::iterator iter=daughters.begin(); iter!=daughters.end(); ++iter) {
-
-    if((*iter)->currentState().particleCharge() != 0){
-      name = std::string("a1");std::cout<<"a1"<<std::endl;
-    }else{
-      name = std::string("neutrino");std::cout<<"neutrino"<<std::endl;
-    }
-  
-    refitTauDecay.push_back( SelectedKinematicParticle(*iter, status, name, ambiguity, emptyCandRef) );
+    if((*iter)->currentState().particleCharge() != 0) name = std::string("a1");
+    else name = std::string("neutrino");
+    refitTauDecay.push_back(SelectedKinematicParticle(*iter, status, name, ambiguity, emptyCandRef) );
   }
-
-
   std::vector<RefCountedKinematicParticle> Pions = kinTauCreator->getPions();
   for (std::vector<RefCountedKinematicParticle>::iterator itr=Pions.begin(); itr!=Pions.end(); ++itr) {  
-    if((*itr)->currentState().particleCharge() != 0){
-      name = std::string("pion");std::cout<<"pion"<<std::endl;
-    }
-     refitTauDecay.push_back( SelectedKinematicParticle(*itr, status, name, ambiguity, emptyCandRef) );
+    if((*itr)->currentState().particleCharge() != 0) name = std::string("pion");
+    refitTauDecay.push_back(SelectedKinematicParticle(*itr, status, name, ambiguity, emptyCandRef));
   }
-
-  std::cout << "Found " << refitTauDecay.size() << " particles" << std::endl;
-
   if(refitTauDecay.size() != 6) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::saveKinParticles Invalid number of SelectedKinematicParticles saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
  else{
    KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2());
@@ -253,7 +305,7 @@ void KinematicTauProducer::saveSelectedTracks(const std::vector<reco::TrackRef> 
   converter::TrackToCandidate tk2cand(pioncfg);
   for (std::vector<reco::TrackRef>::const_iterator trk = usedTracks.begin(); trk != usedTracks.end(); ++trk) {
     reco::RecoChargedCandidate tmpCand;
-    tk2cand.convert(*trk, tmpCand); //convert tracks to candidates                                                                                                                                                                           
+    tk2cand.convert(*trk, tmpCand); 
     daughterCollection.push_back(tmpCand);
   }
 }
@@ -269,10 +321,8 @@ void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & 
   index = 0;
   for(SelectedKinematicDecayCollection::iterator decay = KFTaus.begin(); decay != KFTaus.end(); ++decay){
     std::vector< SelectedKinematicParticle* > daughters;
-
     decay->modifiableChargedDaughters(daughters);
     for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
-      std::cout << "Solution: " << (*particle)->p4().M() << " " <<  (*particle)->p4().Px() << " " <<  (*particle)->p4().Py() << " " <<  (*particle)->p4().Pz() << std::endl; 
       if(index>=newRefs.size()){
 	edm::LogError("KinematicTauProducer")<<"evt "<<iEvent_->id().event()<<" KinematicTauProducer::correctReferences: Bad selection size! index="<<index<<", refs="<<newRefs.size();
         throw 111;
@@ -284,6 +334,22 @@ void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & 
     }
   }
 }
+
+
+double KinematicTauProducer::VertexRotationAndSignificance(TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,
+                                                                    TVector3 &tauFlghtDirNoCorr,
+                                                                    reco::Vertex &pVtx, TLorentzVector &lorentzA1,
+                                                                    TVector3 &tauFlghtDir,double &theta0, double &thetaMax){
+  TVector3 pv(pVtx.position().x(), pVtx.position().y(), pVtx.position().z());
+  TVector3 sv(tmpVtx.position().x(), tmpVtx.position().y(), tmpVtx.position().z());
+  tauFlghtDirNoCorr = sv - pv;
+
+  VertexRotation vtxC(lorentzA1);
+  thetaMax=fabs(vtxC.calcThetaMax());
+  return vtxC.rotatePV(pVtx,tmpVtx,theta0, tauFlghtDir);
+}
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauProducer);
