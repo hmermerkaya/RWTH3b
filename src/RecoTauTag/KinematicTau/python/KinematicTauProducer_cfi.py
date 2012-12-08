@@ -16,5 +16,8 @@ KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::Cand
                                       gensrc = cms.InputTag('genParticles'),
                                       minVtxTracks = cms.untracked.int32(3),
                                       maxChi2ndf = cms.untracked.double(10.0),
+                                      BDTweightFileMinus = cms.untracked.string("$CMSSW_BASE/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
+                                      BDTweightFilePlus  = cms.untracked.string("$CMSSW_BASE/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
+                                      BDTweightFileZero  = cms.untracked.string("$CMSSW_BASE/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
                                       minTau = cms.untracked.uint32(1), #minimum taus to select (otherwise filter returns false)            
                                       )

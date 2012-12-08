@@ -21,7 +21,11 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
   minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)),
   etacut_(iConfig.getUntrackedParameter<double>("etacut",2.1)),
-  sigcut_(iConfig.getUntrackedParameter<double>("sigcut",3.0))
+  sigcut_(iConfig.getUntrackedParameter<double>("sigcut",3.0)),
+  do_BDTTrain_(iConfig.getUntrackedParameter("do_BDTTrain",(bool)(false))),
+  BDTweightFileMinus_(iConfig.getUntrackedParameter<std::string>("BDTweightFileMinus")),
+  BDTweightFilePlus_(iConfig.getUntrackedParameter<std::string>("BDTweightFilePlus")),
+  BDTweightFileZero_(iConfig.getUntrackedParameter<std::string>("BDTweightFileZero"))
 {
   produces<reco::RecoChargedCandidateCollection>("KinematicFitTauDaughters");
   produces<SelectedKinematicDecayCollection>("KinematicFitTau");
@@ -56,6 +60,7 @@ void KinematicTauProducer::beginJob(){
   cnt_ = 0;
   cntFound_ = 0;
 
+  if(do_BDTTrain_){
    output = new TFile("ForTrain.root","RECREATE");
    output_tree = new TTree("t","t");
    output_tree->Branch("BDT_vtxSignPVRotSV",&BDT_vtxSignPVRotSV);
@@ -63,15 +68,27 @@ void KinematicTauProducer::beginJob(){
    output_tree->Branch("BDT_a1Mass",&BDT_a1Mass);
    output_tree->Branch("BDT_energyTFraction",&BDT_energyTFraction);
    output_tree->Branch("BDT_chiSquared",&BDT_chiSquared);
+  }
 
+     reader  = new TMVA::Reader();
+     reader->AddVariable( "fracMins", &fracMins);
+     reader->AddVariable( "a1MassMins", &a1MassMins);
+     reader->AddVariable( "ProbMins3", &ProbMins3);
+     reader->AddVariable( "iterMins", &iterMins);
+     reader->AddVariable( "PVSVMins", &PVSVMins);
+     reader->BookMVA( "BDT_method","/home/home2/institut_3b/cherepanov/work/KinFitDevelop/CMSSW_5_2_5/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml" );
+     //     reader->BookMVA( "BDT_method", BDTweightFileMinus_ );
 }
 
 void KinematicTauProducer::endJob(){
   float ratio = 0.0;
   if(cnt_!=0) ratio=(float)cntFound_/cnt_;
   edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] asks for >= 1 kinTau per event. Selection efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
-  output->Write();
-  output->Close();
+  
+  if(do_BDTTrain_){
+    output->Write();
+    output->Close();
+  }
 
 }
 
@@ -169,6 +186,7 @@ bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTa
     KFTau.SetKinematicFitStatus(ambiguity,discrimValues);
 
     if(fitStatus==1){
+      std::cout<<"----------- BDT  "<<ReturnBDTOutput(ambiguity,kinTauCreator,fitStatus,KFTau) <<std::endl;
       saveKinParticles(ambiguity,kinTauCreator,KFTau);
       std::vector<reco::TrackRef> Tracks=kinTauCreator->getSelectedTracks();
       for(unsigned int i=0;i<Tracks.size();i++){usedTracks.push_back(Tracks.at(i));}
@@ -207,12 +225,6 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   KFTau.SetQualityCriteria(ambiguity,vtxSignPVRotSV, vtxSignPVRotPVRed, a1Mass, energyTFraction);
 
   ChiSquared chiSquared(kinTauCreator->chi2(), kinTauCreator->ndf());
-  BDT_chiSquared =chiSquared.probability();
-  BDT_energyTFraction =energyTFraction;
-  BDT_vtxSignPVRotSV =vtxSignPVRotSV;
-  BDT_vtxSignPVRotPVRed =vtxSignPVRotPVRed;
-  BDT_a1Mass =a1Mass;
-  output_tree->Fill();
 
   //if( chiSquared.probability() < 0.03 )return false;
   // Apply selection cuts
@@ -350,6 +362,105 @@ double KinematicTauProducer::VertexRotationAndSignificance(TransientVertex &tmpV
 }
 
 
+
+void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
+
+
+  // Configure required paramamters
+  reco::PFTau refitPFTau = kinTauCreator->getPFTau();//this is only the visible part of the refitted tau momentum!
+  refitPFTau.setalternatLorentzVect(kinTauCreator->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
+  std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCreator->getRefittedChargedDaughters();
+  std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCreator->getRefittedNeutralDaughters();
+
+  //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
+  reco::Vertex primaryVtx =KFTau.InitialPrimaryVertexReFit();
+  reco::Vertex modifiedPV = kinTauCreator->getModifiedPrimaryVertex();
+  VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
+  VertexDistance3D vtxdist;
+  double vtxSignPVRotSV = vtxdist.distance(modifiedPV, secVtx).significance();
+  double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
+
+  // Mass and energy
+  double a1Mass = refitPFTau.mass();
+  double fraction = refitPFTau.alternatLorentzVect().Et();
+  double energyTFraction=-1;
+  if(fraction != 0.){energyTFraction = KFTau.PFTauRef()->et()/fraction;}
+
+
+
+  NumericalKinematicConstrainedFitter *kcvFitter = kinTauCreator->getFitter();
+
+
+  ChiSquared chiSquared(kinTauCreator->chi2(), kinTauCreator->ndf());
+
+  BDT_chiSquared.push_back(TMath::Prob( chiSquared.probability(), 3));
+  BDT_energyTFraction.push_back(energyTFraction);
+  BDT_vtxSignPVRotSV.push_back(vtxSignPVRotSV);
+  BDT_vtxSignPVRotPVRed.push_back(vtxSignPVRotPVRed);
+  BDT_a1Mass.push_back(a1Mass);
+  BDT_iterations.push_back(kcvFitter->getNit());
+  output_tree->Fill();
+
+
+}
+
+double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
+  // Configure required paramamters
+
+  double MvaOut;
+  reco::PFTau refitPFTau = kinTauCreator->getPFTau();//this is only the visible part of the refitted tau momentum!
+  refitPFTau.setalternatLorentzVect(kinTauCreator->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
+  std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCreator->getRefittedChargedDaughters();
+  std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCreator->getRefittedNeutralDaughters();
+
+  //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
+  reco::Vertex primaryVtx =KFTau.InitialPrimaryVertexReFit();
+  reco::Vertex modifiedPV = kinTauCreator->getModifiedPrimaryVertex();
+  VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
+  VertexDistance3D vtxdist;
+  double vtxSignPVRotSV = vtxdist.distance(modifiedPV, secVtx).significance();
+  double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
+
+  // Mass and energy
+  double a1Mass = refitPFTau.mass();
+  double fraction = refitPFTau.alternatLorentzVect().Et();
+  double energyTFraction=-1;
+  if(fraction != 0.){energyTFraction = KFTau.PFTauRef()->et()/fraction;}
+
+
+  ChiSquared chiSquared(kinTauCreator->chi2(), kinTauCreator->ndf());
+  NumericalKinematicConstrainedFitter *kcvFitter = kinTauCreator->getFitter();
+  if(ambiguity ==0){
+  ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
+  fracMins =energyTFraction;
+  iterMins = kcvFitter->getNit();
+  PVSVMins=vtxSignPVRotSV;
+  a1MassMins =a1Mass;
+    MvaOut = reader->EvaluateMVA( "BDT_method" );
+  }
+
+  if(ambiguity ==1){
+  ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
+  fracMins =energyTFraction;
+  iterMins = kcvFitter->getNit();
+  PVSVMins=vtxSignPVRotSV;
+  a1MassMins =a1Mass;
+    MvaOut = reader->EvaluateMVA( "BDT_method" );
+  }
+
+  if(ambiguity ==2){
+  ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
+  fracMins =energyTFraction;
+  iterMins = kcvFitter->getNit();
+  PVSVMins=vtxSignPVRotSV;
+  a1MassMins =a1Mass;
+   MvaOut = reader->EvaluateMVA( "BDT_method" );
+  }
+
+
+  return MvaOut;
+
+}
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauProducer);

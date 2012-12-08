@@ -41,6 +41,12 @@
 #include "CommonTools/Statistics/interface/ChiSquared.h"
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 
+#include "TMVA/Tools.h"
+#include "TMVA/Reader.h"
+#include "TMVA/MethodCuts.h"
+#include "TMVA/DecisionTree.h"
+
+
 #include "TTree.h"
 #include "TFile.h"
 
@@ -65,6 +71,8 @@ private:
   void saveSelectedTracks(const std::vector<reco::TrackRef> usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
   void correctReferences(SelectedKinematicDecayCollection & selected, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
   void fillTree(std::vector<double> &QCVar);
+  void FillTreeForTraining(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
+  double ReturnBDTOutput(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
   double VertexRotationAndSignificance(TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,
                                        TVector3 &tauFlghtDirNoCorr,
                                        reco::Vertex &pVtx, TLorentzVector &lorentzA1,
@@ -79,16 +87,47 @@ private:
   edm::InputTag gensrc_;
   unsigned int minTau_, minVtxTracks_;
   double etacut_, sigcut_;
+  bool do_BDTTrain_;
+
+  TMVA::Reader *reader;
+
+  std::string BDTweightFileMinus_;
+  std::string BDTweightFilePlus_;
+  std::string BDTweightFileZero_;
+
+  float fracMins;
+  float a1MassMins;
+  float ProbMins3;
+  float iterMins;
+  float PVSVMins;
+
+  float fracPlus;
+  float a1MassPlus;
+  float ProbPlus3;
+  float iterPlus;
+  float PVSVPlus;
+
+  float fracZero;
+  float a1MassZero;
+  float ProbZero3;
+  float iterZero;
+  float PVSVZero;
+
+
 
   // BDT variables
   TFile *output;
   TTree *output_tree;
 
-  double BDT_vtxSignPVRotSV;
-  double BDT_vtxSignPVRotPVRed;
-  double BDT_a1Mass;
-  double BDT_energyTFraction;
-  double BDT_chiSquared;
+  std::vector<double> BDT_vtxSignPVRotSV;
+  std::vector<double> BDT_vtxSignPVRotPVRed;
+  std::vector<double> BDT_a1Mass;
+  std::vector<double> BDT_energyTFraction;
+  std::vector<double> BDT_chiSquared;
+  std::vector<double> BDT_iterations;      
+
+
+
 
 };
 #endif
