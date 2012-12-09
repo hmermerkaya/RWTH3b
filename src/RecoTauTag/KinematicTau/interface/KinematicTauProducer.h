@@ -88,6 +88,8 @@ private:
   unsigned int minTau_, minVtxTracks_;
   double etacut_, sigcut_;
   bool do_BDTTrain_;
+  bool do_BDTComp_;
+
 
   TMVA::Reader *reader;
 

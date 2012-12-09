@@ -23,6 +23,7 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   etacut_(iConfig.getUntrackedParameter<double>("etacut",2.1)),
   sigcut_(iConfig.getUntrackedParameter<double>("sigcut",3.0)),
   do_BDTTrain_(iConfig.getUntrackedParameter("do_BDTTrain",(bool)(false))),
+  do_BDTComp_(iConfig.getUntrackedParameter("do_BDTComp",(bool)(true))),
   BDTweightFileMinus_(iConfig.getUntrackedParameter<std::string>("BDTweightFileMinus")),
   BDTweightFilePlus_(iConfig.getUntrackedParameter<std::string>("BDTweightFilePlus")),
   BDTweightFileZero_(iConfig.getUntrackedParameter<std::string>("BDTweightFileZero"))
@@ -69,7 +70,7 @@ void KinematicTauProducer::beginJob(){
    output_tree->Branch("BDT_energyTFraction",&BDT_energyTFraction);
    output_tree->Branch("BDT_chiSquared",&BDT_chiSquared);
   }
-
+  if(do_BDTComp_){
      reader  = new TMVA::Reader();
      reader->AddVariable( "fracMins", &fracMins);
      reader->AddVariable( "a1MassMins", &a1MassMins);
@@ -77,6 +78,7 @@ void KinematicTauProducer::beginJob(){
      reader->AddVariable( "iterMins", &iterMins);
      reader->AddVariable( "PVSVMins", &PVSVMins);
      reader->BookMVA( "BDT_method","/home/home2/institut_3b/cherepanov/work/KinFitDevelop/CMSSW_5_2_5/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml" );
+  }
      //     reader->BookMVA( "BDT_method", BDTweightFileMinus_ );
 }
 
@@ -186,6 +188,7 @@ bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTa
     KFTau.SetKinematicFitStatus(ambiguity,discrimValues);
 
     if(fitStatus==1){
+      if(do_BDTTrain_)FillTreeForTraining(ambiguity,kinTauCreator,fitStatus,KFTau);
       std::cout<<"----------- BDT  "<<ReturnBDTOutput(ambiguity,kinTauCreator,fitStatus,KFTau) <<std::endl;
       saveKinParticles(ambiguity,kinTauCreator,KFTau);
       std::vector<reco::TrackRef> Tracks=kinTauCreator->getSelectedTracks();
@@ -243,8 +246,6 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
 
 
 }
-
-
 int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const KinematicTauCreator * kinTauCreator, SelectedKinematicDecay &KFTau){
   //Get the secondary vertx from fit
   kinTauCreator->getKinematicTree()->movePointerToTheTop();
@@ -292,7 +293,7 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const Kinemat
   std::vector<RefCountedKinematicParticle> daughters = tree->daughterParticles();
 
   for (std::vector<RefCountedKinematicParticle>::iterator iter=daughters.begin(); iter!=daughters.end(); ++iter) {
-    if((*iter)->currentState().particleCharge() != 0) name = std::string("a1");
+    if((*iter)->currentState().particleCharge() != 0){ name = std::string("a1");std::cout<<"a1"<<std::endl;}
     else name = std::string("neutrino");
     refitTauDecay.push_back(SelectedKinematicParticle(*iter, status, name, ambiguity, emptyCandRef) );
   }
@@ -303,10 +304,20 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const Kinemat
   }
   if(refitTauDecay.size() != 6) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::saveKinParticles Invalid number of SelectedKinematicParticles saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
  else{
-   KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2());
+   std::cout<<"debug 1"<<std::endl;
+   KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2(),1);
+   std::cout<<"debug 2"<<std::endl;
  }
  return refitTauDecay.size();
 }
+
+
+
+
+
+
+   //   KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2(),ReturnBDTOutput(ambiguity,kinTauCreator,1,KFTau));
+
 
 
 
