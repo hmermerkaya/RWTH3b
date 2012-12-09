@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.22 2012/08/17 17:33:19 inugent Exp $
+// $Id: SelectedKinematicDecay.h,v 1.23 2012/09/03 08:59:51 inugent Exp $
 //
 //
 
@@ -57,7 +57,7 @@ class SelectedKinematicDecay {
   void SetKinematicFitProperties(unsigned int ambiguity,const SelectedKinematicParticleCollection particles, 
 				 const int iterations, const int maxiterations, const float csum, 
 				 const float mincsum, const int constraints, const int ndf, 
-				 const float chi2);
+				 const float chi2,const double BDTOutput);
   /// store quality discriminators that cannot directly be calculated from stored members only (e.g. conversion into reco::Vertex format would be needed). FIXME: replace this by  a dynamic calculation (depending on the decay mode)
   void SetQualityCriteria(unsigned int ambiguity, const double vtxSignPVRotSV, const double vtxSignPVRotPVRed, const double a1Mass, const double energyTFraction); 
   void SetInitialGuess(unsigned int ambiguity,TLorentzVector &TauGuessLV,TLorentzVector &NuGuessLV,TVector3 &TauFlghtDirGuess);
@@ -98,7 +98,7 @@ class SelectedKinematicDecay {
   std::vector<TLorentzVector>            Pions(unsigned int ambiguity=ZeroAmbiguitySolution);
   TLorentzVector                         a1_p4(unsigned int ambiguity=ZeroAmbiguitySolution);
   reco::Vertex                           SecondaryVertex(unsigned int ambiguity=ZeroAmbiguitySolution);
-      
+
   // KF variables
   const std::map<std::string,bool>            discriminators(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const SelectedKinematicParticleCollection   particles(unsigned int ambiguity=ZeroAmbiguitySolution) const;
@@ -111,6 +111,7 @@ class SelectedKinematicDecay {
   const int    iterations(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const int    maxiterations(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const float  chi2(unsigned int ambiguity=ZeroAmbiguitySolution) const;
+  const double  BDTVal(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const float  constraints(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const float  ndf(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const float  csum(unsigned int ambiguity=ZeroAmbiguitySolution) const;
@@ -153,6 +154,7 @@ class SelectedKinematicDecay {
   std::vector<float>                        csum_;               /// fit parameter: sum of constraints after last iteration
   std::vector<float>                        mincsum_;            /// fit parameter: minimal sum of constraints. fall below for convergence.
   std::vector<float>                        chi2_;               /// fit parameter: chi2 of the fit 
+  std::vector<double>                       BDT_;                /// fit parameter: BDT output of the QC
   std::vector<float>                        constraints_;        /// fit parameter: number of constraints applied to the fit. (WARNING: This values is called ndf in RecoVertex/KinematicFit)
   std::vector<float>                        ndf_;                /// fit parameter: real ndf depending on the decay mode. (WARNING: This is NOT the ndf() in RecoVertex/KinematicFit)
   std::vector<std::map<std::string, bool> > discriminators_;     /// official pftau discriminators (ensure same size and order)

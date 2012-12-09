@@ -2,7 +2,7 @@
 
 SelectedKinematicDecay::SelectedKinematicDecay() {
   SetInitialProperties(Undefined,reco::PFTauRef(),std::vector<reco::TrackRef>(),reco::Vertex(),"",0);
-  SetKinematicFitProperties(NAmbiguity,SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0);
+  SetKinematicFitProperties(NAmbiguity,SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0,0);
   SetKinematicFitStatus(NAmbiguity,std::map<std::string, bool>());
   SetQualityCriteria(NAmbiguity,-1,-1,-1,-1);
   SetInitialVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());  
@@ -12,7 +12,7 @@ SelectedKinematicDecay::SelectedKinematicDecay() {
 SelectedKinematicDecay::SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRefOrig, std::vector<reco::TrackRef> &TrackTriplet,
 					       const reco::Vertex &primaryVertex,std::string primVtxReFitTag, unsigned int nTauPerVtx){
   SetInitialProperties(tauDecayMode,tauRefOrig,TrackTriplet,primaryVertex,primVtxReFitTag,nTauPerVtx);
-  SetKinematicFitProperties(NAmbiguity,SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0);
+  SetKinematicFitProperties(NAmbiguity,SelectedKinematicParticleCollection(),-1,-1,-1.0,-1.0,-1,0,0.0,0);
   SetKinematicFitStatus(NAmbiguity,std::map<std::string, bool>());
   SetQualityCriteria(NAmbiguity,-1,-1,-1,-1);
   SetInitialVertexProperties(reco::Vertex(),reco::Vertex(),std::vector<reco::TransientTrack>(),TransientVertex());
@@ -44,7 +44,7 @@ void SelectedKinematicDecay::SetKinematicFitStatus(unsigned int ambiguity, const
 void SelectedKinematicDecay::SetKinematicFitProperties(unsigned int ambiguity, const SelectedKinematicParticleCollection particles,
 						       const int iterations, const int maxiterations, const float csum,
 						       const float mincsum, const int constraints, const int ndf,
-						       const float chi2){
+						       const float chi2, const double BDTOutput){
 
 
   if(iterations_.size()!=NAmbiguity){iterations_.clear();iterations_.resize(NAmbiguity,-1);}
@@ -54,6 +54,7 @@ void SelectedKinematicDecay::SetKinematicFitProperties(unsigned int ambiguity, c
   if(constraints_.size()!=NAmbiguity){constraints_.clear();constraints_.resize(NAmbiguity,-1);}
   if(ndf_.size()!=NAmbiguity){ndf_.clear();ndf_.resize(NAmbiguity,0);}
   if(chi2_.size()!=NAmbiguity){chi2_.clear();chi2_.resize(NAmbiguity,0);}
+  if(BDT_.size()!=NAmbiguity){BDT_.clear();BDT_.resize(NAmbiguity,0);}
 
   if(ambiguity<NAmbiguity){
     //clean particles with the same ambiguity
@@ -74,6 +75,7 @@ void SelectedKinematicDecay::SetKinematicFitProperties(unsigned int ambiguity, c
     constraints_.at(ambiguity) = constraints;
     ndf_.at(ambiguity) = ndf;
     chi2_.at(ambiguity) = chi2;
+    BDT_.at(ambiguity) = BDTOutput;
   }
 }
 
@@ -187,8 +189,8 @@ std::vector<TLorentzVector> SelectedKinematicDecay::Pions(unsigned int ambiguity
 TLorentzVector SelectedKinematicDecay::a1_p4(unsigned int ambiguity){
   TLorentzVector a1(0,0,0,0);
   for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
-    if(iParticle->name()=="pion" && iParticle->ambiguity()==ambiguity){
-      a1+=iParticle->p4();
+    if(iParticle->name()=="a1" && iParticle->ambiguity()== ambiguity){
+      a1=iParticle->p4();
     }
   }
   return a1;
@@ -270,6 +272,11 @@ const float  SelectedKinematicDecay::chi2(unsigned int ambiguity)const{
   if(ambiguity<NAmbiguity) return chi2_.at(ambiguity);
   return -999;
 }
+const double  SelectedKinematicDecay::BDTVal(unsigned int ambiguity)const{
+  if(ambiguity<NAmbiguity) return BDT_.at(ambiguity);
+  return -999;
+}
+
 
 const float SelectedKinematicDecay::constraints(unsigned int ambiguity)const{
   if(ambiguity<NAmbiguity) return constraints_.at(ambiguity);
