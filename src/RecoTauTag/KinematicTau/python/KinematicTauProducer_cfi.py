@@ -2,6 +2,7 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.MagneticField_cff import *
 from Configuration.StandardSequences.Geometry_cff import *
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
+import os, subprocess
 
 
 KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::CandidateRefVector containing refs to selected jets
@@ -16,8 +17,8 @@ KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::Cand
                                       gensrc = cms.InputTag('genParticles'),
                                       minVtxTracks = cms.untracked.int32(3),
                                       maxChi2ndf = cms.untracked.double(10.0),
-                                      BDTweightFileMinus = cms.untracked.string("$CMSSW_BASE/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
-                                      BDTweightFilePlus  = cms.untracked.string("$CMSSW_BASE/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
-                                      BDTweightFileZero  = cms.untracked.string("$CMSSW_BASE/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
+                                      BDTweightFileMinus = cms.untracked.string(os.getenv("CMSSW_BASE")+"/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"), # currently not trained so all ambiguities are the same
+                                      BDTweightFilePlus  = cms.untracked.string(os.getenv("CMSSW_BASE")+"/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
+                                      BDTweightFileZero  = cms.untracked.string(os.getenv("CMSSW_BASE")+"/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml"),
                                       minTau = cms.untracked.uint32(1), #minimum taus to select (otherwise filter returns false)            
                                       )

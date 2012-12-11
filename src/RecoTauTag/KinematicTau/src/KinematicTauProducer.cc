@@ -77,7 +77,7 @@ void KinematicTauProducer::beginJob(){
      reader->AddVariable( "ProbMins3", &ProbMins3);
      reader->AddVariable( "iterMins", &iterMins);
      reader->AddVariable( "PVSVMins", &PVSVMins);
-     reader->BookMVA( "BDT_method","/home/home2/institut_3b/cherepanov/work/KinFitDevelop/CMSSW_5_2_5/src/RecoTauTag/KinematicTau/QualityCutsTraining_BDT.weights.xml" );
+     reader->BookMVA( "BDT_method",BDTweightFileZero_);
   }
      //     reader->BookMVA( "BDT_method", BDTweightFileMinus_ );
 }
