@@ -80,7 +80,7 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
 	unsigned int tau_idx=KFCandidates.size();
 	KFCandidates.push_back(std::vector<SelectedKinematicDecay>());
 	std::vector<reco::TrackRef> input;
-	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk) input.push_back(*trk);
+	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk){if((*trk)->algo()==reco::TrackBase::iter0 || (*trk)->algo()==reco::TrackBase::iter3) input.push_back(*trk);}
 	std::vector<std::vector<reco::TrackRef> > combis=choose3Prongs(input);
 	for(unsigned int i=0;i<combis.size();i++){
 	  if(NonTauTracksLists_.size()==1 && NonTauTracksLists_.size()==TauVtxList_.size() && nTauPerVtx_==0){
