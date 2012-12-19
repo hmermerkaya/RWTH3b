@@ -138,7 +138,6 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
   //std::cout << "KFTau.InitialTauFlightDirectionReFitPvtxToSvtx then KFTau.InitialTauFlightDirectionReFitandRotatedPvtxToSvtx" << std::endl;
   //KFTau.InitialTauFlightDirectionReFitPvtxToSvtx().Print();
   //KFTau.InitialTauFlightDirectionReFitandRotatedPvtxToSvtx().Print();
-  TVector3 startingtauFlghtDir=tauFlghtDir;
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Now setup Fit parameters
   for(unsigned int i = 0; i!=transTrkVect.size();i++){
@@ -194,26 +193,21 @@ bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedK
   //    << "ambiguity  " << ambiguity << std::endl;
 
   // Physical configuration
-  if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
-    if(fabs(lorentzA1.Angle(tauFlghtDir))>=fabs(thetaMax)){
+  TVector3 startingtauFlghtDir=tauFlghtDir;
+  /*if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
+    if(fabs(lorentzA1.Angle(startingtauFlghtDir))>=fabs(thetaMax)){
       //case when initial conditions are unphysical reset with 0.XX theta_{GF,max} for starting condition only  
       reco::Vertex tmppVtx=modifiedPV_;
       TransientVertex tmpVtx=secVtx;
       double tmptheta0=theta0;
       VertexRotation vtxC(lorentzA1);
-      //vtxC.rotatePV(tmppVtx,tmpVtx,tmptheta0,startingtauFlghtDir,0.975);
-    }
-    TLorentzVector TauGuessLV1,TauGuessLV2,NuGuessLV1,NuGuessLV2;
-    SolvebyRotation(startingtauFlghtDir,lorentzA1,TauGuessLV1,TauGuessLV2,NuGuessLV1,NuGuessLV2);
-    if(ambiguity==SelectedKinematicDecay::PlusSolution)  TauGuessLV=TauGuessLV1;
-    if(ambiguity==SelectedKinematicDecay::MinusSolution) TauGuessLV=TauGuessLV2;
-      if(TauGuessLV1.E()!=TauGuessLV2.E()){
-	/*	std::cout << "E new: Px " <<  TauGuessLV.Px() << " Py " << TauGuessLV.Py() << " Pz " << TauGuessLV.Pz() << " E " << TauGuessLV.E() 
-		  << " ambiguity  " << ambiguity << " angle " << TauGuessLV.Angle(startingtauFlghtDir) 
-		  << " thetaGF " << fabs(lorentzA1.Angle(tauFlghtDir)) << " thetaGFmax " << fabs(thetaMax) 
-		  << " Dir " <<  startingtauFlghtDir.X() << " " << startingtauFlghtDir.Y() << " " << startingtauFlghtDir.Z() << std::endl;*/
-    }
-  }
+      vtxC.rotatePV(tmppVtx,tmpVtx,tmptheta0,startingtauFlghtDir,0.975);
+      }*/
+  TLorentzVector TauGuessLV1,TauGuessLV2,NuGuessLV1,NuGuessLV2;
+  SolvebyRotation(startingtauFlghtDir,lorentzA1,TauGuessLV1,TauGuessLV2,NuGuessLV1,NuGuessLV2);
+  if(ambiguity==SelectedKinematicDecay::PlusSolution)  TauGuessLV=TauGuessLV1;
+  if(ambiguity==SelectedKinematicDecay::MinusSolution) TauGuessLV=TauGuessLV2;
+  
   neutrinos.push_back(unknownNu(TauGuessLV, lorentzA1, secVtx,NuGuessLV));
   //  std::cout << "Sec Vtx " <<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()
   //	    << " Primary " << modifiedPV_.position().x() << " " << modifiedPV_.position().y() << " " << modifiedPV_.position().z() << std::endl;
@@ -235,7 +229,7 @@ bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<Re
     return false;
   }
   // Setup Constraint
-  MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(primaryVertex,PMH.Get_tauMass(),GenPart,1.0,true);
+  MultiTrackNumericalKinematicConstraint *TauA1NU=new TauA1NuNumericalKinematicConstraint(ambiguity,primaryVertex,PMH.Get_tauMass(),GenPart,1.0,true);
   try{
     kinTree_ = kcvFitter_->fit(unfitDaughters,TauA1NU);//,&vtxGuess);
   }
@@ -322,88 +316,6 @@ int ThreeProngTauCreator::ndf() const {
   int ndf = constraints - freeParameters;
   //if(ndf != 2) printf("ThreeProngTauCreator::ndf: Warning! Unexpected ndf of %i. Expected 2.\n", ndf );
   return ndf;
-}
-
-
-void ThreeProngTauCreator::quadratic(double &x_plus,double &x_minus,double a, double b, double c){
-  double R=b*b-4*a*c;
-  if(R<0){R=0;}
-  x_minus=(-b-sqrt(R))/(2.0*a);
-  x_plus=(-b+sqrt(R))/(2.0*a);
-}
-
-void ThreeProngTauCreator::AnalyticESolver(TLorentzVector &nu1,TLorentzVector &nu2,TLorentzVector A1){
-  double mtau=PMH.Get_tauMass();
-  double a=(A1.Pz()*A1.Pz())/(A1.E()*A1.E())-1.0;
-  double K=(mtau*mtau-A1.M2()-2.0*A1.Pt()*A1.Pt())/(2.0*A1.E());
-  double b=2.0*K*A1.Pz()/A1.E();
-  double c=K*K-A1.Pt()*A1.Pt();
-  double z1(0),z2(0);
-  quadratic(z1,z2,a,b,c);
-  nu1.SetPxPyPzE(-A1.Px(),-A1.Py(),z1,sqrt(z1*z1+A1.Pt()*A1.Pt()));
-  nu2.SetPxPyPzE(-A1.Px(),-A1.Py(),z2,sqrt(z2*z2+A1.Pt()*A1.Pt()));
-}
-
-void ThreeProngTauCreator::NumericalESolver(TLorentzVector &nu1,TLorentzVector &nu2,TLorentzVector A1){
-  double rmin(-100), rmax(100), step(0.01), mtau2(pow(PMH.Get_tauMass(),2.0)), z1(-999), z2(-999), zmin(-999), min(9999), prev(9999);
-  double z=rmin;
-  TLorentzVector nu,tau;
-  for(int i=0;i<=(int)(rmax-rmin)/step;i++){
-    nu.SetPxPyPzE(-A1.Px(),-A1.Py(),z,sqrt(z*z+A1.Pt()*A1.Pt()));
-    tau=A1+nu;
-    double m2=tau.M2();
-    if(m2-mtau2<0 && prev-mtau2>=0) z1=z;
-    if(m2-mtau2>0 && prev-mtau2<=0) z2=z;
-    if(min>m2){ zmin=z; min=m2;}
-    prev=m2;
-    z+=step;
-  }
-  if(z1!=-999 && z2!=-999){
-    nu1.SetPxPyPzE(-A1.Px(),-A1.Py(),z1,sqrt(z1*z1+A1.Pt()*A1.Pt()));
-    nu2.SetPxPyPzE(-A1.Px(),-A1.Py(),z2,sqrt(z2*z2+A1.Pt()*A1.Pt()));
-  }
-  else{
-    nu1.SetPxPyPzE(-A1.Px(),-A1.Py(),zmin,sqrt(zmin*zmin+A1.Pt()*A1.Pt()));
-    nu2.SetPxPyPzE(-A1.Px(),-A1.Py(),zmin,sqrt(zmin*zmin+A1.Pt()*A1.Pt()));
-  }
-}
-
-void ThreeProngTauCreator::SolvebyRotation(TVector3 TauDir,TLorentzVector A1, TLorentzVector &Tau1,TLorentzVector &Tau2,
-					   TLorentzVector &nu1,TLorentzVector &nu2){
-  TLorentzVector A1rot=A1;
-  double phi(TauDir.Phi()),theta(TauDir.Theta());
-  A1rot.RotateZ(-phi);
-  A1rot.RotateY(-theta);
-  /////////////////////////////////////////////////////
-  //  NumericalESolver(nu1,nu2,A1rot); // for debugging AnalyticESolver (slow)
-  /* std::cout << "NumericalESolver nu" << std::endl;
-  nu1.Print();
-  nu2.Print();
-  AnalyticESolver(nu1,nu2,A1rot);
-  std::cout << "AnalyticESolver nu" << std::endl;
-  nu1.Print();
-  nu2.Print();*/
-  AnalyticESolver(nu1,nu2,A1rot);
-  /////////////////////////////////////////////////////
-  nu1.RotateY(theta);
-  nu1.RotateZ(phi);
-  Tau1=A1+nu1;
-  //
-  nu2.RotateY(theta);
-  nu2.RotateZ(phi);
-  Tau2=A1+nu2;
-  /*
-  std::cout << "Solution A1" << std::endl;
-  A1.Print();
-  std::cout << "Solution nu" << std::endl;
-  nu1.Print();
-  nu2.Print();
-  std::cout << "Solution tau" << std::endl;
-  Tau1.Print();
-  Tau2.Print();
-  TauDir.Print();
-  std::cout << " " << theta << " " << phi << std::endl;
-  */
 }
 
 std::vector<RefCountedKinematicParticle> ThreeProngTauCreator::a1maker(std::vector<RefCountedKinematicParticle> &pions,std::vector<RefCountedKinematicParticle> &PostFitPions){

@@ -11,12 +11,12 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "RecoTauTag/KinematicTau/interface/ThreeProngTauSolver.h"
 
 
-
-class TauA1NuNumericalKinematicConstraint : public MultiTrackNumericalKinematicConstraint{
+class TauA1NuNumericalKinematicConstraint : public MultiTrackNumericalKinematicConstraint,  public ThreeProngTauSolver {
  public:
-  TauA1NuNumericalKinematicConstraint(const reco::Vertex &primaryVertex,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight=1.0,bool debug_=false);
+  TauA1NuNumericalKinematicConstraint(unsigned int &ambiguity_,const reco::Vertex &primaryVertex,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight=1.0,bool debug_=false);
   virtual ~TauA1NuNumericalKinematicConstraint(){}
 
   enum Pars{tau_phi=0,tau_theta,a1_px,a1_py,a1_pz,a1_m,nu_px,nu_py,nu_pz,npar,norigpar=13};
@@ -34,7 +34,7 @@ class TauA1NuNumericalKinematicConstraint : public MultiTrackNumericalKinematicC
   TVector3 TauDir,sv,pv;
   double mtau_c;
   edm::Handle<reco::GenParticleCollection> &GenPart;
-
+  unsigned int ambiguity;
 
 };
 #endif

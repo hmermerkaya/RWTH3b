@@ -9,7 +9,7 @@ KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::Cand
                                       #parameters for KinematicConstrainedVertexFitter
                                       primVtx = cms.InputTag("offlinePrimaryVertices"),
                                       KinematicTauCandTag = cms.InputTag("ThreeProngInputSelectorStep1","PreKinematicDecaysStep1"),
-                                      fitParameters = cms.PSet( maxDelta = cms.double(.0001),#stopping condition
+                                      fitParameters = cms.PSet( maxDelta = cms.double(.01),#stopping condition
                                                                 maxNbrOfIterations = cms.int32(100),	#number of iterations
                                                                 maxReducedChiSq = cms.double(225.),
                                                                 minChiSqImprovement = cms.double(50.)

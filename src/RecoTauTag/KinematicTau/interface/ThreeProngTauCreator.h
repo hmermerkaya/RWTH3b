@@ -34,12 +34,11 @@
 #include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
 #include "RecoVertex/KinematicFit/interface/KinematicParticleFitter.h"
 #include "RecoVertex/KinematicFit/interface/MassKinematicConstraint.h"
-
+#include "RecoTauTag/KinematicTau/interface/ThreeProngTauSolver.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-class ThreeProngTauCreator : public KinematicTauCreator
-{
+class ThreeProngTauCreator : public KinematicTauCreator, public ThreeProngTauSolver{
 public:
   explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,edm::Handle<reco::GenParticleCollection> &GenPart_):KinematicTauCreator(transTrackBuilder,GenPart_){}
   explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,edm::Handle<reco::GenParticleCollection> &GenPart_):KinematicTauCreator(transTrackBuilder, cfg,GenPart_){}
@@ -56,12 +55,6 @@ private:
   RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,TLorentzVector &NuGuessLV);
   RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
   std::vector<RefCountedKinematicParticle> a1maker(std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &PostFitPions);
-  void SolvebyRotation(TVector3 TauDir,TLorentzVector A1,TLorentzVector &Tau1,TLorentzVector &Tau2,TLorentzVector &nu1,TLorentzVector &nu2);
-  void quadratic(double &x_plus,double &x_minus,double a, double b, double c);
-  void AnalyticESolver(TLorentzVector &nu1,TLorentzVector &nu2,TLorentzVector A1);
-  void NumericalESolver(TLorentzVector &nu1,TLorentzVector &nu2,TLorentzVector A1);
-
-
   ParticleMassHelper PMH;
 
 };

@@ -2,12 +2,14 @@
 #include "RecoVertex/VertexPrimitives/interface/VertexException.h"
 #include "RecoVertex/KinematicFitPrimitives/interface/KinematicVertexFactory.h"
 #include "TLorentzVector.h"
+#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
-TauA1NuNumericalKinematicConstraint::TauA1NuNumericalKinematicConstraint(const reco::Vertex &primaryVertex,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight,bool debug_):
+TauA1NuNumericalKinematicConstraint::TauA1NuNumericalKinematicConstraint(unsigned int &ambiguity_,const reco::Vertex &primaryVertex,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight,bool debug_):
   MultiTrackNumericalKinematicConstraint(debug_),
   pv_inital(primaryVertex),
   mtau_c(mtau),
-  GenPart(GenPart_)
+  GenPart(GenPart_),
+  ambiguity(ambiguity_)
 {
   pv_inital=primaryVertex;
   if(!GenPart.isValid())debug=false;
@@ -33,17 +35,36 @@ TVectorD TauA1NuNumericalKinematicConstraint::Value(TVectorD &v){
   TLorentzVector a1_d=a1;
   TLorentzVector nu_d=nu;
   double phi(v(tau_phi)),theta(v(tau_theta));
+  TLorentzVector Tau1,Tau2,nu1,nu2;
+  TVector3 TauDir; TauDir.SetMagThetaPhi(1.0,theta,phi);
+  SolvebyRotation(TauDir,a1,Tau1,Tau2,nu1,nu2,false);
   a1.RotateZ(-phi);
   a1.RotateY(-theta);
   nu.RotateZ(-phi);
   nu.RotateY(-theta);
-
-  TLorentzVector nufixed=nu;//(-a1.Px(),-a1.Py(),nu.Pz(),sqrt(a1.Pt()*a1.Pt()+nu.Pz()*nu.Pz()));
-  TVectorD res(3);
+  TLorentzVector nufixed(-a1.Px(),-a1.Py(),nu.Pz(),sqrt(a1.Pt()*a1.Pt()+nu.Pz()*nu.Pz()));
   TLorentzVector tau=a1+nufixed;
-  res(0) = tau.M2()-mtau_c*mtau_c;                                // mass constraint fixed to only float Pz for nu (ie only one value with huge errors per constraint) 
-  res(1) = a1.Px()+nu.Px(); //a1.Pt()-nu.Pt();                    // |Pt| balance constraint
-  res(2) = a1.Py()+nu.Py(); //1+(a1.Px()*nu.Px()+a1.Py()*nu.Py()) // (a1.Pt()*nu.Pt()); // phi' constraint (back-to-back) 
+
+  TVectorD res(3);
+  //if(ambiguity==SelectedKinematicDecay::ZeroAmbiguitySolution) 
+  res(0) = tau.M2()-mtau_c*mtau_c;
+  //if(ambiguity==SelectedKinematicDecay::PlusSolution)          res(0) = nu.Pz()-nu1.Pz();
+  //if(ambiguity==SelectedKinematicDecay::MinusSolution)         res(0) = nu.Pz()-nu2.Pz();
+  res(1) = a1.Px()+nu.Px(); //a1.Pt()-nu.Pt();                    // |Pt| balance constraint 
+  res(2) = a1.Py()+nu.Py(); //1+(a1.Px()*nu.Px()+a1.Py()*nu.Py()) // (a1.Pt()*nu.Pt()); // phi' constraint (back-to-back)             
+  /*  if(debug){
+    v.Print();
+    std::cout << "Tau Mass" << tau.M() << " a1" << std::endl;
+    a1.Print();
+    std::cout << "nu"  << std::endl;
+    nu.Print();
+    std::cout << "nu solution 1"  << std::endl;
+    nu1.Print();
+    std::cout << "nu solution 2"  << std::endl;
+    nu2.Print();
+    std::cout << "constraints " << std::endl;
+    res.Print();
+    }*/
   /*
   if(debug){
     std::cout << "------------>"<<std::endl;
@@ -191,6 +212,8 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
   for(int i=0;i<w.GetNrows();i++){w(i)=1;}
 
   if(hasa1 && hasnu){
+    // store magnetic field 
+    field=inStates.front().magneticField();
     // store cov
     cov.ResizeTo(npar,npar);
     cov=incov_temp.SimilarityT(D);
@@ -200,15 +223,37 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
     par.ResizeTo(npar);
     par=inpar;
     par_first.ResizeTo(npar);
-    par_first=par;
-    /*if(debug){
-      std::cout << "first par " << std::endl; 
-      par_first.Print(); 
-      std::cout << "first cov " << std::endl;
-      cov_first.Print();
+    par_first=inpar;
+    // Check if Tau Direction is unphysical and if nessicary set the starting point to Theta_{GJ-Max} 
+    /*
+    TLorentzVector a1(par(a1_px),par(a1_py),par(a1_pz),sqrt(par(a1_m)*par(a1_m)+par(a1_px)*par(a1_px)+par(a1_py)*par(a1_py)+par(a1_pz)*par(a1_pz)));
+    double phi(par(tau_phi)),theta(par(tau_theta));
+    if(SetTauDirectionatThetaGJMax(a1,theta,phi)){
+      std::cout <<  "resetting phi and theta" << std::endl;
+      TLorentzVector Tau1,Tau2,nu1,nu2;
+      TVector3 TauDir; TauDir.SetMagThetaPhi(1.0,theta,phi);
+      SolvebyRotation(TauDir,a1,Tau1,Tau2,nu1,nu2);
+      par(tau_phi)=phi;
+      par(tau_theta)=theta;
+      std::cout << "ambiguity: " << ambiguity << std::endl;
+      if(ambiguity==SelectedKinematicDecay::PlusSolution){
+	nu1.Print();
+	par(nu_px)=nu1.Px();
+	par(nu_py)=nu1.Py();
+	par(nu_pz)=nu1.Pz();
+      }
+      if(ambiguity==SelectedKinematicDecay::MinusSolution){
+	nu2.Print();
+	par(nu_px)=nu2.Px();
+        par(nu_py)=nu2.Py();
+        par(nu_pz)=nu2.Pz();
+      }
       }*/
-    field=inStates.front().magneticField();
-    //if(debug) std::cout << "TauA1NuNumericalKinematicConstraint::ConfigureIntialState end" << std::endl;
+      
+    std::cout << "Calling Value for inital par" << std::endl;
+    Value(par);
+    std::cout << "Calling Value for inital par complete" << std::endl;
+    //
     return true;
   }
   //if(debug) std::cout << "TauA1NuNumericalKinematicConstraint::ConfigureIntialState end" << std::endl;
@@ -221,6 +266,7 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
     //par.Print();
     //cov.Print();
     //}
+  ComputeVariance();
   //making refitted states of Kinematic Particles
   std::vector<KinematicState> ns;
   AlgebraicVector7            newParA1;

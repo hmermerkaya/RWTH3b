@@ -430,7 +430,7 @@ double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,const Kinem
   VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
   VertexDistance3D vtxdist;
   double vtxSignPVRotSV = vtxdist.distance(modifiedPV, secVtx).significance();
-  double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
+  //double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
 
   // Mass and energy
   double a1Mass = refitPFTau.mass();
