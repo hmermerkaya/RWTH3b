@@ -47,33 +47,35 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
   TVectorD finPar=convertToVector(alpha);
 
   // do while loop to see if the convergance criteria are satisfied
-  double s(1), stepscale(0.75), NIter(10);
+  double s(1), stepscale(0.01);
   chi2prev=chi2;
   double Curentchi2(ChiSquareUsingInitalPoint(alpha_A,lambda)), Currentdelta(ConstraintDelta(par));
   TMatrixT<double> alpha_s=alpha;
   std::cout << "Before chi2: " << Curentchi2 << " prev: " << chi2prev <<   " delta " << Currentdelta << " " << MaxDelta_ << " scaling " << s << " " <<  std::endl;
-  // convergence in 2 step procedure
-  // 1) Get within 25x MaxDelta_
+  // convergence in 2 step procedure to minimize chi2 within MaxDelta_ of the constriants
+  // 1) Get within 5x MaxDelta_
   // 2) converge based on improving chi2 and constrianed delta
   unsigned int Proc=ConstraintMin;
-  if(ConstraintDelta(par)<25*MaxDelta_)Proc=Chi2AndConstaintMin;
-  std::cout << "Constraint Test " << ConstraintDelta(par) << " min " << 25*MaxDelta_ << " " << Proc << " ConstraintMin " << ConstraintMin << " Chi2AndConstaintMin " << Chi2AndConstaintMin << std::endl; 
-  for(int iter=0;iter<=NIter;iter++){
+  if(ConstraintDelta(par)<5*MaxDelta_)Proc=Chi2AndConstaintMin;
+  std::cout << "Constraint Test " << ConstraintDelta(par) << " min " << 5*MaxDelta_ << " " << Proc << " ConstraintMin " << ConstraintMin << " Chi2AndConstaintMin " << Chi2AndConstaintMin << std::endl; 
+  int  NIter=(int)(1.0/stepscale);
+  for(int iter=0;iter<NIter;iter++){
     // compute safty cutoff for numberical constraint
     double diff=0;
     for(int l=0;l<alpha_s.GetNrows();l++){
       if(diff<alpha_s(l,0)-alpha_A(l,0))diff=alpha_s(l,0)-alpha_A(l,0);
     }
     double delta_alpha_s=ConstraintDelta(convertToVector(alpha_s));
-    double chi2_s=ChiSquareUsingInitalPoint(alpha_s,lambda);
-    std::cout << "Loop chi2: " << chi2_s << " prev: " << Curentchi2 <<   " delta " << delta_alpha_s << " " << Currentdelta << " scaling " << s << " diff " << diff << " Proc " << Proc << std::endl;
     if(Proc==ConstraintMin){
-      if(delta_alpha_s<Currentdelta || iter==NIter || diff<100*epsilon_){Curentchi2=chi2_s; Currentdelta=delta_alpha_s; ScaleFactor=s; break;}
+      std::cout << "Loop chi2: " <<  " delta " << delta_alpha_s << " " << Currentdelta << " scaling " << s << " diff " << diff << " Proc " << Proc << std::endl;
+      if(delta_alpha_s<Currentdelta || iter==NIter || diff<100*epsilon_){Curentchi2=ChiSquareUsingInitalPoint(alpha_s,lambda); Currentdelta=delta_alpha_s; ScaleFactor=s; break;}
     }
     else if(Proc==Chi2AndConstaintMin){
-      if((delta_alpha_s<Currentdelta+MaxDelta_ && chi2_s<Curentchi2) || iter==NIter || diff<100*epsilon_){Curentchi2=chi2_s; Currentdelta=delta_alpha_s; ScaleFactor=s; break;}
+      double chi2_s=ChiSquareUsingInitalPoint(alpha_s,lambda);
+      std::cout << "Loop chi2: " << chi2_s << " prev: " << Curentchi2 <<   " delta " << delta_alpha_s << " " << Currentdelta << " scaling " << s << " diff " << diff << " Proc " << Proc << std::endl;
+      if((delta_alpha_s<Currentdelta/*+MaxDelta_*/ && chi2_s<Curentchi2) || iter==NIter || diff<100*epsilon_){Curentchi2=chi2_s; Currentdelta=delta_alpha_s; ScaleFactor=s; break;}
     }
-    s*=stepscale;
+    s-=stepscale;
     alpha_s=alpha_A+s*(alpha-alpha_A);
   }
   std::cout << "Found chi2: " << Curentchi2 << " prev: " << chi2prev <<   " delta " << Currentdelta << " " << MaxDelta_ << " scaling " << ScaleFactor << " " <<  std::endl;
@@ -180,6 +182,16 @@ TMatrixT<double>  MultiTrackNumericalKinematicConstraint::ComputeVariance(){
   TMatrixT<double> VDTV_DDV=V_alpha0*DTV_DDV;
   TMatrixT<double> CovCor=VDTV_DDV;
   CovCor*=ScaleFactor;
+  if(V_corr_prev.GetNrows()!=V_alpha0.GetNrows()){
+    V_corr_prev.ResizeTo(V_alpha0.GetNrows(),V_alpha0.GetNrows());
+    V_corr_prev=CovCor;
+  }
+  else{
+    V_corr_prev*=(1-ScaleFactor);
+    CovCor+=V_corr_prev;
+    V_corr_prev=CovCor;
+  }
+  
   TMatrixT<double> V_alpha = V_alpha0-CovCor;
   for(int i=0; i<cov.GetNrows();i++){
     for(int j=0; j<=i;j++){

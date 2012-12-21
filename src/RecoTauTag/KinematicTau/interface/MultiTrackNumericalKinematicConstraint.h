@@ -12,7 +12,7 @@ class MultiTrackNumericalKinematicConstraint {
  public:
   enum Position{pos_x=0,pos_y,pos_z,nposdim};
   enum Parameters{par_vx=0,par_vy,par_vz,par_px,par_py,par_pz,par_m,npardim};
-  enum ConvergeProc{ConstraintMin=0,Chi2AndConstaintMin};
+  enum ConvergeProc{ConstraintMin=0,Chi2Min,Chi2AndConstaintMin};
 
   MultiTrackNumericalKinematicConstraint(bool debugflag,double weight=1.0);
   virtual ~MultiTrackNumericalKinematicConstraint(){};
@@ -58,6 +58,8 @@ class MultiTrackNumericalKinematicConstraint {
   TMatrixT<double> D;
   TMatrixTSym<double> V_D;
   double ScaleFactor;
+
+  TMatrixT<double> V_corr_prev;
   
 };
 #endif
