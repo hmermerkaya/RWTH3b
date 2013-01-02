@@ -19,6 +19,7 @@ class MultiTrackNumericalKinematicConstraint {
 
   virtual MultiTrackNumericalKinematicConstraint* clone() const=0;
 
+  virtual void   SetWeight(double weight){weight_=weight;}
   virtual double GetWeight()const{return weight_;}
   virtual void SetMaxDelta(double MaxDelta){MaxDelta_=MaxDelta;}
 
@@ -51,7 +52,7 @@ class MultiTrackNumericalKinematicConstraint {
   TMatrixT<double> Derivative();
   TVectorT<double> convertToVector(TMatrixT<double> M);
   TMatrixT<double> convertToMatrix(TVectorT<double> V);
-
+  TVectorD WeightedValue(TVectorD &v){return weight_*Value(v);}
   double epsilon_, weight_,MaxDelta_;
 
   TMatrixTSym<double> V_alpha0_inv;

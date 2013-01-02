@@ -1,7 +1,7 @@
 #include "RecoTauTag/KinematicTau/interface/MultiTrackNumericalKinematicConstraint.h"
 #include "RecoVertex/VertexPrimitives/interface/VertexException.h"
 #include "TDecompBK.h"
-
+#include <exception>
 
 MultiTrackNumericalKinematicConstraint::MultiTrackNumericalKinematicConstraint(bool debugflag,double weight):
   chi2(1e10),
@@ -30,11 +30,12 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
   TMatrixTSym<double> V_D_inv=V_alpha0;
   V_D_inv.Similarity(D);
   double det = V_D_inv.Determinant();
-  if(fabs(det)<=1E-33){
+  std::cout << fabs(det) << std::endl;
+  TDecompBK Inverter(V_D_inv);
+  if(!Inverter.Decompose()){
     std::cout << "Fit failed: unable to invert SYM gain matrix " << det << " \n" << std::endl;
     return false;
   }
-  TDecompBK Inverter(V_D_inv);
   V_D=Inverter.Invert();
 
   // solve equations
@@ -149,7 +150,18 @@ double MultiTrackNumericalKinematicConstraint::ChiSquareUsingInitalPoint(TMatrix
     TMatrixTSym<double> V_alpha0=cov_first;
     V_alpha0_inv.ResizeTo(cov_first.GetNrows(),cov_first.GetNrows());
     TDecompBK Inverter(V_alpha0);
-    V_alpha0_inv=Inverter.Invert();
+    if(!Inverter.Decompose()){ // handle rare case where inversion is not possible (ie assume diagonal)
+      std::cout << "MultiTrackNumericalKinematicConstraint::ChiSquareUsingInitalPoint: Error non-invertable Matrix... Calculating under assumption that correlations can be neglected!!!" << std::endl;
+      for(int j=0;j<par.GetNrows();j++){
+	for(int i=0;i<par.GetNrows();i++){
+	  if(i==j) V_alpha0_inv(i,j)=1.0/V_alpha0(i,j);
+	  else V_alpha0_inv(i,j)=0.0;
+	}
+      }
+    }
+    else{
+      V_alpha0_inv=Inverter.Invert();
+    }
   }
 
   TMatrixT<double> lambdaT=lambda; lambdaT.T();
