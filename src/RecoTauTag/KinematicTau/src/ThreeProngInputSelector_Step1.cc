@@ -61,7 +61,6 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
   bool found = false;
   edm::Handle<reco::VertexCollection > primaryVertexCollection;
   iEvent_->getByLabel(primVtx_,primaryVertexCollection);
-  
   if(primaryVertexCollection->size()>0){
     edm::Handle<reco::PFTauCollection> inputCollection;
     iEvent_->getByLabel(tauType_+"PFTauProducer", inputCollection);
@@ -88,7 +87,8 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
 	  }
 	  else if(NonTauTracksLists_.size()>1 && TauVtxList_.size()==NonTauTracksLists_.size() && nTauPerVtx_==1){
 	    //Code to find best vertex would go here
-	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(p),nTauPerVtx_));
+	    if(tau_idx<nTauPerVtx_)KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(p),nTauPerVtx_));
+	    else std::cout << "WARNING: tau_idx>=nTauPerVtx_ Too many tau candidates. Results may be biased. tau_idx: " << tau_idx << " nTauPerVtx_ " << nTauPerVtx_ << std::endl;
 	    p++;
 	  }
 	  else{
@@ -98,7 +98,6 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
 	}
       }
     }
-      
     // remove duplicates
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
@@ -125,7 +124,6 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
 	}
       }
     }
-    
     // Get Vertex Tracks List
     if(NonTauTracksLists_.size()==1 && nTauPerVtx_==0){
       GetNonTauTracks(iEvent_,trkCollectionTag_,NonTauTracksLists_.at(0),tautracks);

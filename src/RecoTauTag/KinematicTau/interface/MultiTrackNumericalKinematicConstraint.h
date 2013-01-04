@@ -14,7 +14,7 @@ class MultiTrackNumericalKinematicConstraint {
   enum Parameters{par_vx=0,par_vy,par_vz,par_px,par_py,par_pz,par_m,npardim};
   enum ConvergeProc{ConstraintMin=0,Chi2Min,Chi2AndConstaintMin};
 
-  MultiTrackNumericalKinematicConstraint(bool debugflag,double weight=1.0);
+  MultiTrackNumericalKinematicConstraint(bool debugflag,double weight);
   virtual ~MultiTrackNumericalKinematicConstraint(){};
 
   virtual MultiTrackNumericalKinematicConstraint* clone() const=0;

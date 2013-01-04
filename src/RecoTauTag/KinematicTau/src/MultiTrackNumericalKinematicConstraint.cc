@@ -24,13 +24,12 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
   TMatrixT<double> alpha_0=convertToMatrix(par_first);
   TMatrixT<double> delta_alpha_A=alpha_A-alpha_0;
   D=Derivative();
-  TMatrixT<double> d=convertToMatrix(Value(par));
+  TMatrixT<double> d=convertToMatrix(WeightedValue(par));
   TMatrixT<double> C=D*delta_alpha_A-d;
   TMatrixTSym<double> V_alpha0=cov_first;
   TMatrixTSym<double> V_D_inv=V_alpha0;
   V_D_inv.Similarity(D);
   double det = V_D_inv.Determinant();
-  std::cout << fabs(det) << std::endl;
   TDecompBK Inverter(V_D_inv);
   if(!Inverter.Decompose()){
     std::cout << "Fit failed: unable to invert SYM gain matrix " << det << " \n" << std::endl;
@@ -40,8 +39,6 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
 
   // solve equations
   TMatrixT<double> lambda=-1.0*V_D*C;
-  std::cout << "lambda" << std::endl;
-  lambda.Print();
   TMatrixT<double> DT=D; DT.T();
   TMatrixT<double> alpha=alpha_0-V_alpha0*DT*lambda;
 
@@ -52,13 +49,11 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
   chi2prev=chi2;
   double Curentchi2(ChiSquareUsingInitalPoint(alpha_A,lambda)), Currentdelta(ConstraintDelta(par));
   TMatrixT<double> alpha_s=alpha;
-  std::cout << "Before chi2: " << Curentchi2 << " prev: " << chi2prev <<   " delta " << Currentdelta << " " << MaxDelta_ << " scaling " << s << " " <<  std::endl;
   // convergence in 2 step procedure to minimize chi2 within MaxDelta_ of the constriants
   // 1) Get within 5x MaxDelta_
   // 2) converge based on improving chi2 and constrianed delta
   unsigned int Proc=ConstraintMin;
   if(ConstraintDelta(par)<5*MaxDelta_)Proc=Chi2AndConstaintMin;
-  std::cout << "Constraint Test " << ConstraintDelta(par) << " min " << 5*MaxDelta_ << " " << Proc << " ConstraintMin " << ConstraintMin << " Chi2AndConstaintMin " << Chi2AndConstaintMin << std::endl; 
   int  NIter=(int)(1.0/stepscale);
   for(int iter=0;iter<NIter;iter++){
     // compute safty cutoff for numberical constraint
@@ -68,18 +63,15 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
     }
     double delta_alpha_s=ConstraintDelta(convertToVector(alpha_s));
     if(Proc==ConstraintMin){
-      std::cout << "Loop chi2: " <<  " delta " << delta_alpha_s << " " << Currentdelta << " scaling " << s << " diff " << diff << " Proc " << Proc << std::endl;
       if(delta_alpha_s<Currentdelta || iter==NIter || diff<100*epsilon_){Curentchi2=ChiSquareUsingInitalPoint(alpha_s,lambda); Currentdelta=delta_alpha_s; ScaleFactor=s; break;}
     }
     else if(Proc==Chi2AndConstaintMin){
       double chi2_s=ChiSquareUsingInitalPoint(alpha_s,lambda);
-      std::cout << "Loop chi2: " << chi2_s << " prev: " << Curentchi2 <<   " delta " << delta_alpha_s << " " << Currentdelta << " scaling " << s << " diff " << diff << " Proc " << Proc << std::endl;
       if((delta_alpha_s<Currentdelta/*+MaxDelta_*/ && chi2_s<Curentchi2) || iter==NIter || diff<100*epsilon_){Curentchi2=chi2_s; Currentdelta=delta_alpha_s; ScaleFactor=s; break;}
     }
     s-=stepscale;
     alpha_s=alpha_A+s*(alpha-alpha_A);
   }
-  std::cout << "Found chi2: " << Curentchi2 << " prev: " << chi2prev <<   " delta " << Currentdelta << " " << MaxDelta_ << " scaling " << ScaleFactor << " " <<  std::endl;
   // set chi2
   chi2=Curentchi2;  
   chi_2=chi2;
@@ -92,7 +84,6 @@ bool MultiTrackNumericalKinematicConstraint::ApplyLagrangianConstraints(double &
 
 
 TMatrixD MultiTrackNumericalKinematicConstraint::Derivative(){ // alway evaluated at current par
-  //std::cout << "MultiTrackNumericalKinematicConstraint::Derivative start" << std::endl;
   TMatrixD Derivatives(numberOfEquations(),par.GetNrows());
   TVectorD par_plus(par.GetNrows());
   TVectorD value(numberOfEquations());
@@ -102,8 +93,8 @@ TMatrixD MultiTrackNumericalKinematicConstraint::Derivative(){ // alway evaluate
       par_plus(i)=par(i);
       if(i==j) par_plus(i)=par(i)+epsilon_;
     }
-    value=Value(par);
-    value_plus=Value(par_plus);
+    value=WeightedValue(par);
+    value_plus=WeightedValue(par_plus);
     for(int i=0; i<numberOfEquations();i++){
       Derivatives(i,j)=(value_plus(i)-value(i))/epsilon_;
     }
@@ -170,19 +161,17 @@ double MultiTrackNumericalKinematicConstraint::ChiSquareUsingInitalPoint(TMatrix
   TMatrixT<double> dalphaT=dalpha;  dalphaT.T();
   TMatrixT<double> chisquare_var=dalphaT*(V_alpha0_inv*dalpha);
   TVectorT<double> alpha_v=convertToVector(alpha);
-  TMatrixT<double> chisquare_constraints=lambdaT*convertToMatrix(Value(alpha_v));
+  TMatrixT<double> chisquare_constraints=lambdaT*convertToMatrix(WeightedValue(alpha_v));
   double c2=chisquare_var(0,0)+chisquare_constraints(0,0);
-  std::cout << "chi2 " << chisquare_var(0,0) << " " << chisquare_constraints(0,0) << std::endl;
   return c2;
 }
 
 double MultiTrackNumericalKinematicConstraint::ConstraintDelta(TVectorT<double> par){
-  TVectorD d_par=Value(par);
+  TVectorD d_par=WeightedValue(par);
   double delta_d(0);
   for(int i = 0; i<d_par.GetNrows(); i++){
     delta_d+=fabs(d_par(i));
   }
-  std::cout << "delta_d " << delta_d <<std::endl;
   return delta_d;
 }
 

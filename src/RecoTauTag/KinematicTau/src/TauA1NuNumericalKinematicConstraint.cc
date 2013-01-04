@@ -5,7 +5,7 @@
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 
 TauA1NuNumericalKinematicConstraint::TauA1NuNumericalKinematicConstraint(unsigned int &ambiguity_,const reco::Vertex &primaryVertex,double mtau,edm::Handle<reco::GenParticleCollection> &GenPart_,double weight,bool debug_):
-  MultiTrackNumericalKinematicConstraint(debug_),
+  MultiTrackNumericalKinematicConstraint(debug_,weight),
   pv_inital(primaryVertex),
   mtau_c(mtau),
   GenPart(GenPart_),
@@ -50,8 +50,8 @@ TVectorD TauA1NuNumericalKinematicConstraint::Value(TVectorD &v){
   res(0) = tau.M2()-mtau_c*mtau_c;
   //if(ambiguity==SelectedKinematicDecay::PlusSolution)          res(0) = nu.Pz()-nu1.Pz();
   //if(ambiguity==SelectedKinematicDecay::MinusSolution)         res(0) = nu.Pz()-nu2.Pz();
-  res(1) = a1.Px()+nu.Px(); //a1.Pt()-nu.Pt();                    // |Pt| balance constraint 
-  res(2) = a1.Py()+nu.Py(); //1+(a1.Px()*nu.Px()+a1.Py()*nu.Py()) // (a1.Pt()*nu.Pt()); // phi' constraint (back-to-back)             
+  res(1) = a1.Px()+nu.Px(); 
+  res(2) = a1.Py()+nu.Py(); 
   /*  if(debug){
     v.Print();
     std::cout << "Tau Mass" << tau.M() << " a1" << std::endl;
@@ -250,9 +250,7 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
       }
       }*/
       
-    std::cout << "Calling Value for inital par" << std::endl;
     Value(par);
-    std::cout << "Calling Value for inital par complete" << std::endl;
     //
     return true;
   }
@@ -261,11 +259,7 @@ bool TauA1NuNumericalKinematicConstraint::ConfigureIntialState(const std::vector
 }
 
 std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKinematicVertex > TauA1NuNumericalKinematicConstraint::ConvertStateToParameters(const std::vector<KinematicState> &inStates,const GlobalPoint& inPoint){
-  //if(debug){
-  // std::cout << "TauA1NuNumericalKinematicConstraint::ConvertStateToParameters start" << std::endl;
-    //par.Print();
-    //cov.Print();
-    //}
+
   ComputeVariance();
   //making refitted states of Kinematic Particles
   std::vector<KinematicState> ns;
@@ -274,11 +268,11 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
   AlgebraicMatrix             ns_cov(inStates.size()*npardim+nposdim,inStates.size()*npardim+nposdim,0);
 
   // setup a1
-  bool hasa1(false);
-  bool hasnu(false);
+  //bool hasa1(false);
+  //bool hasnu(false);
   for(unsigned int s=0; s<inStates.size();s++){
     if(inStates.at(s).particleCharge()!=0){
-      hasa1=true;
+      //hasa1=true;
       AlgebraicVector newPar = asHepVector<7>(inStates.at(s).kinematicParameters().vector());
       for(int i =par_vx;i<=par_m; i++){newParA1(i)=newPar(i+1);}
       // now add updated momentum
@@ -301,7 +295,7 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
   // setup nu
   for(unsigned int s=0; s<inStates.size();s++){
     if(inStates.at(s).particleCharge()==0){
-      hasnu=true;
+      //hasnu=true;
       AlgebraicVector7 newParNu;
       // now add updated momentum
       for(int i =par_vx;i<=par_vz; i++){newParNu(i) = newParA1(i+1);}
@@ -349,8 +343,6 @@ std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix >, RefCountedKi
     }
   }
 
-  //std::cout << "ns_cov " << ns_cov << std::endl;
   std::pair<std::vector<KinematicState>, AlgebraicMatrix> ns_m(ns,ns_cov);
-  //if(debug)std::cout << "TauA1NuNumericalKinematicConstraint::ConvertStateToParameters end" << std::endl;
   return std::pair<std::pair<std::vector<KinematicState>, AlgebraicMatrix>, RefCountedKinematicVertex >(ns_m,rVtx);
 }
