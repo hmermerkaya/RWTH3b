@@ -11,9 +11,9 @@
 <use   name="RecoVertex/PrimaryVertexProducer"/>
 <use   name="DQMServices/Core"/>
 <use   name="FWCore/ServiceRegistry"/>
-<use   name="FWCore/ServiceRegistry"/>
 <use   name="Validation/EventGenerator"/> 
-<use   name= "TMVA"/> 
+<use   name="SimpleFits/FitSoftware"/>
+<use   name="TMVA"/>
 <use   name="rootcore"/>
 <use   name="roottmva"/>
 <use   name="boost"/>

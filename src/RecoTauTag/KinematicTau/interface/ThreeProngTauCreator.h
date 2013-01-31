@@ -3,58 +3,47 @@
 // Package:    KinematicTau
 // Class:      ThreeProngTauCreator
 // 
-/**
- This class creates a kinemtic tau from the 3prong decay suggestion.
- Part of the KinematicTau package.
-
- @author Lars Perchalla, Philip Sauerland
- @date 2009
- */
 
 #ifndef ThreeProngTauCreator_h
 #define ThreeProngTauCreator_h
 
 
-#include "RecoTauTag/KinematicTau/interface/KinematicTauCreator.h"
 #include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
 
 #include <TLorentzVector.h>
-#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
-#include <RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h>
-//kinematic fit:
-#include <RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h>
-#include <RecoVertex/KinematicFitPrimitives/interface/VirtualKinematicParticleFactory.h>
-#include <RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h>
-#include "RecoVertex/KinematicFit/interface/MultiTrackMassKinematicConstraint.h"
 //own KinematicFit classes
-#include "RecoTauTag/KinematicTau/interface/TauA1NuNumericalKinematicConstraint.h"
 #include "RecoTauTag/KinematicTau/interface/ParticleMassHelper.h"
-#include "RecoVertex/KinematicFit/interface/KinematicConstrainedVertexFitter.h"
-#include "RecoVertex/KinematicFit/interface/TwoTrackMassKinematicConstraint.h"
-#include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
-#include "RecoVertex/KinematicFit/interface/KinematicParticleFitter.h"
-#include "RecoVertex/KinematicFit/interface/MassKinematicConstraint.h"
-#include "RecoTauTag/KinematicTau/interface/ThreeProngTauSolver.h"
-
+#include "SimpleFits/FitSoftware/interface/MultiProngTauSolver.h"
+#include "SimpleFits/FitSoftware/interface/LorentzVectorParticle.h"
+#include "SimpleFits/FitSoftware/interface/TrackParticle.h"
+#include "RecoTauTag/KinematicTau/interface/FitSequencer.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 
-class ThreeProngTauCreator : public KinematicTauCreator, public ThreeProngTauSolver{
+
+class ThreeProngTauCreator : public FitSequencer{
 public:
-  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,edm::Handle<reco::GenParticleCollection> &GenPart_):KinematicTauCreator(transTrackBuilder,GenPart_){}
-  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,edm::Handle<reco::GenParticleCollection> &GenPart_):KinematicTauCreator(transTrackBuilder, cfg,GenPart_){}
+  enum FitSeq{VertexFit,TauFit,NFits};
   
-  // ndf depends on specific decay.
-  virtual int ndf() const;
+  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,edm::Handle<reco::GenParticleCollection> &GenPart_):FitSequencer(transTrackBuilder,GenPart_){}
+  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,edm::Handle<reco::GenParticleCollection> &GenPart_):FitSequencer(transTrackBuilder, cfg, GenPart_){}
   
-private:
-  virtual int create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau);
-  bool createStartScenario(unsigned int& ambiguity,SelectedKinematicDecay &KFTau, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos, std::vector<RefCountedKinematicParticle> &a1);
+  TString FitSequence(int i){
+    if(i==VertexFit) return "VertexFit";
+    if(i==TauFit)    return "TauFit";
+    return "Invalid";
+  }
 
-  bool kinematicRefit(unsigned int& ambiguity,std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex);
-  double getTauMomentumMagnitudes(unsigned int& ambiguity,double ma1,double pa1,double M,double theta);
-  RefCountedKinematicParticle unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,TLorentzVector &NuGuessLV);
-  RefCountedKinematicParticle virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess);
-  std::vector<RefCountedKinematicParticle> a1maker(std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &PostFitPions);
+private:
+  int  create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau);
+  void ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions);
+  void ConfigureNeutrino(SelectedKinematicDecay &KFTau,int ambiguity,LorentzVectorParticle &a1,std::vector<LorentzVectorParticle> &neutrinos);
+  LorentzVectorParticle EstimateNu(LorentzVectorParticle &a1,TLorentzVector &nuGuess);
+  bool FitA1(std::vector<TrackParticle> &pions);
+  bool FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex & primaryVertex,unsigned int &ambiguity);
+
+  // Parameters
   ParticleMassHelper PMH;
 
 };

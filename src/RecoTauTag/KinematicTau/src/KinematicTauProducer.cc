@@ -10,7 +10,7 @@
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
 #include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
-
+#include "RecoTauTag/KinematicTau/interface/ParticleBuilder.h"
 
 KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
@@ -40,27 +40,17 @@ void KinematicTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   bool filterValue = false;
   cnt_++;
   iEvent_ = &iEvent;
-
   std::auto_ptr<SelectedKinematicDecayCollection> KinematicFitTauDecays = std::auto_ptr<SelectedKinematicDecayCollection >(new SelectedKinematicDecayCollection);
   SelectedKinematicDecayCollection &KinematicFitTauDecays_=*KinematicFitTauDecays;
-  std::auto_ptr<reco::RecoChargedCandidateCollection> daughterCollection_ = std::auto_ptr<reco::RecoChargedCandidateCollection>(new reco::RecoChargedCandidateCollection);
-  reco::RecoChargedCandidateCollection & daughterCollection = * daughterCollection_;
-
-  filterValue = select(KinematicFitTauDecays_,daughterCollection,iSetup);
+  filterValue = select(KinematicFitTauDecays_,iSetup);
   if(filterValue) edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Passed";
   else edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Failed";
-
-  edm::OrphanHandle<reco::RecoChargedCandidateCollection> orphanCands = iEvent_->put(daughterCollection_,"KinematicFitTauDaughters");
-  correctReferences(KinematicFitTauDecays_, orphanCands) ;//has to be called before put(selected_,"SelectedKinematicParticles")!!!
-  iEvent_->put(KinematicFitTauDecays,"KinematicFitTau");
-
   if(filterValue) cntFound_++;//found at least 1 refit tau
 }
 
 void KinematicTauProducer::beginJob(){
   cnt_ = 0;
   cntFound_ = 0;
-
   if(do_BDTTrain_){
    output = new TFile("ForTrain.root","RECREATE");
    output_tree = new TTree("t","t");
@@ -79,7 +69,7 @@ void KinematicTauProducer::beginJob(){
      reader->AddVariable( "PVSVMins", &PVSVMins);
      reader->BookMVA( "BDT_method",BDTweightFileZero_);
   }
-     //     reader->BookMVA( "BDT_method", BDTweightFileMinus_ );
+  //     reader->BookMVA( "BDT_method", BDTweightFileMinus_ );
 }
 
 void KinematicTauProducer::endJob(){
@@ -94,7 +84,7 @@ void KinematicTauProducer::endJob(){
 
 }
 
-bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection,const edm::EventSetup& iSetup){
+bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,const edm::EventSetup& iSetup){
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
 
@@ -113,7 +103,6 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 
     for(unsigned int i=0; i<KinematicTauCandidate->size();i++){
       std::vector<SelectedKinematicDecay>       KFTauCandidates;
-      std::vector<std::vector<reco::TrackRef> > KFTauCandidatesTracks;
       for(unsigned int j=0; j<KinematicTauCandidate->at(i).size();j++){
 	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
         if(j==0){
@@ -143,11 +132,9 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 	    if(fabs(tauFlghtDirNoCorr.Eta())<etacut_ || fabs(tauFlghtDir.Eta())<etacut_ ){
 	      KTau.SetInitialVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.InitialRefittedTracks(),SVH.InitialSecondaryVertex());
 	      KTau.SetInitialKinematics(tauFlghtDirNoCorr,SVH.Initial_pions(),a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
-	      std::vector<reco::TrackRef> Tracks;
-	      bool FitOK=FitKinematicTauCandidate(KTau,Tracks,transTrackBuilder_,genParticles);
+	      bool FitOK=FitKinematicTauCandidate(KTau,transTrackBuilder_,genParticles);
 	      if(FitOK){
 		KFTauCandidates.push_back(KTau);
-		KFTauCandidatesTracks.push_back(Tracks);
 	      }
 	    }
 	  }
@@ -155,7 +142,6 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
       }
       if(KFTauCandidates.size()>0){
 	KinematicFitTauDecays_.push_back(KFTauCandidates.at(0));
-	saveSelectedTracks(KFTauCandidatesTracks.at(0),daughterCollection);
       }
     }
     if (KinematicFitTauDecays_.size() >= minTau_) {
@@ -173,13 +159,12 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 }
 
 
-bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTau,std::vector<reco::TrackRef> &usedTracks, edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles){
+bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTau,edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles){
   bool hasasusccessfullfit=false;
   for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
-    KinematicTauCreator *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
+    FitSequencer *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
     int fitStatus = kinTauCreator->create(ambiguity,KFTau);
     edm::LogInfo("KinematicTauProducer") <<"KinematicTauProducer::select: fitstatus " << fitStatus ;
-    if(fitStatus==1)kinTauCreator->getRefittedChargedDaughters();
     //compute discriminators
     std::map<std::string,bool> discrimValues;
     
@@ -191,8 +176,6 @@ bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTa
       if(do_BDTTrain_)FillTreeForTraining(ambiguity,kinTauCreator,fitStatus,KFTau);
       std::cout<<"----------- BDT  "<<ReturnBDTOutput(ambiguity,kinTauCreator,fitStatus,KFTau) <<std::endl;
       saveKinParticles(ambiguity,kinTauCreator,KFTau);
-      std::vector<reco::TrackRef> Tracks=kinTauCreator->getSelectedTracks();
-      for(unsigned int i=0;i<Tracks.size();i++){usedTracks.push_back(Tracks.at(i));}
       hasasusccessfullfit=true;
     }
     delete kinTauCreator;
@@ -200,20 +183,19 @@ bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTa
   return hasasusccessfullfit;
 }
 
-bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
+bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
   //combine a discriminator of loose quality cuts
   //test if fit could create the final decay tree
   if(!fitStatus)return false;
   // Configure required paramamters
-  reco::PFTau refitPFTau = kinTauCreator->getPFTau();//this is only the visible part of the refitted tau momentum!
-  refitPFTau.setalternatLorentzVect(kinTauCreator->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
-  std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCreator->getRefittedChargedDaughters();
-  std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCreator->getRefittedNeutralDaughters();
+  reco::PFTau refitPFTau = kinTauCreator->getPFTau();
+  std::vector<LorentzVectorParticle> chargedDaughters = kinTauCreator->chargedDaughters();
+  std::vector<LorentzVectorParticle> neutralDaughters = kinTauCreator->neutralDaughters();
 
   //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
   reco::Vertex primaryVtx =KFTau.InitialPrimaryVertexReFit();
-  reco::Vertex modifiedPV = kinTauCreator->getModifiedPrimaryVertex();
-  VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
+  reco::Vertex modifiedPV = KFTau.InitialPrimaryVertexReFitAndRotated();
+  reco::Vertex secVtx=ParticleBuilder::GetVertex(kinTauCreator->mother());
   VertexDistance3D vtxdist;
   double vtxSignPVRotSV = vtxdist.distance(modifiedPV, secVtx).significance();
   double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
@@ -246,117 +228,28 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
 
 
 }
-int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,const KinematicTauCreator * kinTauCreator, SelectedKinematicDecay &KFTau){
+int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,FitSequencer * kinTauCreator, SelectedKinematicDecay &KFTau){
   //Get the secondary vertx from fit
-  kinTauCreator->getKinematicTree()->movePointerToTheTop();
-  reco::Vertex sec_vertex;
-  RefCountedKinematicParticle the_top = kinTauCreator->getKinematicTree()->currentParticle();
-  if (the_top->currentState().isValid()){
-    KinematicVertex the_vertex = (*kinTauCreator->getKinematicTree()->currentDecayVertex());
-    if(the_vertex.vertexIsValid() ){
-      sec_vertex = reco::Vertex(reco::Vertex::Point(the_vertex.vertexState().position()),the_vertex.vertexState().error().matrix_new(),
-				the_vertex.chiSquared(), the_vertex.degreesOfFreedom(),0);
-    }
-  }
+  reco::Vertex sec_vertex=ParticleBuilder::GetVertex(kinTauCreator->mother());
   KFTau.SetKFSecondaryVertex(ambiguity,sec_vertex);
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Save Kinematic Fit Results and Particles
-  RefCountedKinematicTree tree = kinTauCreator->getKinematicTree();
-  NumericalKinematicConstrainedFitter *kcvFitter = kinTauCreator->getFitter();
-  try{
-    tree->movePointerToTheTop();
-  }
-  catch(VertexException){
-    edm::LogWarning("KinematicTauProducer")<<"KinematicTree::movePointerToTheTop; tree is empty! -- Event skipped.";
-    return false;
-  }
-  int iterations = kcvFitter->getNit();
-  float csum = kcvFitter->getCSum();
-  
-  int status = 1;
+  //int status = 1;
   std::string name;
   int maxiterations = fitParameters_.getParameter<int>( "maxNbrOfIterations" );
   double mincsum = fitParameters_.getParameter<double>( "maxDelta" );
-  reco::RecoChargedCandidateRef emptyCandRef;//pions will be filled later on by correctReferences()      
-  if(tree->currentParticle()->currentState().particleCharge() != 0){
-    name = std::string("tau");std::cout<<"tau"<<std::endl;
-  }
-  else{
-    LogTrace("KinematicTauProducer")<<"KinematicTauProducer::saveKinParticles: neutral tau detected. tau skipped.";
-    return 0;
-  }
-  reco::PFTauRef tauRef=KFTau.PFTauRef(); // Fix this is not the real initial state
+
   SelectedKinematicParticleCollection refitTauDecay;
-  refitTauDecay.push_back( SelectedKinematicParticle(tree->currentParticle(), status, name, ambiguity, emptyCandRef) );
-  refitTauDecay.back().setInitialState(TLorentzVector(tauRef->px(), tauRef->py(), tauRef->pz(), tauRef->energy()), kinTauCreator->getModifiedPrimaryVertex());//initial tau state consists of rotated primVtx (+init. err) and the pftau par. 
-  int constraints = tree->currentParticle()->degreesOfFreedom();
-  std::vector<RefCountedKinematicParticle> daughters = tree->daughterParticles();
-
-  for (std::vector<RefCountedKinematicParticle>::iterator iter=daughters.begin(); iter!=daughters.end(); ++iter) {
-    if((*iter)->currentState().particleCharge() != 0){ name = std::string("a1");std::cout<<"a1"<<std::endl;}
-    else name = std::string("neutrino");
-    refitTauDecay.push_back(SelectedKinematicParticle(*iter, status, name, ambiguity, emptyCandRef) );
-  }
-  std::vector<RefCountedKinematicParticle> Pions = kinTauCreator->getPions();
-  for (std::vector<RefCountedKinematicParticle>::iterator itr=Pions.begin(); itr!=Pions.end(); ++itr) {  
-    if((*itr)->currentState().particleCharge() != 0) name = std::string("pion");
-    refitTauDecay.push_back(SelectedKinematicParticle(*itr, status, name, ambiguity, emptyCandRef));
-  }
+  kinTauCreator->GetSelectedKinematicParticleList(ambiguity,refitTauDecay);
   if(refitTauDecay.size() != 6) edm::LogWarning("KinematicTauProducer")<<"KinematicTauProducer::saveKinParticles Invalid number of SelectedKinematicParticles saveSelectedTracks:Saved only "<<refitTauDecay.size()<<" refitted particles.";
- else{
-   std::cout<<"debug 1"<<std::endl;
-   KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2(),1);
-   std::cout<<"debug 2"<<std::endl;
- }
- return refitTauDecay.size();
+  else{
+    std::cout<<"debug 1"<<std::endl;
+    KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, kinTauCreator->Niter(), maxiterations, kinTauCreator->CSum(), mincsum, kinTauCreator->NConstraints(), kinTauCreator->ndf(), kinTauCreator->chi2(),1);
+    std::cout<<"debug 2"<<std::endl;
+  }
+  return refitTauDecay.size();
 }
 
-
-
-
-
-
-   //   KFTau.SetKinematicFitProperties(ambiguity,refitTauDecay, iterations, maxiterations, csum, mincsum, constraints, kinTauCreator->ndf(), kinTauCreator->chi2(),ReturnBDTOutput(ambiguity,kinTauCreator,1,KFTau));
-
-
-
-
-void KinematicTauProducer::saveSelectedTracks(const std::vector<reco::TrackRef> usedTracks, reco::RecoChargedCandidateCollection & daughterCollection){
-  //set up TrackToCandidate converter              
-  edm::ParameterSet pioncfg;
-  pioncfg.addParameter("particleType", 211);
-  converter::TrackToCandidate tk2cand(pioncfg);
-  for (std::vector<reco::TrackRef>::const_iterator trk = usedTracks.begin(); trk != usedTracks.end(); ++trk) {
-    reco::RecoChargedCandidate tmpCand;
-    tk2cand.convert(*trk, tmpCand); 
-    daughterCollection.push_back(tmpCand);
-  }
-}
-
-
-void KinematicTauProducer::correctReferences(SelectedKinematicDecayCollection & KFTaus, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands){
-  unsigned index = 0;
-  std::vector<reco::RecoChargedCandidateRef> newRefs;
-  for(reco::RecoChargedCandidateCollection::const_iterator iter = orphanCands->begin(); iter != orphanCands->end(); ++iter, ++index){
-    reco::RecoChargedCandidateRef ref(orphanCands, index);
-    newRefs.push_back(ref);
-  }
-  index = 0;
-  for(SelectedKinematicDecayCollection::iterator decay = KFTaus.begin(); decay != KFTaus.end(); ++decay){
-    std::vector< SelectedKinematicParticle* > daughters;
-    decay->modifiableChargedDaughters(daughters);
-    for(std::vector<SelectedKinematicParticle*>::iterator particle = daughters.begin(); particle != daughters.end(); ++particle){
-      if(index>=newRefs.size()){
-	edm::LogError("KinematicTauProducer")<<"evt "<<iEvent_->id().event()<<" KinematicTauProducer::correctReferences: Bad selection size! index="<<index<<", refs="<<newRefs.size();
-        throw 111;
-      }
-      if(*particle!=NULL){
-        (*particle)->setCandRef(newRefs.at(index));
-      }else edm::LogError("KinematicTauProducer")<<"KinematicTauProducer::correctReferences: Reference not modified!!!(at index="<<index<<")";
-      index++;
-    }
-  }
-}
 
 
 double KinematicTauProducer::VertexRotationAndSignificance(TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,
@@ -374,19 +267,16 @@ double KinematicTauProducer::VertexRotationAndSignificance(TransientVertex &tmpV
 
 
 
-void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
-
-
+void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
   // Configure required paramamters
-  reco::PFTau refitPFTau = kinTauCreator->getPFTau();//this is only the visible part of the refitted tau momentum!
-  refitPFTau.setalternatLorentzVect(kinTauCreator->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
-  std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCreator->getRefittedChargedDaughters();
-  std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCreator->getRefittedNeutralDaughters();
+  reco::PFTau refitPFTau =  kinTauCreator->getPFTau();
+  std::vector<LorentzVectorParticle> chargedDaughters = kinTauCreator->chargedDaughters();
+  std::vector<LorentzVectorParticle> neutralDaughters = kinTauCreator->neutralDaughters();
 
   //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
-  reco::Vertex primaryVtx =KFTau.InitialPrimaryVertexReFit();
-  reco::Vertex modifiedPV = kinTauCreator->getModifiedPrimaryVertex();
-  VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
+  reco::Vertex primaryVtx=KFTau.InitialPrimaryVertexReFit();
+  reco::Vertex modifiedPV=KFTau.InitialPrimaryVertexReFitAndRotated();
+  reco::Vertex secVtx=ParticleBuilder::GetVertex(kinTauCreator->mother());
   VertexDistance3D vtxdist;
   double vtxSignPVRotSV = vtxdist.distance(modifiedPV, secVtx).significance();
   double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
@@ -397,11 +287,6 @@ void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,const Kin
   double energyTFraction=-1;
   if(fraction != 0.){energyTFraction = KFTau.PFTauRef()->et()/fraction;}
 
-
-
-  NumericalKinematicConstrainedFitter *kcvFitter = kinTauCreator->getFitter();
-
-
   ChiSquared chiSquared(kinTauCreator->chi2(), kinTauCreator->ndf());
 
   BDT_chiSquared.push_back(TMath::Prob( chiSquared.probability(), 3));
@@ -409,25 +294,24 @@ void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,const Kin
   BDT_vtxSignPVRotSV.push_back(vtxSignPVRotSV);
   BDT_vtxSignPVRotPVRed.push_back(vtxSignPVRotPVRed);
   BDT_a1Mass.push_back(a1Mass);
-  BDT_iterations.push_back(kcvFitter->getNit());
+  BDT_iterations.push_back(kinTauCreator->Niter());
   output_tree->Fill();
 
 
 }
 
-double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
+double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
   // Configure required paramamters
 
   double MvaOut;
-  reco::PFTau refitPFTau = kinTauCreator->getPFTau();//this is only the visible part of the refitted tau momentum!
-  refitPFTau.setalternatLorentzVect(kinTauCreator->getKinematicTau().p4());//this is the whole refitted tau momentum including the neutrino!
-  std::vector<math::XYZTLorentzVector> chargedDaughters = kinTauCreator->getRefittedChargedDaughters();
-  std::vector<math::XYZTLorentzVector> neutralDaughters = kinTauCreator->getRefittedNeutralDaughters();
+  reco::PFTau refitPFTau =  kinTauCreator->getPFTau();
+  std::vector<LorentzVectorParticle> chargedDaughters = kinTauCreator->chargedDaughters();
+  std::vector<LorentzVectorParticle> neutralDaughters = kinTauCreator->neutralDaughters();
 
   //vertex separation between the modified primary vertex and the secondary vertex obtained by the fit
-  reco::Vertex primaryVtx =KFTau.InitialPrimaryVertexReFit();
-  reco::Vertex modifiedPV = kinTauCreator->getModifiedPrimaryVertex();
-  VertexState secVtx(kinTauCreator->getKinematicTree()->currentDecayVertex()->position(), kinTauCreator->getKinematicTree()->currentDecayVertex()->error());
+  reco::Vertex primaryVtx=KFTau.InitialPrimaryVertexReFit();
+  reco::Vertex modifiedPV=KFTau.InitialPrimaryVertexReFitAndRotated();
+  reco::Vertex secVtx=ParticleBuilder::GetVertex(kinTauCreator->mother());
   VertexDistance3D vtxdist;
   double vtxSignPVRotSV = vtxdist.distance(modifiedPV, secVtx).significance();
   //double vtxSignPVRotPVRed = vtxdist.distance(modifiedPV, primaryVtx).significance();
@@ -440,35 +324,30 @@ double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,const Kinem
 
 
   ChiSquared chiSquared(kinTauCreator->chi2(), kinTauCreator->ndf());
-  NumericalKinematicConstrainedFitter *kcvFitter = kinTauCreator->getFitter();
   if(ambiguity ==0){
-  ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
-  fracMins =energyTFraction;
-  iterMins = kcvFitter->getNit();
-  PVSVMins=vtxSignPVRotSV;
-  a1MassMins =a1Mass;
+    ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
+    fracMins =energyTFraction;
+    iterMins = kinTauCreator->Niter();
+    PVSVMins=vtxSignPVRotSV;
+    a1MassMins =a1Mass;
     MvaOut = reader->EvaluateMVA( "BDT_method" );
   }
-
-  if(ambiguity ==1){
-  ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
-  fracMins =energyTFraction;
-  iterMins = kcvFitter->getNit();
-  PVSVMins=vtxSignPVRotSV;
-  a1MassMins =a1Mass;
+  else if(ambiguity ==1){
+    ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
+    fracMins =energyTFraction;
+    iterMins = kinTauCreator->Niter();
+    PVSVMins=vtxSignPVRotSV;
+    a1MassMins =a1Mass;
     MvaOut = reader->EvaluateMVA( "BDT_method" );
   }
-
-  if(ambiguity ==2){
-  ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
-  fracMins =energyTFraction;
-  iterMins = kcvFitter->getNit();
-  PVSVMins=vtxSignPVRotSV;
-  a1MassMins =a1Mass;
-   MvaOut = reader->EvaluateMVA( "BDT_method" );
+  else{//if(ambiguity ==2){
+    ProbMins3 =TMath::Prob( chiSquared.probability(), 3);
+    fracMins =energyTFraction;
+    iterMins = kinTauCreator->Niter();
+    PVSVMins=vtxSignPVRotSV;
+    a1MassMins =a1Mass;
+    MvaOut = reader->EvaluateMVA( "BDT_method" );
   }
-
-
   return MvaOut;
 
 }

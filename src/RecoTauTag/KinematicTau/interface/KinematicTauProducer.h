@@ -30,7 +30,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
+#include "RecoTauTag/KinematicTau/interface/FitSequencer.h"
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
@@ -63,20 +63,21 @@ private:
   virtual void endJob();
   
   //Execute the kinematic fit and in case of success modify the taus parameters
-  bool select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,reco::RecoChargedCandidateCollection & daughterCollection,const edm::EventSetup& iSetup);
-  bool FitKinematicTauCandidate(SelectedKinematicDecay &KFTau,std::vector<reco::TrackRef> &usedTracks, edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles);
+  bool select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,const edm::EventSetup& iSetup);
+  bool FitKinematicTauCandidate(SelectedKinematicDecay &KFTau, edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles);
   //combine a discriminator of important quality cuts of a refitted tau decay
-  bool dicriminatorByKinematicFitQuality(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
-  int  saveKinParticles(unsigned int &ambiguity,const KinematicTauCreator * kinTauCreator, SelectedKinematicDecay &KFTau);
-  void saveSelectedTracks(const std::vector<reco::TrackRef> usedTracks, reco::RecoChargedCandidateCollection & daughterCollection);
-  void correctReferences(SelectedKinematicDecayCollection & selected, const edm::OrphanHandle<reco::RecoChargedCandidateCollection> & orphanCands);
-  void fillTree(std::vector<double> &QCVar);
-  void FillTreeForTraining(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
-  double ReturnBDTOutput(unsigned int &ambiguity,const KinematicTauCreator *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
+  bool dicriminatorByKinematicFitQuality(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
+  int  saveKinParticles(unsigned int &ambiguity,FitSequencer * kinTauCreator, SelectedKinematicDecay &KFTau);
   double VertexRotationAndSignificance(TransientVertex &tmpVtx, std::vector<reco::TransientTrack> trks,
                                        TVector3 &tauFlghtDirNoCorr,
                                        reco::Vertex &pVtx, TLorentzVector &lorentzA1,
                                        TVector3 &tauFlghtDir,double &theta0, double &thetaMax);
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // BDT functions
+  void fillTree(std::vector<double> &QCVar);
+  void FillTreeForTraining(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
+  double ReturnBDTOutput(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau);
   
   const edm::ParameterSet fitParameters_;
   edm::Event * iEvent_;
