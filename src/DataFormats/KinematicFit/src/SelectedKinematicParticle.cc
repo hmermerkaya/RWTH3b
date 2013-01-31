@@ -2,7 +2,7 @@
 
 SelectedKinematicParticle::SelectedKinematicParticle() {
   status_ = -1;
-  name_ = "";
+  pdgid_=0;
   charge_ = 0;
   ambiguity_ = -1;
   
@@ -13,21 +13,24 @@ SelectedKinematicParticle::SelectedKinematicParticle() {
   
   CandRef_ = reco::RecoChargedCandidateRef();
 }
-SelectedKinematicParticle::SelectedKinematicParticle(const RefCountedKinematicParticle & kinparticle, const int status, const std::string & name, const int ambiguity, const reco::RecoChargedCandidateRef & CandRef){
+
+SelectedKinematicParticle::SelectedKinematicParticle(LorentzVectorParticle p, const int status, const int ambiguity, const reco::RecoChargedCandidateRef & CandRef){
   status_ = status;
-  name_ = name;
-  charge_ = (kinparticle->currentState()).particleCharge();
+  pdgid_=p.PDGID();
+  charge_ = p.Charge();
   ambiguity_ = ambiguity;
   
-  kinparm_.ResizeTo(7);
-  kinparm_ = convertVector((kinparticle->currentState()).kinematicParameters().vector());
-  input_kinparm_.ResizeTo(7);
-  input_kinparm_ = convertVector((kinparticle->initialState()).kinematicParameters().vector());
+  kinparm_.ResizeTo(LorentzVectorParticle::NLorentzandVertexPar);
+  for(int i=0;i<LorentzVectorParticle::NLorentzandVertexPar;i++) kinparm_(i) = p.Parameter(i);
+  input_kinparm_.ResizeTo(LorentzVectorParticle::NLorentzandVertexPar);
+  input_kinparm_ = kinparm_;
   
-  kinmatrix_.ResizeTo(TMatrixDSym(7));
-  kinmatrix_ = convertMatrix((kinparticle->currentState()).kinematicParametersError().matrix());
-  input_kinmatrix_.ResizeTo(TMatrixDSym(7));
-  input_kinmatrix_ = convertMatrix((kinparticle->initialState()).kinematicParametersError().matrix());
+  kinmatrix_.ResizeTo(LorentzVectorParticle::NLorentzandVertexPar,LorentzVectorParticle::NLorentzandVertexPar);
+  for(int i=0;i<LorentzVectorParticle::NLorentzandVertexPar;i++){
+    for(int j=0;j<LorentzVectorParticle::NLorentzandVertexPar;j++){kinmatrix_ = p.Covariance(i,j);}
+  }
+  input_kinmatrix_.ResizeTo(LorentzVectorParticle::NLorentzandVertexPar,LorentzVectorParticle::NLorentzandVertexPar);
+  input_kinmatrix_ = kinmatrix_;
   
   CandRef_ = CandRef;
 }
@@ -35,8 +38,8 @@ SelectedKinematicParticle::SelectedKinematicParticle(const RefCountedKinematicPa
 const int SelectedKinematicParticle::status() const {
   return status_;
 }
-const std::string & SelectedKinematicParticle::name() const {
-  return name_;
+const int  SelectedKinematicParticle::pdgid() const {
+  return pdgid_;
 }
 const int SelectedKinematicParticle::charge() const {
   return charge_;
@@ -64,27 +67,6 @@ const reco::RecoChargedCandidateRef & SelectedKinematicParticle::candRef() const
 }
 void SelectedKinematicParticle::setCandRef(const reco::RecoChargedCandidateRef & parm){
   CandRef_ = parm;
-}
-
-const TVectorT<double> SelectedKinematicParticle::convertVector( const AlgebraicVector7 & vector ) {
-  TVectorT<double> tmpVector(7);
-  for (int i = 0; i < 7; i++) {
-    tmpVector[i] = double(vector.At(i));
-  }
-  return tmpVector;
-}
-
-const TMatrixDSym SelectedKinematicParticle::convertMatrix( const AlgebraicSymMatrix77 & matrix ) {
-  TMatrixDSym tmpMatrix(7);
-  for (int i = 0; i < 7; i++) {
-    for (int j = 0; j < 7; j++) {
-      tmpMatrix[i][j] = matrix.At(i,j);
-      if (i == j && tmpMatrix[i][j] < -0.000001) {
-	//std::cerr << "WARNING: matrix_el[" << i << "][" << j << "]: " << tmpMatrix[i][j] << " (before: " << matrix.At(i,j) << ")" << std::endl;
-      }
-    }
-  }
-  return tmpMatrix;
 }
 
 const TLorentzVector SelectedKinematicParticle::p4() const {

@@ -6,6 +6,7 @@
 <use   name="DataFormats/VertexReco"/>
 <use   name="RecoVertex/KinematicFitPrimitives"/>
 <use   name="RecoVertex/VertexPrimitives"/>
+<use   name="SimpleFits/FitSoftware"/>
 <use   name="TrackingTools/TransientTrack"/>
 <use   name="CommonTools/Statistics"/>
 <export>

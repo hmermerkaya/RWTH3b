@@ -1,4 +1,5 @@
 #include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
+#include "Validation/EventGenerator/interface/PdtPdgMini.h"
 
 SelectedKinematicDecay::SelectedKinematicDecay() {
   SetInitialProperties(Undefined,reco::PFTauRef(),std::vector<reco::TrackRef>(),reco::Vertex(),"",0);
@@ -159,7 +160,7 @@ TLorentzVector SelectedKinematicDecay::Initial_a1_p4(){
 
 TLorentzVector SelectedKinematicDecay::Tau(unsigned int ambiguity){
   for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
-    if(iParticle->name()=="tau"  && iParticle->ambiguity()==ambiguity){
+    if(abs(iParticle->pdgid())==PdtPdgMini::tau_minus  && iParticle->ambiguity()==ambiguity){
       return iParticle->p4(); 
     }
   }
@@ -168,7 +169,7 @@ TLorentzVector SelectedKinematicDecay::Tau(unsigned int ambiguity){
 
 TLorentzVector SelectedKinematicDecay::Neutrino(unsigned int ambiguity){
   for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
-    if(iParticle->name()=="neutrino"  && iParticle->ambiguity()==ambiguity){
+    if(abs(iParticle->pdgid())==PdtPdgMini::nu_tau  && iParticle->ambiguity()==ambiguity){
       return iParticle->p4();
     }
   }
@@ -178,7 +179,7 @@ TLorentzVector SelectedKinematicDecay::Neutrino(unsigned int ambiguity){
 std::vector<TLorentzVector> SelectedKinematicDecay::Pions(unsigned int ambiguity){
   std::vector<TLorentzVector> pions;
   for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
-    if(iParticle->name()=="pion"  && iParticle->ambiguity()==ambiguity){
+    if(abs(iParticle->pdgid())==PdtPdgMini::pi_plus  && iParticle->ambiguity()==ambiguity){
       pions.push_back(iParticle->p4());
     }
   }
@@ -189,7 +190,7 @@ std::vector<TLorentzVector> SelectedKinematicDecay::Pions(unsigned int ambiguity
 TLorentzVector SelectedKinematicDecay::a1_p4(unsigned int ambiguity){
   TLorentzVector a1(0,0,0,0);
   for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
-    if(iParticle->name()=="a1" && iParticle->ambiguity()== ambiguity){
+    if(abs(iParticle->pdgid())==PdtPdgMini::a_1_plus && iParticle->ambiguity()== ambiguity){
       a1=iParticle->p4();
     }
   }
@@ -199,14 +200,14 @@ TLorentzVector SelectedKinematicDecay::a1_p4(unsigned int ambiguity){
 
 const SelectedKinematicParticle * SelectedKinematicDecay::topParticle(unsigned int ambiguity) const {
   for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-    if(iter->name()=="tau" && iter->ambiguity()==ambiguity) return &(*iter);
+    if(abs(iter->pdgid())==PdtPdgMini::tau_minus && iter->ambiguity()==ambiguity) return &(*iter);
   }
   return &(*particles_.begin());
 }
 
 void SelectedKinematicDecay::daughters(std::vector< SelectedKinematicParticle const * > & par,unsigned int ambiguity) const {
   for ( SelectedKinematicParticleCollection::const_iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
-    if(iter->name()!="tau" && iter->ambiguity()==ambiguity) par.push_back(&(*iter));//skip mother
+    if(abs(iter->pdgid())!=PdtPdgMini::tau_minus && iter->ambiguity()==ambiguity) par.push_back(&(*iter));//skip mother
   }
 }
 
@@ -228,7 +229,7 @@ void SelectedKinematicDecay::neutralDaughters(std::vector< SelectedKinematicPart
 void SelectedKinematicDecay::modifiableChargedDaughters(std::vector< SelectedKinematicParticle * > & par,unsigned int ambiguity) {
   for ( SelectedKinematicParticleCollection::iterator iter = particles_.begin(); iter != particles_.end(); ++iter ) {
     if ( std::abs(iter->charge()) == 1  ) {
-      if(iter != particles_.begin() && iter->name()!="tau"  && iter->name()!="a1") par.push_back(&(*iter));//skip mother
+      if(iter != particles_.begin() && abs(iter->pdgid())!=PdtPdgMini::tau_minus  && abs(iter->pdgid())!=PdtPdgMini::a_1_plus) par.push_back(&(*iter));//skip mother
     }
   }
 }
