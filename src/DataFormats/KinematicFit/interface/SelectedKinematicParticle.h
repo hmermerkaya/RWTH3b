@@ -6,17 +6,11 @@
 // Class:      SelectedKinematicParticle
 // 
 /**
- * This class stores the results from kinematically refitted particles.
- * @author Lars Perchalla, Philip Sauerland
- * @date 2009
+ This class stores the results from kinematically refitted particles.
+
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
  */
-//
-// Original Author:  Lars Perchalla, Philip Sauerland
-//         Created:  Thu Dec  17 12:27:34 CEST 2009
-// $Id: SelectedKinematicParticle.h,v 1.7 2010/06/24 11:50:41 sauerlan Exp $
-//
-
-
 
 #include <memory>
 #include <algorithm>
@@ -29,72 +23,56 @@
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
-#include "RecoVertex/KinematicFitPrimitives/interface/RefCountedKinematicParticle.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
-
+#include "SimpleFits/FitSoftware/interface/LorentzVectorParticle.h"
 
 class SelectedKinematicParticle {
-public:
-	SelectedKinematicParticle();
-	SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef CandRef_, const int ambiguity_, const int status_);
-	SelectedKinematicParticle(const TVectorT<double> kinparm_, const TMatrixDSym kinmatrix_, const TVectorT<double> input_kinparm_, const TMatrixDSym input_kinmatrix_, const int charge_, const std::string name_, const float chi2_, const float ndf_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef CandRef_, const int ambiguity_, const int status_);
-    SelectedKinematicParticle(const RefCountedKinematicParticle kinparticle_, const std::string name_, const int iterations_, const int maxiterations_, const float csum_, const float mincsum_, const reco::RecoChargedCandidateRef CandRef_, const int ambiguity_, const int status_);
-
-    int status() const;
-    int matched() const;
-    int iterations() const;
-    int maxiterations() const;
-    int ambiguity() const;
-
-    int charge() const;
-	float chi2() const;
-	float ndf() const;
-    float csum() const;
-    float mincsum() const;
-
-    std::string name() const;
-    
-	TVectorT<double> parameters() const;
-	TVectorT<double> input_parameters() const;
-
-	TMatrixDSym matrix() const;
-	TMatrixDSym input_matrix() const;
-    
-	reco::RecoChargedCandidateRef candRef() const;
-	void setCandRef(const reco::RecoChargedCandidateRef parm);
-    
-    TLorentzVector p4() const;
-	TVector3 vertex() const;
-    
-	void setMatched(const int parm);
-	void setInitialState(const TLorentzVector & momentum, const reco::Vertex & primVtx);
-	
-private:
-    int status__; //
-    int matched__; //
-    int iterations__; //
-    int maxiterations__; //
-    int ambiguity__; //
-    
-    int charge__; //
-    float chi2__; // 
-	float ndf__; //
-    float csum__; //
-    float mincsum__; //
-    
-    std::string name__; //
-    
-	TVectorT<double> kinparm__; //
-	TVectorT<double> input_kinparm__; //
-
-	TMatrixDSym kinmatrix__; //
-	TMatrixDSym input_kinmatrix__; //
-    
-    reco::RecoChargedCandidateRef CandRef__; //
-    
-    TVectorT<double> convertVector( const AlgebraicVector7 vector );
-    TMatrixDSym convertMatrix( const AlgebraicSymMatrix77 matrix );
+ public:
+  SelectedKinematicParticle();
+  SelectedKinematicParticle(LorentzVectorParticle p,const int status, const int ambiguity, const reco::RecoChargedCandidateRef & CandRef);
+  
+  const int status() const;
+  const int pdgid() const;
+  const int charge() const;
+  const unsigned int ambiguity() const;
+  
+  const TVectorT<double> & parameters() const;
+  const TVectorT<double> & input_parameters() const;
+  
+  const TMatrixDSym & matrix() const;
+  const TMatrixDSym & input_matrix() const;
+  
+  const reco::RecoChargedCandidateRef & candRef() const;
+  void setCandRef(const reco::RecoChargedCandidateRef & parm);
+  
+  const TLorentzVector p4() const;
+  const TVector3 vertex() const;
+  
+  void setInitialState(const TLorentzVector & momentum, const reco::Vertex & primVtx);
+  
+ private:
+  /// status code (not in use yet)
+  int status_; //
+  /// particle name
+  int pdgid_; //
+  /// particle charge
+  int charge_; //
+  /// DEPRECATED! ambiguity counter
+  int ambiguity_; //
+  
+  /// kinematic parameters of the fitted state
+  TVectorT<double> kinparm_; //
+  /// kinematic parameters of the unfitted state
+  TVectorT<double> input_kinparm_; //
+  
+  /// coveriance matrix of the fitted state
+  TMatrixDSym kinmatrix_; //
+  /// coveriance matrix of the unfitted state
+  TMatrixDSym input_kinmatrix_; //
+  
+  /// reference to the initial candidate
+  reco::RecoChargedCandidateRef CandRef_; //
 };
 
 typedef std::vector<SelectedKinematicParticle> SelectedKinematicParticleCollection;
