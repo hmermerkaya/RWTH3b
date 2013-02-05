@@ -46,6 +46,7 @@ void KinematicTauProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   if(filterValue) edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Passed";
   else edm::LogInfo("KinematicTauProducer")<<"KinematicTauProducer::filter Failed";
   if(filterValue) cntFound_++;//found at least 1 refit tau
+  iEvent_->put(KinematicFitTauDecays,"KinematicFitTau");
 }
 
 void KinematicTauProducer::beginJob(){
@@ -85,6 +86,7 @@ void KinematicTauProducer::endJob(){
 }
 
 bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFitTauDecays_,const edm::EventSetup& iSetup){
+  std::cout << "KinematicTauProducer::select" << std::endl;
   edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
 
@@ -96,20 +98,21 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
   iEvent_->getByLabel(primVtxTag_, primaryVertexCollection);
   if (!primaryVertexCollection.isValid()) return false;
   reco::VertexCollection primaryVertices = *primaryVertexCollection;
-
   if(primaryVertices.size()>0){ // if event has vertex get tau candidated
+    std::cout << "found vertex" << std::endl;
     edm::Handle<std::vector<std::vector<SelectedKinematicDecay> > > KinematicTauCandidate;
     iEvent_->getByLabel(KinematicTauCandTag_,KinematicTauCandidate);
-
+    std::cout << "N candidates List " << KinematicTauCandidate->size() << std::endl;
     for(unsigned int i=0; i<KinematicTauCandidate->size();i++){
-      std::vector<SelectedKinematicDecay>       KFTauCandidates;
+      std::vector<SelectedKinematicDecay>  KFTauCandidates;
+      std::cout << "Kinematic Fit " << i << std::endl;
+      std::cout << "N candidates" << KinematicTauCandidate->at(i).size() << std::endl;
       for(unsigned int j=0; j<KinematicTauCandidate->at(i).size();j++){
+	std::cout << "Kinematic Fit " << i << " " << j << std::endl;
 	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
-        if(j==0){
-          const reco::PFTauRef pfiter=KTau.PFTauRef();
-        }
         SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
         if(SVH.hasSecondaryVertex()){
+	  std::cout << "Kinematic Fit " << i << " " << j << " has SV" << std::endl;
           TString vertexName=KTau.PrimaryVertexReFitCollectionTag();
           TString VTag;
           for(unsigned int v=0;v<VertexTags_.size() && VertexTags_.size()==TauVtxList_.size();v++){
@@ -117,8 +120,10 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
           }
 	  edm::Handle<reco::VertexCollection > CurrentTauPrimaryVtx;
           iEvent_->getByLabel(edm::InputTag(VTag.Data()),CurrentTauPrimaryVtx);
+	  std::cout << "Kinematic Fit check PV " << std::endl;
           if(!CurrentTauPrimaryVtx.isValid()) continue;
           if(CurrentTauPrimaryVtx->size()==0) continue;
+	  std::cout << "Kinematic Fit has PV " << std::endl;
 	  reco::Vertex primaryVertexReFit=CurrentTauPrimaryVtx->front();
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
           TVector3 tauFlghtDirNoCorr;
@@ -132,8 +137,11 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 	    if(fabs(tauFlghtDirNoCorr.Eta())<etacut_ || fabs(tauFlghtDir.Eta())<etacut_ ){
 	      KTau.SetInitialVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.InitialRefittedTracks(),SVH.InitialSecondaryVertex());
 	      KTau.SetInitialKinematics(tauFlghtDirNoCorr,SVH.Initial_pions(),a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
+	      std::cout << "before Fit "<< std::endl;
 	      bool FitOK=FitKinematicTauCandidate(KTau,transTrackBuilder_,genParticles);
+	      std::cout << "after Fit "<< std::endl;
 	      if(FitOK){
+		std::cout << "good Fit "<< std::endl;
 		KFTauCandidates.push_back(KTau);
 	      }
 	    }

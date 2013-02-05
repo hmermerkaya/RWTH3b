@@ -7,27 +7,36 @@
 
 int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay &KFTau){
   status=0;
-  //std::cout << "Fit start" << std::endl;
+  std::cout << "Fit start" << std::endl;
   std::vector<TrackParticle> pions;
   std::vector<LorentzVectorParticle> neutrino;
   std::vector<LorentzVectorParticle> daughters;
   // Helix fit for a1
   ConfigurePions(KFTau,pions);
+  std::cout << "configure pions" << std::endl;
   if(pions.size()!=3)return status;
-  if(!FitA1(pions)) return status;
+  std::cout << "pions ok" << std::endl;
+  if(!FitA1(pions,PV_)){ std::cout << "status failed" <<  std::endl; return status;}
+  std::cout << "vertex and a1 Fit" << std::endl;
   A1=mother();
+  std::cout << "have a1 mother" << std::endl;
   // Tau fit
+
   ConfigureNeutrino(KFTau,ambiguity,A1,neutrino);
   daughters.push_back(A1);
   daughters.push_back(neutrino.at(0));
+  std::cout << "have tau daughters" << std::endl;
   if(!FitTau(daughters,PV_,ambiguity)) return status;
+  std::cout << " have tau Fit" << std::endl;
   Tau=mother();
+  std::cout << " have tau mother" << std::endl;
   // Fit sequence complete
   status=1;
   return status;
 }
 
 void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions){
+  PV_=KFTau.InitialPrimaryVertexReFit();
   std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
   GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
@@ -81,13 +90,14 @@ LorentzVectorParticle ThreeProngTauCreator::EstimateNu(LorentzVectorParticle &a1
   return LorentzVectorParticle(par,Cov,PdtPdgMini::nu_tau,0,a1.BField());
 }
 
-bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex & primaryVertex,
+bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex &primaryVertex,
 				  unsigned int &ambiguity){
   if(unfitDaughters.size()!=2){
     edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
     return false;
   }
   // Setup Constraint
+  std::cout << "PV " << primaryVertex.position().x() << " " << primaryVertex.position().y() << " " << primaryVertex.position().z() << std::endl;
   TVector3 pv(primaryVertex.position().x(),primaryVertex.position().y(),primaryVertex.position().z());
   TMatrixTSym<double> pvcov(LorentzVectorParticle::NVertex);
   math::Error<LorentzVectorParticle::NVertex>::type pvCov;
@@ -109,8 +119,9 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   return false;
 }
 
-bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions){
-  Chi2VertexFitter chi2v(pions);
+bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::Vertex & primaryVertex){
+  TVector3 pv(primaryVertex.position().x(),primaryVertex.position().y(),primaryVertex.position().z());
+  Chi2VertexFitter chi2v(pions,pv);
   chi2v.Fit();
   double c(0); for(unsigned int i=0;i<pions.size();i++){c+=pions.at(i).Charge();}
   int pdgid=fabs(PdtPdgMini::a_1_plus)*c;

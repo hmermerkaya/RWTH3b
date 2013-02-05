@@ -40,7 +40,7 @@ private:
   void ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions);
   void ConfigureNeutrino(SelectedKinematicDecay &KFTau,int ambiguity,LorentzVectorParticle &a1,std::vector<LorentzVectorParticle> &neutrinos);
   LorentzVectorParticle EstimateNu(LorentzVectorParticle &a1,TLorentzVector &nuGuess);
-  bool FitA1(std::vector<TrackParticle> &pions);
+  bool FitA1(std::vector<TrackParticle> &pions,const reco::Vertex & primaryVertex);
   bool FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex & primaryVertex,unsigned int &ambiguity);
 
   // Parameters

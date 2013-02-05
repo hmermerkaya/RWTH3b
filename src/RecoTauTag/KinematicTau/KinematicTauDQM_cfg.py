@@ -123,7 +123,7 @@ process.source = cms.Source("PoolSource",
                             
                             )
 
-numberOfEvents = -1
+numberOfEvents = 100
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
