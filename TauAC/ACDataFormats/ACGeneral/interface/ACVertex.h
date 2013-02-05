@@ -30,7 +30,9 @@ public:
     double trackSize() const { return trackSize_; }
     double ptSum() const { return ptSum_; }
 
-    /// distance from vtx in units of their projected errorsum
+    /// distance from point (without any errors) in units of the projected vertex error. usefull for comparing a single track with a vertex.
+    double vtxDistanceSignificance(const TVector3 & point) const;
+    /// distance from vtx in units of their projected errorsum. usefull for comparing two vertices.
     double vtxDistanceSignificance(const ACVertex & vtx) const;
 	/// project error in direction of axis
     double projectedError(const TVector3 & axis, const TMatrixDSym & error) const;

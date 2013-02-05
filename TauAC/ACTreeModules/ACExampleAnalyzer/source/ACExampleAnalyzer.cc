@@ -10,7 +10,8 @@ int main(int argc, char* argv[]) {
     ACExampleAnalyzer anlzr;
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
-    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/SingleMuNov2011A_100_7TeV.root");
+    //filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/SingleMuNov2011A_100_7TeV.root");
+    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/tauSMBrFromZ_100_7TeV.root");    
     ACTreeReader::SetVerbosity(true);
     loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
     loops.back()->loop(anlzr, -1);
@@ -25,7 +26,7 @@ void ACExampleAnalyzer::analyze(const ACEvent & event) {
         printf("\t%s=%i", filter->first.c_str(), filter->second);
     }
     printf("\n");
-    printf("PFMET topology: %f\n", event.eventGlobals()->pfMETTopology());
+    printf("PFMET topology: %f\n", event.eventGlobals()->pfMET().topology());
     printf("PFMET MET, METType1Corrected: %f, %f\n", event.eventGlobals()->pfMET().Mag(), event.eventGlobals()->pfType1CorrectedMET().Mag());
 
     const std::map<std::string, std::vector<std::string> > & moduleNamesPerPath = event.trigger()->moduleNamesPerPath();

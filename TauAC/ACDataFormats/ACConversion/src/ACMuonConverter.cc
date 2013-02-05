@@ -5,6 +5,7 @@ ACMuonConverter::ACMuonConverter(const reco::Muon& particle, bool isRecommendedM
     charge_ = particle.charge();
     p4_ = TLorentzVector(particle.p4().Px(), particle.p4().Py(), particle.p4().Pz(), particle.p4().E());
     vertex_ = TVector3(particle.vx(), particle.vy(), particle.vz());
+    //store vertexCovariance!!!
     genRef_ = genRef;
     /// to be ignored:    ACGenDecayRef genDecayRef_
     

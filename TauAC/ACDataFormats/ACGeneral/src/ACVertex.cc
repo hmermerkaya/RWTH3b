@@ -19,6 +19,16 @@ position_(position), valid_(valid), chi2_(chi2), ndof_(ndof), trackSize_(trackSi
     error_ = error;
 }
 
+double ACVertex::vtxDistanceSignificance(const TVector3 & point) const {
+	//another/better approach would take a helix and calc the POCA...
+	TMatrixDSym matrix = error();
+	TVector3 distance = point - position();
+	double error = projectedError(distance, matrix);
+	double significance = -1.;
+	if(error!=0.) significance = distance.Mag()/error;
+	
+	return significance;
+}
 double ACVertex::vtxDistanceSignificance(const ACVertex & vtx) const {
 	//distance between both vertices is calculated in units of their projected errorsum
 	TMatrixDSym matrix = error() + vtx.error();

@@ -23,6 +23,7 @@
 #include "../interface/ACTrack.h"
 #include "../interface/ACTrigger.h"
 #include "../interface/ACTriggerObject.h"
+#include "../interface/ACMET.h"
 
 #ifdef __CINT__
 
@@ -39,6 +40,11 @@ typedef ACFitParticleDecayForLinkDefOnly* pACFitParticleDecayForLinkDefOnly;
 
 #pragma link C++ class ACCommon+;
 #pragma link C++ class ACTools+;
+
+#pragma link C++ class ACMET+;
+#pragma link C++ class pACMET+;
+#pragma link C++ class std::vector<ACMET >+;
+#pragma link C++ class std::vector<pACMET >+;
 
 #pragma link C++ class ACCandidateRef+;
 #pragma link C++ class ACGenParticleRef+;

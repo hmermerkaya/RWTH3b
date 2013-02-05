@@ -247,7 +247,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     edm::Handle<reco::PFMETCollection> pfType1CorrectedMet;
     edm::Handle<reco::METCollection> tcMET;
     if (loadCollection(evt, pfMETTag_, pfMET) && loadCollection(evt, tcMETTag_, tcMET) && loadCollection(evt, pfType1CorrectedMetTag_, pfType1CorrectedMet)) {
-        *eventGlobals_ = ACEventGlobals(TVector3(pfMET->begin()->px(), pfMET->begin()->py(), 0.0), TVector3(pfType1CorrectedMet->begin()->px(), pfType1CorrectedMet->begin()->py(), 0.0), TVector3(tcMET->begin()->px(), tcMET->begin()->py(), 0.0), pfMET->begin()->sumEt(), pfType1CorrectedMet->begin()->sumEt(), tcMET->begin()->sumEt());
+        *eventGlobals_ = ACEventGlobals(ACMET(pfMET->begin()->px(), pfMET->begin()->py(), pfMET->begin()->sumEt(), pfMET->begin()->getSignificanceMatrix()), ACMET(pfType1CorrectedMet->begin()->px(), pfType1CorrectedMet->begin()->py(), pfType1CorrectedMet->begin()->sumEt(), pfType1CorrectedMet->begin()->getSignificanceMatrix()), ACMET(tcMET->begin()->px(), tcMET->begin()->py(), tcMET->begin()->sumEt(), tcMET->begin()->getSignificanceMatrix()));
     }
     
     // set trigger results and trigger objects

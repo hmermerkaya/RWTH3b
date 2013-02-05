@@ -31,8 +31,8 @@ ACHarvester::~ACHarvester() {
 void ACHarvester::scanDirectories(const std::vector<std::string> & directories, std::vector<std::string> & fileNames) {
     for (std::vector<std::string>::const_iterator dir = directories.begin(); dir != directories.end(); ++dir) {
         scanDirectory(*dir, fileNames);
-        //std::cout<<"found "<<fileNames.size()<<std::endl;
     }
+    std::cout<<"    found "<<fileNames.size()<<" ROOT files in total."<<std::endl;
 }
 bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool printDatasets, bool forcedMergeAll) {
     if (fileNames.size() < 1) {
@@ -189,6 +189,19 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
             fileMap = newFileMap;
         }
     }
+    
+    //report the sets to work on
+    if (fileMap.size() > 1) {
+        int debugCountFiles = 0;
+        std::cout<<"--> ACHarvester will work on the following set(s):"<<std::endl;
+        for (std::map<std::string, std::pair<ACDataset*, std::vector<TFile*> > >::const_iterator sample = fileMap.begin(); sample != fileMap.end(); ++sample) {
+            printf("    %10s: %4lu files\n", sample->first.c_str(), sample->second.second.size());
+            debugCountFiles += sample->second.second.size();
+        }
+        std::cout<<"    "<<std::string(40, '-')<<std::endl;
+        printf("    %10s: %4i files\n", "total", debugCountFiles);
+    }
+    
     mergedDatasets_->clear();
     std::vector<std::string> validStoragePaths;
     for (std::map<std::string, std::pair<ACDataset*, std::vector<TFile*> > >::const_iterator sample = fileMap.begin(); sample != fileMap.end(); ++sample) {
@@ -234,7 +247,8 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
                     std::cout<<"\t... replaced by "<<newValue<<std::endl;
                 } else std::cout<<"\t... keep it."<<std::endl;
             }
-            mergeRootFiles(file, &filesOfCommonSample, 0, 0);
+            if (!mergeRootFiles(file, &filesOfCommonSample, 0, 0)) std::cout<<"ACHarvester::loadRootFiles: WARNING! Sth. went wrong during merging step!"<<std::endl;
+            std::cout<<"    Writing the file "<<fullPath<<std::endl;
             file->Write();
             // the following two lines are a HOTFIX needed due to a ROOT bug on larger amounts of files
             file->Close();
@@ -283,7 +297,7 @@ void ACHarvester::burstCompare() {
     }
 
     compareStyle();
-    mergeRootFiles(target, &fileList, 0, 1);
+    if (!mergeRootFiles(target, &fileList, 0, 1)) std::cout<<"ACHarvester::burstCompare: WARNING! Sth. went wrong during merging step!"<<std::endl;
     target->Write();
     target->Close();
     printf("    Comparison output at %s.\n", filePath.c_str());
@@ -436,6 +450,7 @@ bool ACHarvester::modifyDataset(ACDataset * dataset) {
     return madeChanges;
 }
 int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, int depth, int mode) {
+    bool silent = true;
     //std::cout << "Target path: " << target->GetPath() << std::endl;
     if (mode==1) {
         if (sourcelist->GetSize()!=2) {
@@ -457,6 +472,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
     std::string storagePath = fullPath.substr(0, pos-5);//strip .root
     //std::cout << "storagePath, path: " << storagePath <<","<< path << std::endl;
 
+    if (depth==2) std::cout<<"    merge main folder: "<<path<<std::endl;//report only main folders
     
     Int_t nguess = sourcelist->GetSize()+1000;
     THashList allNames(nguess);
@@ -479,6 +495,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
             TIter nextkey( current_sourcedir->GetListOfKeys() );
             TKey *key;
             TString oldkeyname;
+            TChain *globChain = 0;
             
             while ( (key = (TKey*)nextkey())) {
                 
@@ -498,7 +515,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                 
                 TClass *cl = TClass::GetClass(key->GetClassName());
                 if (!cl || !cl->InheritsFrom(TObject::Class())) {
-                    Info("MergeRecursive", "cannot merge object type, name: %s title: %s",
+                    Info("MergeRecursive", "cannot merge unsupported object type, name: %s title: %s",
                          key->GetName(), key->GetTitle());
                     continue;
                 }
@@ -528,7 +545,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                     //status = MergeRecursive(newdir, sourcelist, type);
                     status = mergeRootFiles(newdir, sourcelist, depth, mode);
                     if (!status) return status;
-                } else if (obj->IsA()->InheritsFrom("TH1") || obj->IsA()->InheritsFrom("ACDataset") ) {
+                } else if (obj->IsA()->InheritsFrom("TH1") || obj->IsA()->InheritsFrom("ACDataset") || obj->IsA()->InheritsFrom( "TTree" )) {
                     TList inputs;//store link to input objects for easy deletion
 
                     ACDataset * dataset = 0;
@@ -540,6 +557,18 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                     } else if (obj->IsA()->InheritsFrom("ACDataset") ) {
                         dataset = (ACDataset*)obj;
                         std::cout<<"--> found dataset: "<<dataset->name()<<", "<<dataset->jobType()<<std::endl;
+                    } else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
+                        std::cout<<"--> found tree. name: "<<obj->GetName() << ", title: " << obj->GetTitle()<<std::endl;
+                        //std::cout<<"    in file "<<current_file->GetName()<<std::endl;
+                        TString obj_name;
+                        if (path.Length()) {
+                            obj_name = path + "/" + obj->GetName();
+                        } else {
+                            obj_name = obj->GetName();
+                        }
+                        globChain = new TChain(obj_name);
+                        //std::cout<<"adding first tree from "<<current_file->GetName()<<std::endl;
+                        globChain->Add(current_file->GetName());
                     }
 
                     // Loop over all source files and merge same-name object
@@ -573,7 +602,10 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                                     inputs.Add(hobj);
                                     
                                     // now do indiviual merging operations
-                                    if (obj->IsA()->InheritsFrom("TH1") ) {
+                                    if (obj->IsA()->InheritsFrom("TTree") ) {
+                                        //std::cout<<"adding tree from "<<nextsource->GetName()<<std::endl;
+                                        globChain->Add(nextsource->GetName());
+                                    } else if (obj->IsA()->InheritsFrom("TH1") ) {
                                         TH1 *h2 = (TH2*)hobj;
                                         if (mode==0) {
                                             if (checkCompatibleBinning(h1, h2)) mergeHistograms(h1, h2);
@@ -587,8 +619,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                                                 }
                                             }
                                         } else compareHistograms(h1, h2, mergedDatasets_->at(0).first, mergedDatasets_->at(sampleID).first, storagePath, path.Data());
-                                    }
-                                    if (obj->IsA()->InheritsFrom("ACDataset") ) {
+                                    } else if (obj->IsA()->InheritsFrom("ACDataset") ) {
                                         if (mode==0) {
                                             ACDataset * dataset2 = (ACDataset*)hobj;
                                             //std::cout<<"--> found further dataset: "<<dataset2->name()<<std::endl;
@@ -610,7 +641,7 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                                 } else {
                                     if (!inconsistency) {
                                         // report inconsistencies once
-                                        std::cout<<"    Skip missing object "<<obj->GetName()<<". No further warnings."<<std::endl;
+                                        if (!silent) std::cout<<"    Skip missing object "<<obj->GetName()<<". No further warnings."<<std::endl;
                                         inconsistency = true;
                                     }
                                 }
@@ -668,7 +699,14 @@ int ACHarvester::mergeRootFiles(TDirectory * target, const TList * sourcelist, i
                 
                 oldkeyname = key->GetName();
                 //!!if the object is a tree, it is stored in globChain...
-                if(obj->IsA()->InheritsFrom( TDirectory::Class() )) {
+                if(obj->IsA()->InheritsFrom( "TTree" )) {
+                    if (globChain) {
+                        //std::cout<<"here is the chain"<<std::endl;
+                        //globChain->ls();
+                        globChain->Merge(target->GetFile(),0,"keep");
+                        delete globChain;
+                    }
+                } else if (obj->IsA()->InheritsFrom( TDirectory::Class() )) {
                     // Do not delete the directory if it is part of the output
                     // and we are in incremental mode (because it will be reuse
                     // and has not been written to disk (for performance reason).
@@ -761,6 +799,7 @@ bool ACHarvester::recoverBinInconsistency(TH1 * h1, TH1 * h2) const {
 
 // helper functions needed in compareHistograms
 void ACHarvester::scanDirectory(const std::string & directory, std::vector<std::string> & fileNames, int level) {
+    bool silent = true;
     if (level==0) {
         printf("--> Scan directory %s ...\n", directory.c_str());
     }
@@ -769,12 +808,14 @@ void ACHarvester::scanDirectory(const std::string & directory, std::vector<std::
         for (boost::filesystem::directory_iterator itr(directory); itr!=boost::filesystem::directory_iterator(); ++itr) {
             //std::cout<<itr->path().string()<<std::endl;// display full path
             if (boost::filesystem::is_directory(itr->path().string())) {
-                printf("%*s cd %s\n", 4*level-1, "", itr->path().filename().c_str());// display filename only
+                if (!silent) printf("%*s cd %s\n", 4*level-1, "", itr->path().filename().c_str());// display filename only
                 scanDirectory(itr->path().string(), fileNames, level);
             } else if (is_regular_file(itr->status())) {
                 if (itr->path().extension()==".root") {
-                    printf("%*s adding %s ", 4*level-1, "", itr->path().filename().c_str());// display filename only
-                    std::cout<<"["<<file_size(itr->path())/1000<<" kB]"<<std::endl;
+                    if (!silent) {
+                        printf("%*s adding %s ", 4*level-1, "", itr->path().filename().c_str());// display filename only
+                        std::cout<<"["<<file_size(itr->path())/1000<<" kB]"<<std::endl;
+                    }
                     fileNames.push_back(itr->path().string());
                 }
             }
