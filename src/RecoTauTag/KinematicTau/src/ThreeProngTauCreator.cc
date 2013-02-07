@@ -4,6 +4,7 @@
 #include "SimpleFits/FitSoftware/interface/TauA1NuConstrainedFitter.h"
 #include "SimpleFits/FitSoftware/interface/Chi2VertexFitter.h"
 #include "Validation/EventGenerator/interface/PdtPdgMini.h"
+#include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
 
 int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay &KFTau){
   status=0;
@@ -37,10 +38,38 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
 
 void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions){
   PV_=KFTau.InitialPrimaryVertexReFit();
+  // GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
   std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
-  GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
+  ////////// debug
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
-    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,pv));
+    std::cout << "selected tracks px " << selectedTracks.at(i)->px() << " py " << selectedTracks.at(i)->py() << " pz " << selectedTracks.at(i)->pz() << " vx "
+              << selectedTracks.at(i)->vx() << " vy " <<selectedTracks.at(i)->vy() << " vz " << selectedTracks.at(i)->vz() << std::endl;
+
+    std::cout << "qoverp " << selectedTracks.at(i)->qoverp() << " theta " << selectedTracks.at(i)->theta() << " kappa" <<  selectedTracks.at(i)->qoverp()/fabs(cos(selectedTracks.at(i)->theta())) 
+	      << " d0 " << selectedTracks.at(i)->dxy() << " dsz " << selectedTracks.at(i)->dsz() <<  " dz " << selectedTracks.at(i)->dz() << " cos(lambda)" << cos(selectedTracks.at(i)->lambda()) << " " 
+	      << selectedTracks.at(i)->pt()/selectedTracks.at(i)->p() <<   std::endl;  
+  }
+  SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
+  TransientVertex secVtx=SVH.InitialSecondaryVertex();
+  PV_=secVtx;
+  GlobalPoint pv(0.0,0.0,0.0);
+  GlobalPoint sv(secVtx.position().x(),secVtx.position().y(),secVtx.position().z());
+  std::vector<reco::TransientTrack> transTrkVect=SVH.InitialRefittedTracks();
+  GlobalPoint cptpv;
+  GlobalPoint cptsv;
+  for(unsigned int i = 0; i!=transTrkVect.size();i++){
+    std::cout << "transTrkVect tracks px " << transTrkVect.at(i).track().px() << " py " << transTrkVect.at(i).track().py() << " pz " << transTrkVect.at(i).track().pz() << " vx"
+              << transTrkVect.at(i).track().vx() << " vy" <<transTrkVect.at(i).track().vy() << " vz " << transTrkVect.at(i).track().vz() << std::endl;
+    std::cout << "vx " <<transTrkVect.at(i).trajectoryStateClosestToPoint(pv).position().x() << " vy " << transTrkVect.at(i).trajectoryStateClosestToPoint(pv).position().y() << " vz " << transTrkVect.at(i).trajectoryStateClosestToPoint(pv).position().z() << std::endl;
+    cptpv=transTrkVect.at(i).trajectoryStateClosestToPoint(pv).position();
+    cptsv=transTrkVect.at(i).trajectoryStateClosestToPoint(sv).position();
+    std::cout << "linear estimate of s: " << sqrt(pow(cptpv.x()-cptsv.x(),2.0)+pow(cptpv.y()-cptsv.y(),2.0)+pow(cptpv.z()-cptsv.z(),2.0)) << std::endl;
+    std::cout << "pv x0 " << cptpv.x() << " pv y0 " << cptpv.y() << " pv z0 " << cptpv.z() << "pv (x^2+y^2)^1/2 " << sqrt(cptpv.x()*cptpv.x()+cptpv.y()*cptpv.y())  << std::endl;
+    std::cout << "sv x0 " << cptsv.x() << " sv y0 " << cptsv.y() << " sv z0 " << cptsv.z() <<  std::endl;
+  }
+  /////////////// end debug
+  for(unsigned int i = 0; i!=selectedTracks.size();i++){
+    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,cptsv));
   }
 }
 

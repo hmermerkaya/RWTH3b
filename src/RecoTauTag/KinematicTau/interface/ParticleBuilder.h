@@ -16,14 +16,17 @@
 
 class ParticleBuilder {
  public:
+  enum CMSSWPerigee{aCurv=0,aTheta,aPhi,aTip,aLip};
+
   ParticleBuilder(){};
   ~ParticleBuilder(){};
 
-  static TrackParticle CreateTrackParticle(const reco::TrackRef &track,  edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const GlobalPoint p);
+  static TrackParticle CreateTrackParticle(const reco::TrackRef &track,  edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const GlobalPoint p,bool fromPerigee=true);
   static reco::Vertex  GetVertex(LorentzVectorParticle p);
 
  private:
-  static int GetCMSSWTrackParIndex(int i);
+  static TMatrixT<double> ConvertCMSSWTrackParToSFTrackPar(TMatrixT<double> &inpar);
+  static TMatrixT<double> ConvertCMSSWTrackPerigeeToSFTrackPar(TMatrixT<double> &inpar);
 
 };
 #endif
