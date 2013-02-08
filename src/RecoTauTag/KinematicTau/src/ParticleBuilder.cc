@@ -10,7 +10,6 @@
 TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const GlobalPoint p, bool fromPerigee){
   // Configured for CMSSW Tracks only
   reco::TransientTrack transTrk=transTrackBuilder->build(track); 
-  GlobalPoint orgin(0.0,0.0,0.0);
   TMatrixT<double>    par(TrackParticle::NHelixPar+1,1);
   TMatrixTSym<double> cov(TrackParticle::NHelixPar+1);
   TMatrixT<double>    SFpar(TrackParticle::NHelixPar,1);
@@ -28,18 +27,21 @@ TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, 
   }
   else{
     reco::TransientTrack transTrk=transTrackBuilder->build(track);
-    GlobalPoint orgin(0.0,0.0,0.0);
+    GlobalPoint origin(0.0,0.0,0.0);
     for(int i=0;i<TrackParticle::NHelixPar;i++){
-      par(i,0)=transTrk.trajectoryStateClosestToPoint(orgin).perigeeParameters().vector()(i);
+      par(i,0)=transTrk.trajectoryStateClosestToPoint(origin).perigeeParameters().vector()(i);
       for(int j=0;j<TrackParticle::NHelixPar;j++){
-        cov(i,j)=transTrk.trajectoryStateClosestToPoint(orgin).perigeeParameters().vector()(i);
+        cov(i,j)=transTrk.trajectoryStateClosestToPoint(origin).perigeeParameters().vector()(i);
       }
     }
     par(TrackParticle::NHelixPar,0)=transTrackBuilder->field()->inInverseGeV(p).z();
     SFpar=ConvertCMSSWTrackPerigeeToSFTrackPar(par);
     SFcov=ErrorMatrixPropagator::PropogateError(&ParticleBuilder::ConvertCMSSWTrackPerigeeToSFTrackPar,par,cov);
+  
+  GlobalPoint pv=transTrk.trajectoryStateClosestToPoint(origin).position();
+  std::cout << "BField Z pv " << transTrackBuilder->field()->inInverseGeV(pv).z()  << " Bz/B "<< transTrackBuilder->field()->inInverseGeV(pv).z()/transTrackBuilder->field()->inInverseGeV(pv).mag() << std::endl;
+  std::cout << "BField Z sv " << transTrackBuilder->field()->inInverseGeV(p).z()  << " Bz/B "<< transTrackBuilder->field()->inInverseGeV(p).z()/transTrackBuilder->field()->inInverseGeV(p).mag() << std::endl;
   }
-
   ParticleMassHelper PMH;
   double c=track->charge();
   return  TrackParticle(SFpar,SFcov,abs(PdtPdgMini::pi_plus)*c,PMH.Get_piMass(),c,transTrackBuilder->field()->inInverseGeV(p).z());
