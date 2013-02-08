@@ -67,9 +67,10 @@ void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::ve
     std::cout << "pv x0 " << cptpv.x() << " pv y0 " << cptpv.y() << " pv z0 " << cptpv.z() << "pv (x^2+y^2)^1/2 " << sqrt(cptpv.x()*cptpv.x()+cptpv.y()*cptpv.y())  << std::endl;
     std::cout << "sv x0 " << cptsv.x() << " sv y0 " << cptsv.y() << " sv z0 " << cptsv.z() <<  std::endl;
   }
+  std::cout << "Kalman Fit Vertex x " << secVtx.position().x() << " y " << secVtx.position().y() << " z " << secVtx.position().z() << std::endl; 
   /////////////// end debug
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
-    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,cptsv));
+    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,cptpv));
   }
 }
 
@@ -154,6 +155,26 @@ bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::V
   chi2v.Fit();
   double c(0); for(unsigned int i=0;i<pions.size();i++){c+=pions.at(i).Charge();}
   int pdgid=fabs(PdtPdgMini::a_1_plus)*c;
+  TLorentzVector LV=chi2v.GetMother(pdgid).LV();
+  for(reco::GenParticleCollection::const_iterator itr = GenPart_->begin(); itr!= GenPart_->end(); ++itr){
+    if(fabs(itr->pdgId())==15){
+      const reco::GenParticle mytau=(*itr);
+      for (unsigned int i=0; i<(itr)->numberOfDaughters();i++){
+	const reco::Candidate *dau=(itr)->daughter(i);
+	if(fabs(dau->pdgId())==20213){
+	  TLorentzVector a1(dau->p4().Px(),dau->p4().Py(),dau->p4().Pz(),dau->p4().E());
+	  //if(a1.DeltaR(LV)<0.4){
+	    // Print info from matching tau
+	    std::cout << "A1 Truth Px " << dau->p4().Px() << " Py " << dau->p4().Py() << " Pz " << dau->p4().Pz() << " E " << dau->p4().E() << " M " << dau->p4().M() <<  std::endl;
+	    std::cout << "Tau vx "      << (itr)->vx() << " vy " << (itr)->vy() << " vz " << (itr)->vz() << std::endl;
+	    std::cout << "A1 vx "       << dau->vx()  << " vy " << dau->vy() << " vz " << dau->vz() << std::endl;
+	    //}
+	}
+      }
+    }
+  }
+  std::cout << "Chi2Vertex Fit vx " << chi2v.GetVertex().X() << " vy " << chi2v.GetVertex().Y() << " " << chi2v.GetVertex().Z() << " " << std::endl; 
+  std::cout << "Chi2Vertex a1 Px  " << LV.Px() << " py " << LV.Py() << " pz " << LV.Pz() << std::endl; 
   StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),chi2v.GetMother(pdgid));
   return  true;
 }
