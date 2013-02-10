@@ -53,7 +53,7 @@ reco::Vertex ParticleBuilder::GetVertex(LorentzVectorParticle p){
   reco::Vertex::Point vp(v.X(),v.Y(),v.Z());
   reco::Vertex::Error ve;
   for(int i=0;i<vcov.GetNrows();i++){
-    for(int j=0;j<=vcov.GetNrows();j++){ve(i,j)=vcov(i,j);}
+    for(int j=0;j<vcov.GetNrows();j++){ve(i,j)=vcov(i,j);}
   }
   return reco::Vertex(vp,ve);
 }

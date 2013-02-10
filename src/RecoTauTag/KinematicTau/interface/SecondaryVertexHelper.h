@@ -42,7 +42,7 @@ public:
   std::vector<TLorentzVector>       Initial_pions(){return pions_;}
 
 private:
-  bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
+  bool checkSecVtx(std::vector<reco::TransientTrack> trkVct, TransientVertex & transVtx);
 
   bool hasSecondaryVertex_;
   TransientVertex tmpVtx_;

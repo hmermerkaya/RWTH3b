@@ -179,11 +179,14 @@ bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTa
     discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFit",fitStatus));
     discrimValues.insert(std::pair<std::string,bool>("PFRecoTauDiscriminationByKinematicFitQuality",dicriminatorByKinematicFitQuality(ambiguity,kinTauCreator,fitStatus,KFTau)));
     KFTau.SetKinematicFitStatus(ambiguity,discrimValues);
-
+    std::cout << "Fit status " << fitStatus << std::endl;
     if(fitStatus==1){
+      std::cout << "Fit status A " << std::endl;
       if(do_BDTTrain_)FillTreeForTraining(ambiguity,kinTauCreator,fitStatus,KFTau);
+      std::cout << "Fit status B " << std::endl;
       std::cout<<"----------- BDT  "<<ReturnBDTOutput(ambiguity,kinTauCreator,fitStatus,KFTau) <<std::endl;
       saveKinParticles(ambiguity,kinTauCreator,KFTau);
+      std::cout << "Fit status C " << std::endl;
       hasasusccessfullfit=true;
     }
     delete kinTauCreator;

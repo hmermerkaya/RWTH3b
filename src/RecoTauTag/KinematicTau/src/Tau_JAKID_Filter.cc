@@ -19,7 +19,7 @@ Tau_JAKID_Filter::~Tau_JAKID_Filter(){
 
 bool Tau_JAKID_Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
   bool filterValue = false;
-  //cnt_++;
+  cnt_++;
 
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(gensrc_, genParticles);
@@ -28,7 +28,6 @@ bool Tau_JAKID_Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end(); ++itr){
       const reco::GenParticle mytau=(*itr);
       if(isTruthTauInAcceptance(mytau)){
-	cnt_++;
 	TauDecay_CMSSWReco TD;
 	unsigned int jak_id, TauBitMask;
 	TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
@@ -66,7 +65,7 @@ void Tau_JAKID_Filter::endJob(){
 // This function is duplicated... needs to be fixed!!
 bool Tau_JAKID_Filter::isTruthTauInAcceptance(const reco::GenParticle &cand){
   if(fabs(cand.pdgId())!=fabs(PdtPdgMini::tau_minus)) return false;
-  if(cand.status()!=2) return false; // require tau that is: 2) a particle after parton showering and ISR/FSR
+  //if(cand.status()!=2) return false; // require tau that is: 2) a particle after parton showering and ISR/FSR
   TLorentzVector tau(cand.p4().Px(),cand.p4().Py(),cand.p4().Pz(),cand.p4().E());
   if(tau.Pt()>TauPtMin_ && fabs(tau.Eta())<TauEtaMax_)return true; // require tau within Pt and |eta| acceptance
   return false;

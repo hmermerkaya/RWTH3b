@@ -18,21 +18,20 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   if(pions.size()!=3)return status;
   std::cout << "pions ok" << std::endl;
   if(!FitA1(pions,PV_)){ std::cout << "status failed" <<  std::endl; return status;}
-  std::cout << "vertex and a1 Fit" << std::endl;
   A1=mother();
-  std::cout << "have a1 mother" << std::endl;
   // Tau fit
-
   ConfigureNeutrino(KFTau,ambiguity,A1,neutrino);
   daughters.push_back(A1);
   daughters.push_back(neutrino.at(0));
+
   std::cout << "have tau daughters" << std::endl;
-  if(!FitTau(daughters,PV_,ambiguity)) return status;
+  if(!FitTau(daughters,PV_,ambiguity)){ std::cout << "Tau fit status failed" <<  std::endl; return status;}
   std::cout << " have tau Fit" << std::endl;
   Tau=mother();
   std::cout << " have tau mother" << std::endl;
   // Fit sequence complete
   status=1;
+  std::cout << " Fit Complete" << std::endl;
   return status;
 }
 
@@ -140,9 +139,14 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
     }
   }
   TauA1NuConstrainedFitter TauA1NU(ambiguity,unfitDaughters,pv,pvcov,PMH.Get_tauMass());
+  TauA1NU.SetMaxDelta(0.01);
+  TauA1NU.SetNIterMax(1000);
   TauA1NU.Fit();
+  std::cout << "Fit Complete" << std::endl;
   StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
   if (TauA1NU.isConverged()) {
+    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
+    std::cout << "Fit stored" << std::endl;
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 
@@ -156,6 +160,9 @@ bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::V
   chi2v.Fit();
   double c(0); for(unsigned int i=0;i<pions.size();i++){c+=pions.at(i).Charge();}
   int pdgid=fabs(PdtPdgMini::a_1_plus)*c;
+
+  ////////////////////////////////////////////////////////////
+  // debug
   TLorentzVector LV=chi2v.GetMother(pdgid).LV();
   for(reco::GenParticleCollection::const_iterator itr = GenPart_->begin(); itr!= GenPart_->end(); ++itr){
     if(fabs(itr->pdgId())==15){
@@ -166,16 +173,17 @@ bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::V
 	  TLorentzVector a1(dau->p4().Px(),dau->p4().Py(),dau->p4().Pz(),dau->p4().E());
 	  //if(a1.DeltaR(LV)<0.4){
 	    // Print info from matching tau
-	    std::cout << "A1 Truth Px " << dau->p4().Px() << " Py " << dau->p4().Py() << " Pz " << dau->p4().Pz() << " E " << dau->p4().E() << " M " << dau->p4().M() <<  std::endl;
-	    std::cout << "Tau vx "      << (itr)->vx() << " vy " << (itr)->vy() << " vz " << (itr)->vz() << std::endl;
-	    std::cout << "A1 vx "       << dau->vx()  << " vy " << dau->vy() << " vz " << dau->vz() << std::endl;
-	    //}
+	  std::cout << "A1 Truth Px " << dau->p4().Px() << " Py " << dau->p4().Py() << " Pz " << dau->p4().Pz() << " E " << dau->p4().E() << " M " << dau->p4().M() <<  std::endl;
+	  std::cout << "Tau vx "      << (itr)->vx() << " vy " << (itr)->vy() << " vz " << (itr)->vz() << std::endl;
+	  std::cout << "A1 vx "       << dau->vx()  << " vy " << dau->vy() << " vz " << dau->vz() << std::endl;
+	  //}
 	}
       }
     }
   }
   std::cout << "Chi2Vertex Fit vx " << chi2v.GetVertex().X() << " vy " << chi2v.GetVertex().Y() << " " << chi2v.GetVertex().Z() << " " << std::endl; 
   std::cout << "Chi2Vertex a1 Px  " << LV.Px() << " py " << LV.Py() << " pz " << LV.Pz() << std::endl; 
+  ////////////////////////////////////////////////////////////
   StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),chi2v.GetMother(pdgid));
   return  true;
 }

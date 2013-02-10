@@ -17,6 +17,7 @@ FitSequencer::FitSequencer(edm::ESHandle<TransientTrackBuilder>  &transTrackBuil
 
 
 void FitSequencer::GetSelectedKinematicParticleList(unsigned int &ambiguity,SelectedKinematicParticleCollection &refitTauDecay){
+  std::cout << "FitSequencer::GetSelectedKinematicParticleList" << std::endl;
   refitTauDecay.clear();
   reco::RecoChargedCandidateRef emptyCandRef;// temporary dummy variable
   refitTauDecay.push_back(SelectedKinematicParticle(mother(),status,ambiguity, emptyCandRef));
@@ -24,6 +25,7 @@ void FitSequencer::GetSelectedKinematicParticleList(unsigned int &ambiguity,Sele
   for(unsigned int i=0;i<d.size();i++){
     refitTauDecay.push_back(SelectedKinematicParticle(d.at(i),status,ambiguity,emptyCandRef));
   }
+  std::cout << "FitSequencer::GetSelectedKinematicParticleList done" << std::endl;
 }
 
 void FitSequencer::StoreResults(float chi2,float ndf,float csum,float niter,float nconst,std::vector<LorentzVectorParticle> fitdaughters,LorentzVectorParticle fitmother){
