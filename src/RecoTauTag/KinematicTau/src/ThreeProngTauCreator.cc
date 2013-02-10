@@ -14,21 +14,16 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   std::vector<LorentzVectorParticle> daughters;
   // Helix fit for a1
   ConfigurePions(KFTau,pions);
-  std::cout << "configure pions" << std::endl;
   if(pions.size()!=3)return status;
-  std::cout << "pions ok" << std::endl;
-  if(!FitA1(pions,PV_)){ std::cout << "status failed" <<  std::endl; return status;}
+  if(!FitA1(pions,PV_)){return status;}
   A1=mother();
   // Tau fit
   ConfigureNeutrino(KFTau,ambiguity,A1,neutrino);
   daughters.push_back(A1);
   daughters.push_back(neutrino.at(0));
 
-  std::cout << "have tau daughters" << std::endl;
-  if(!FitTau(daughters,PV_,ambiguity)){ std::cout << "Tau fit status failed" <<  std::endl; return status;}
-  std::cout << " have tau Fit" << std::endl;
+  if(!FitTau(daughters,PV_,ambiguity)){return status;}
   Tau=mother();
-  std::cout << " have tau mother" << std::endl;
   // Fit sequence complete
   status=1;
   std::cout << " Fit Complete" << std::endl;
@@ -127,7 +122,6 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
     return false;
   }
   // Setup Constraint
-  std::cout << "PV " << primaryVertex.position().x() << " " << primaryVertex.position().y() << " " << primaryVertex.position().z() << std::endl;
   TVector3 pv(primaryVertex.position().x(),primaryVertex.position().y(),primaryVertex.position().z());
   TMatrixTSym<double> pvcov(LorentzVectorParticle::NVertex);
   math::Error<LorentzVectorParticle::NVertex>::type pvCov;
@@ -142,11 +136,8 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   TauA1NU.SetMaxDelta(0.01);
   TauA1NU.SetNIterMax(1000);
   TauA1NU.Fit();
-  std::cout << "Fit Complete" << std::endl;
-  StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
   if (TauA1NU.isConverged()) {
     StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
-    std::cout << "Fit stored" << std::endl;
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 

@@ -61,6 +61,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       if(npassed==discriminators_.size()){
 	cntFound_.at(ambiguity)+=1;
 	//found=true;
+	std::cout << "KinematicTauAnalyzer::analyze A" << std::endl;
 	SelectedKinematicDecay KFTau=(*kinFitTau);
 	const TLorentzVector Tau=KFTau.Tau(ambiguity);
 	const TLorentzVector a1=KFTau.a1_p4(ambiguity);
@@ -82,7 +83,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	TVector3 FlightDir(Secvtx.position().x()-Pvtx.position().x(),
 			   Secvtx.position().y()-Pvtx.position().y(),
 			   Secvtx.position().z()-Pvtx.position().z());
-	
+	std::cout << "KinematicTauAnalyzer::analyze B" << std::endl;
 	nEvt.at(ambiguity)->Fill(0.5,weight);
 	Truth_TauMatched.at(ambiguity)->Fill(0.0,weight);
 	TauMass.at(ambiguity)->Fill(Tau.M(),weight);
@@ -96,7 +97,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 	std::cout << "DQM " << Tau_initial.Px() << " " << Tau_initial.Py() << " " << Tau_initial.Pz() << " " << Tau_initial.E() 
 		  << " Vector " << FlightDir_initial.X() << " " << FlightDir_initial.Y() << " " <<FlightDir_initial.Z() << std::endl;
-
+	std::cout << "KinematicTauAnalyzer::analyze C" << std::endl;
 	GFAngle.at(ambiguity)->Fill(a1.Angle(Tau.Vect()),weight);
 	GFAngleInitial.at(ambiguity)->Fill(a1_initial.Angle(Tau_initial.Vect()),weight);
 
@@ -107,7 +108,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	  PionThetaChange.at(ambiguity)->Fill(fabs(Pions.at(i).Theta()-Pions_initial.at(i).Theta()),weight);
 	  PionEChange.at(ambiguity)->Fill(Pions.at(i).E()-Pions_initial.at(i).E(),weight);
 	}
-	
+	std::cout << "KinematicTauAnalyzer::analyze D" << std::endl;
 	NuMass.at(ambiguity)->Fill(Nu.M(),weight);
 	dNuMass.at(ambiguity)->Fill(Nu.M()-Nu_initial.M(),weight);
 	NuPhiChange.at(ambiguity)->Fill(Nu.DeltaPhi(Nu_initial),weight);
@@ -134,37 +135,43 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
         csum.at(ambiguity)->Fill(KFTau.csum(ambiguity),weight);
 	mincsum.at(ambiguity)->Fill(KFTau.mincsum(ambiguity),weight);
 	chi2prob.at(ambiguity)->Fill(KFTau.chi2prob(ambiguity),weight);
-
+	std::cout << "KinematicTauAnalyzer::analyze E" << std::endl;
 	// If Truth is valid run truth comparison
 	if(genParticles.isValid()){
+	  std::cout << "KinematicTauAnalyzer::analyze F" << std::endl;
 	  bool foundtruth=false;
 	  for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end() && !foundtruth; ++itr){
 	    const reco::GenParticle mytau=(*itr);
 	    if(isTruthTauInAcceptance(mytau)){
+	      std::cout << "KinematicTauAnalyzer::analyze FA" << std::endl;
 	      TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
 	      TauDecay_CMSSWReco TD;
 	      unsigned int jak_id, TauBitMask;
 	      TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
+	      std::cout << "KinematicTauAnalyzer::analyze FB" << std::endl;
+	      std::cout << "MC Tau " << itr->p4().Px() << " "<< itr->p4().Py() << " "<< itr->p4().Pz() << std::endl;
+	      std::cout << "a1 " << a1.Px() << " " << a1.Py() << " " << a1.Pz() << std::endl; 
 	      if(a1.DeltaR(mc)<TauMatchingDR_ && doJAKID(jak_id)){
 		foundtruth=true;
 		Truth_TauMatched.at(ambiguity)->Fill(1.0,weight);
-
+		std::cout << "KinematicTauAnalyzer::analyze FC" << std::endl;
 		JAKID.at(ambiguity)->Fill(jak_id,weight);
 		std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
-
+		std::cout << "KinematicTauAnalyzer::analyze FD" << std::endl;
 		if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
                   TLorentzVector Tau_plus=KFTau.Tau(SelectedKinematicDecay::PlusSolution);
                   TLorentzVector Tau_minus=KFTau.Tau(SelectedKinematicDecay::MinusSolution);
                   if(fabs(mc.E()-Tau_plus.E())<fabs(mc.E()-Tau_minus.E()) && Tau_plus.E()!=Tau.E())  continue;
                   if(fabs(mc.E()-Tau_plus.E())>fabs(mc.E()-Tau_minus.E()) && Tau_minus.E()!=Tau.E()) continue;
                 }
-
+		std::cout << "KinematicTauAnalyzer::analyze FE" << std::endl;
 		TVector3 TruthPvtx(itr->vx(),itr->vy(),itr->vz());
 		TVector3 TruthSvtx;
 		for( unsigned int dp=0;dp<DecayProd.size();dp++){
 		  if(fabs(DecayProd.at(dp)->pdgId())!=fabs(PdtPdgMini::tau_minus))
 		    TruthSvtx=TVector3(DecayProd.at(dp)->vx(),DecayProd.at(dp)->vy(),DecayProd.at(dp)->vz());
 		}
+		std::cout << "KinematicTauAnalyzer::analyze F1" << std::endl;
 
 		if(JAKIDtoIndex.count(jak_id)==1){
 		  unsigned int idx=JAKIDtoIndex.find(jak_id)->second;
@@ -172,14 +179,16 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
                   Pvtx_cov.ResizeTo(TMatrixDSym(3));
                   for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Pvtx_cov(i,j) = Pvtx.covariance(i,j);//diagonals are squares of sigmas
                   TMatrixDSym Svtx_cov(3);
+		  std::cout << "KinematicTauAnalyzer::analyze F2" << std::endl;
                   Svtx_cov.ResizeTo(TMatrixDSym(3));
                   for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = Secvtx.covariance(i,j);//diagonals are squares of sigmas
                   TVector3 Pvtx_point(Pvtx.position().x(),Pvtx.position().y(),Pvtx.position().z());
                   TVector3 Svtx_point(Secvtx.position().x(),Secvtx.position().y(),Secvtx.position().z());
+		  std::cout << "KinematicTauAnalyzer::analyze F3" << std::endl;
                   TMatrixDSym Truth_cov(3);
                   Truth_cov.ResizeTo(TMatrixDSym(3));
                   for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = 0.0;
-
+		  std::cout << "KinematicTauAnalyzer::analyze G" << std::endl;
 		  //Tau
 		  Truth_TauMatch_dPhi.at(ambiguity).at(idx)->Fill(Tau.DeltaPhi(mc),weight);
 		  Truth_TauMatch_dTheta.at(ambiguity).at(idx)->Fill(mc.Theta()-Tau.Theta(),weight);
@@ -198,7 +207,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  TruthSecVtxXChange.at(ambiguity).at(idx)->Fill(Secvtx.position().x()-TruthSvtx.X(),weight);
 		  TruthSecVtxYChange.at(ambiguity).at(idx)->Fill(Secvtx.position().y()-TruthSvtx.Y(),weight);
 		  TruthSecVtxZChange.at(ambiguity).at(idx)->Fill(Secvtx.position().z()-TruthSvtx.Z(),weight);
-
+		  std::cout << "KinematicTauAnalyzer::analyze H" << std::endl;
 		  VertexRotation vtxC;
 		  TruthPVtxSig.at(ambiguity).at(idx)->Fill(vtxC.vtxDistanceSignificance(Pvtx_point,Pvtx_cov,TruthPvtx,Truth_cov),weight);
 		  TruthSecVtxSig.at(ambiguity).at(idx)->Fill(vtxC.vtxDistanceSignificance(Svtx_point,Svtx_cov,TruthSvtx,Truth_cov),weight);
@@ -210,7 +219,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
                   Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),mc.Pt()-Tau.Pt(),weight);
                   Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),mc.E()-Tau.E(),weight);
-
+		  std::cout << "KinematicTauAnalyzer::analyze I" << std::endl;
 		  TLorentzVector mc_a1(0,0,0,0);
 		  for(unsigned int j=0;j<DecayProd.size();j++){
 		    if(fabs(DecayProd.at(j)->pdgId())==PdtPdgMini::a_1_plus){
@@ -228,7 +237,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  Truth_A1Match_dE.at(ambiguity).at(idx)->Fill(a1.E()-mc_a1.E());
 		  Truth_A1Match_dPt.at(ambiguity).at(idx)->Fill(a1.Pt()-mc_a1.Pt());
 		  Truth_A1Match_M.at(ambiguity).at(idx)->Fill(a1.M()-mc_a1.M());
-
+		  std::cout << "KinematicTauAnalyzer::analyze J" << std::endl;
 		  //charged hadrons (pi/K)
 		  for(unsigned int i=0; i<Pions.size();i++){
 		    double pidrmin=999;
@@ -248,6 +257,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		      Truth_PionMatch_dE.at(ambiguity).at(idx)->Fill(mcpion.E()-Pions.at(i).E(),weight);
 		    }
 		  }
+		  std::cout << "KinematicTauAnalyzer::analyze K" << std::endl;
 		  //nu
 		  TLorentzVector mcnu;
 		  bool hasnu=false;
@@ -269,7 +279,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       }
     }
   }
-
+  std::cout << "KinematicTauAnalyzer::analyze L" << std::endl;
   // Fill truth info for all taus within acceptance
   if(genParticles.isValid()){
     for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
