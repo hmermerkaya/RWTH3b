@@ -42,7 +42,7 @@ SecondaryVertexHelper::~SecondaryVertexHelper(){
 
 
 
-bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> trkVct, TransientVertex & transVtx){
+bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx){
  if(trkVct.size()<2){
     LogTrace("ThreeProngTauCreator")<<"Can't check SecVertex: Only "<<trkVct.size()<<" Tracks.";
     return false;

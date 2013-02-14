@@ -15,7 +15,9 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   // Helix fit for a1
   ConfigurePions(KFTau,pions);
   if(pions.size()!=3)return status;
-  if(!FitA1(pions,PV_)){return status;}
+  SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
+  TransientVertex secVtx=SVH.InitialSecondaryVertex();
+  if(!FitA1(pions,secVtx)){return status;}
   A1=mother();
   // Tau fit
   ConfigureNeutrino(KFTau,ambiguity,A1,neutrino);
@@ -32,7 +34,7 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
 
 void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions){
   PV_=KFTau.InitialPrimaryVertexReFit();
-  // GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
+  GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
   std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
   ////////// debug
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
@@ -45,8 +47,6 @@ void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::ve
   }
   SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
   TransientVertex secVtx=SVH.InitialSecondaryVertex();
-  PV_=secVtx;
-  GlobalPoint pv(0.0,0.0,0.0);
   GlobalPoint sv(secVtx.position().x(),secVtx.position().y(),secVtx.position().z());
   GlobalPoint tv(selectedTracks.at(0)->vx(),selectedTracks.at(0)->vy(),selectedTracks.at(0)->vz());
   std::vector<reco::TransientTrack> transTrkVect=SVH.InitialRefittedTracks();
@@ -65,7 +65,7 @@ void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::ve
   std::cout << "Kalman Fit Vertex x " << secVtx.position().x() << " y " << secVtx.position().y() << " z " << secVtx.position().z() << std::endl; 
   /////////////// end debug
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
-    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,tv));
+    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,pv));
   }
 }
 

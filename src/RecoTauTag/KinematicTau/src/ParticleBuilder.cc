@@ -31,7 +31,7 @@ TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, 
     for(int i=0;i<TrackParticle::NHelixPar;i++){
       par(i,0)=transTrk.trajectoryStateClosestToPoint(origin).perigeeParameters().vector()(i);
       for(int j=0;j<TrackParticle::NHelixPar;j++){
-        cov(i,j)=transTrk.trajectoryStateClosestToPoint(origin).perigeeParameters().vector()(i);
+        cov(i,j)=transTrk.trajectoryStateClosestToPoint(origin).perigeeError().covarianceMatrix()(i,j);
       }
     }
     par(TrackParticle::NHelixPar,0)=transTrackBuilder->field()->inInverseGeV(p).z();
@@ -75,7 +75,7 @@ TMatrixT<double> ParticleBuilder::ConvertCMSSWTrackPerigeeToSFTrackPar(TMatrixT<
   par(TrackParticle::kappa,0)  = inpar(aCurv,0); 
   par(TrackParticle::lambda,0) = TMath::Pi()/2-inpar(aTheta,0); 
   par(TrackParticle::phi,0)    = inpar(aPhi,0);
-  par(TrackParticle::dz,0)     = inpar(aTip,0);
-  par(TrackParticle::dxy,0)    = inpar(aLip,0);
+  par(TrackParticle::dxy,0)    = -inpar(aTip,0);
+  par(TrackParticle::dz,0)     = inpar(aLip,0);
   return par;
 }
