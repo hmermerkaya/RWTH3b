@@ -53,6 +53,7 @@ void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
     int cachesize = 30000000;   //30 MBytes
     fChain_->SetCacheSize(cachesize);
     fChain_->SetCacheLearnEntries();
+    //fChain_->AddBranchToCache("*",kTRUE);//speedup (gain like 1s in 10000 events)
     
     Long64_t nbytes = 0, nb = 0;
     int run = -1;

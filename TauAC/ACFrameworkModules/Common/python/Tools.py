@@ -1,5 +1,6 @@
 import os
 import fnmatch
+import FWCore.ParameterSet.Config as cms
 
 def scanDir(dir, pattern='*.root'): #pattern = '*.py' # Can include any UNIX shell-style wildcards
   #scan <dir> recursivly and return any files matching <pattern>
@@ -31,7 +32,7 @@ def parseDecayType(jobName):
         if 'tau3piFromW' in jobName:
             decayType = 'W3pr'
     else:  
-        if 'FromZ' in jobName:
+        if 'FromZ' in jobName or 'DYTauTau' in jobName:
             decayType = 'TauPair'
             motherPdgID = 23
         if 'FromGFH' in jobName or 'FromVBFH' in jobName or 'GFHTauTau' in jobName:
@@ -44,3 +45,45 @@ def parseDecayType(jobName):
 
     #print 'jobname, decayType, motherPdgID: ',jobName, decayType, motherPdgID
     return [decayType, motherPdgID]
+
+
+class Scanner(object):
+    """Class to scan a sequence/path and store its modules. (See visit() function in /FWCore/ParameterSet/python/SequenceTypes.py for enter and leave).
+        Usage: scanner = Scanner()
+               mysequence.visit(scanner)
+               scanner.printModules()
+        """
+    def __init__(self):
+        self.modules = []
+    def enter(self,visitee):
+        """to be called from the visit function"""
+        self.modules.append(visitee)
+    def modules(self):
+        """return the stored objects"""
+        return self.modules
+    def filterLabels(self):
+        """return the labels of stored EDFilter objects"""
+        labels = [module.label() for module in self.modules if type(module) is cms.EDFilter]
+        return labels
+    def filters(self):
+        """return the stored objects of kind EDFilter"""
+        modules = [module for module in self.modules if type(module) is cms.EDFilter]
+        return modules
+    def analyzers(self):
+        """return the stored objects of kind EDAnalyzer"""
+        modules = [module for module in self.modules if type(module) is cms.EDAnalyzer]
+        return modules
+    def producers(self):
+        """return the stored objects of kind EDProducer"""
+        modules = [module for module in self.modules if type(module) is cms.EDProducer]
+        return modules
+    def printModules(self):
+        """print the stored objects"""
+        print "Scanner stores", len(self.filters()),"EDFilter", len(self.producers()),"EDProducer", len(self.analyzers()),"EDAnalyzer"
+        for module in self.modules:
+            print "module ", module, "is filter?", "YES" if type(module) is cms.EDFilter else "NO"
+            #if type(module) in [cms.EDFilter, cms.EDProducer, cms.EDAnalyzer]:
+            #    print "module ", module.label(), "is of type", type(module)
+    def leave(self, visitee):
+        """to be called from the visit function"""
+        pass

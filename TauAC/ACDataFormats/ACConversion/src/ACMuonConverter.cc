@@ -10,8 +10,7 @@ ACMuonConverter::ACMuonConverter(const reco::Muon& particle, bool isRecommendedM
     /// to be ignored:    ACGenDecayRef genDecayRef_
     
     isGlobalMuonPromptTight_ = muon::isGoodMuon(particle, muon::GlobalMuonPromptTight);
-    isGoodMuon2011_ = isRecommendedMuon;
-    //    isGoodMuon2012_ = isRecommendedMuon;    
+    isRecommendedMuon_ = isRecommendedMuon;
 
     if (particle.isPFIsolationValid()) {
         //const reco::MuonIsolation  iso03 = particle.pfIsolationR03();

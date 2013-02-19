@@ -194,12 +194,17 @@ bool ACHarvester::loadRootFiles(const std::vector<std::string> & fileNames, bool
     if (fileMap.size() > 1) {
         int debugCountFiles = 0;
         std::cout<<"--> ACHarvester will work on the following set(s):"<<std::endl;
+        unsigned int maxWidth = 0;
         for (std::map<std::string, std::pair<ACDataset*, std::vector<TFile*> > >::const_iterator sample = fileMap.begin(); sample != fileMap.end(); ++sample) {
-            printf("    %10s: %4lu files\n", sample->first.c_str(), sample->second.second.size());
+            unsigned int width = sample->first.size();
+            if (width > maxWidth) maxWidth = width;
+        }
+        for (std::map<std::string, std::pair<ACDataset*, std::vector<TFile*> > >::const_iterator sample = fileMap.begin(); sample != fileMap.end(); ++sample) {
+            printf("    %*s: %4lu files\n", maxWidth, sample->first.c_str(), sample->second.second.size());
             debugCountFiles += sample->second.second.size();
         }
         std::cout<<"    "<<std::string(40, '-')<<std::endl;
-        printf("    %10s: %4i files\n", "total", debugCountFiles);
+        printf("    %*s: %4i files\n", maxWidth, "total", debugCountFiles);
     }
     
     mergedDatasets_->clear();

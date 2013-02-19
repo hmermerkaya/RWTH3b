@@ -11,7 +11,7 @@ ACMuon::ACMuon() {
     trackRef_ = ACTrackRef ();
     genRef_ = ACGenParticleRef();
     isGlobalMuonPromptTight_ = false;
-    isGoodMuon2011_ = false;
+    isRecommendedMuon_ = false;
     sumChargedHadronPt_ = -1.;
     sumChargedParticlePt_ = -1.;
     sumNeutralHadronEt_ = -1.;
@@ -27,7 +27,7 @@ ACMuon::ACMuon(const TLorentzVector& p4, int charge) {
     trackRef_ = ACTrackRef ();
     genRef_ = ACGenParticleRef();
     isGlobalMuonPromptTight_ = false;
-    isGoodMuon2011_ = false;
+    isRecommendedMuon_ = false;
     sumChargedHadronPt_ = -1.;
     sumChargedParticlePt_ = -1.;
     sumNeutralHadronEt_ = -1.;
@@ -41,6 +41,11 @@ double ACMuon::vy() const { return vertex().Y(); }
 double ACMuon::vz() const { return vertex().Z(); }
 double ACMuon::isolation() const {
     double value = sumChargedHadronPt() + sumNeutralHadronEt() + sumPhotonEt();
+    if (pt() > 0. ) return value/pt();
+    else return INFINITY;
+}
+double ACMuon::isolationDBeta() const {
+    double value = sumChargedHadronPt() + std::max(0., sumNeutralHadronEt() + sumPhotonEt() - .5 * sumPUPt());
     if (pt() > 0. ) return value/pt();
     else return INFINITY;
 }

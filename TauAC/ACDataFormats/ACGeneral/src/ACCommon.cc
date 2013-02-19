@@ -18,7 +18,7 @@ void ACCommon::tokenize(const std::string& str, std::vector<std::string>& tokens
     }
 }
 
-double ACCommon::round(double value, int power) {
+double ACCommon::round(double value, int power) const {
     if (value!=0) {
         return floor(value * pow(10.0, abs(power)) + 0.5) * pow(10.0, -abs(power));
     } else {

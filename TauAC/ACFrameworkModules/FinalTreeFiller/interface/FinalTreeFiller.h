@@ -94,6 +94,9 @@ private:
     template <class T> void deleteVectorOfPointers(T * inVectorOfPointers);
     /// save way to fill a collection from a inputtag into a given handle
     template <class T> bool loadCollection(const edm::Event& iEvent, const edm::InputTag & tag, edm::Handle<T>& handle, bool silent = false);
+    
+    /// return muon ID according to recommendations based on datataking period
+    bool muonID(const reco::Muon & muon, const reco::Vertex & vtx, const std::string & era) const;
 
     /// framework file service
     edm::Service<TFileService> fileService_;
@@ -101,7 +104,7 @@ private:
     edm::InputTag genSignalTag_, genSignalRefTag_, chargedTauDaughterMatchMapTag_, beamSpotTag_, primVtxTag_, reducedPrimVtxTag_, pileupInfoTag_, triggerResultsTag_, triggerEventTag_, trackTag_, muonTag_, electronTag_, kinematicTausTag_, pfMETTag_, pfType1CorrectedMetTag_, tcMETTag_, pfJetTag_, pfTauTag_, pfTauDiscriminatorPattern_;
     double minJetPt_, minTauPt_, minTrackPt_;
     std::vector<std::string> flags_;
-    std::string pileUpDistributionFileMC_, pileUpDistributionHistMC_, pileUpDistributionFileData_, pileUpDistributionHistData_;
+    std::string pileUpDistributionFileMC_, pileUpDistributionHistMC_, pileUpDistributionFileData_, pileUpDistributionHistData_, era_;
     /// dynamically derived input tags for PFTau discriminators
     std::vector<edm::InputTag> discriminators_;
 

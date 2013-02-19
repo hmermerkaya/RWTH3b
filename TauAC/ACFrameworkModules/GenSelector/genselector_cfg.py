@@ -25,7 +25,7 @@ if jobName.find('tau3piFromVBFH')!=-1:
 	decayType = 'VBFH'
 if jobName.find('tau3piFromZ')!=-1:
 	decayType = 'Z3pr'
-if jobName.find('tauSMBrFromZ')!=-1:
+if jobName.find('DYTauTau')!=-1:
 	decayType = 'ZSMBr'
 
 if numberOfEvents == -1:

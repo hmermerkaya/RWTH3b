@@ -4,7 +4,7 @@
  Class to store offline muons according to framework object (reco::Muon).
  More sophisticated constructor in correpsonding conversion class.
  
- Isolation parameters refer to pfIsolationR04 as recommended for 2011.
+ Isolation parameters refer to pfIsolationR04 as recommended for 2011, 2012.
 
  @author Lars Perchalla
  @date 2012
@@ -26,7 +26,7 @@ public:
     const ACTrackRef & trackRef() const { return trackRef_; }
     
     bool isGlobalMuonPromptTight() const {return isGlobalMuonPromptTight_;}
-    bool isRecommendedMuon() const {return isGoodMuon2011_;}
+    bool isRecommendedMuon() const {return isRecommendedMuon_;}
     
     float sumChargedHadronPt() const {return sumChargedHadronPt_;}
     float sumChargedParticlePt() const {return sumChargedParticlePt_;}
@@ -51,11 +51,13 @@ public:
     /// z coordinate of vertex position
     double vz() const;
 
-    /// calculate the isolation according to the POG recommendation for 2011
+    /// calculate the isolation according to the POG recommendation for 2011, 2012
     double isolation() const;
-    /// whether the muon passes the recommended PF isolation for 2011
+    /// calculate the dBeta corrected isolation according to the POG recommendation for 2011, 2012
+    double isolationDBeta() const;
+    /// whether the muon passes the recommended PF isolation for 2011, 2012
     bool isIsolatedLoose() const;
-    /// whether the muon passes the recommended PF isolation for 2011
+    /// whether the muon passes the recommended PF isolation for 2011, 2012
     bool isIsolatedTight() const;
 
     ClassDef(ACMuon,1);
@@ -70,9 +72,8 @@ protected:
     
     /// whether the muon passes muon::GlobalMuonPromptTight (part of the recommendation)
     bool isGlobalMuonPromptTight_;
-    /// whether the muon passes the POG recommendation for 2011 (includes isGlobalMuonPromptTight_)
-    bool isGoodMuon2011_;
-//    bool isGoodMuon2012_;
+    /// whether the muon passes the POG recommendation for 2011/2012 (includes isGlobalMuonPromptTight_)
+    bool isRecommendedMuon_;
     
     ///muon isolation: sum-pt of charged Hadron
     float sumChargedHadronPt_;

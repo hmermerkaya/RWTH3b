@@ -20,7 +20,7 @@ public:
     double get(const std::string & name) const;
     int getInt(const std::string & name) const;
     void count(const std::string & name, double amount=1.0);
-    double ratio(const std::string & numerator, const std::string & denominator) const;
+    double ratio(const std::string & numerator, const std::string & denominator, int precision = -1000) const;
     const std::map<std::string, double> & counts() const {return counts_;}
     /// Combine two ACCounters
     ACCounter & operator+=(const ACCounter & rhs);

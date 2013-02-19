@@ -30,7 +30,7 @@ protected:
     /// split a string into tokens separated by a specific delimiter
     void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters=" ") const;
     /// round value to a given precission
-    double round(double value, int power = 0);
+    double round(double value, int power = 0) const;
     /// delete pointers in a vector
     template <class T> void deleteVectorOfPointers(T * inVectorOfPointers);
 };

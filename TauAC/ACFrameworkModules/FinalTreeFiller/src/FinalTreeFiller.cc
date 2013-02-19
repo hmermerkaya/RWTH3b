@@ -27,7 +27,8 @@ flags_(iConfig.getParameter< std::vector<std::string> >("flags")),
 pileUpDistributionFileMC_(iConfig.getUntrackedParameter<std::string>("pileUpDistributionFileMC", "")),
 pileUpDistributionHistMC_(iConfig.getUntrackedParameter<std::string>("pileUpDistributionHistMC", "")),
 pileUpDistributionFileData_(iConfig.getUntrackedParameter<std::string>("pileUpDistributionFileData", "")),
-pileUpDistributionHistData_(iConfig.getUntrackedParameter<std::string>("pileUpDistributionHistData", ""))
+pileUpDistributionHistData_(iConfig.getUntrackedParameter<std::string>("pileUpDistributionHistData", "")),
+era_(iConfig.getUntrackedParameter<std::string>("era", ""))
 {
     hltChanged_ = true;
     eventTree_ = 0;
@@ -479,39 +480,13 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
     edm::Handle<reco::MuonCollection> muons;
     if (loadCollection(evt, muonTag_, muons)) {
         *muons_ = std::vector<ACMuon *>();
+        //choose object ID according to datataking period/scenario defined by 'era_'
+        reco::VertexCollection::const_iterator selectedPV = offlinePrimaryVertices->end();
+        if (offlinePrimaryVertices->size() > 0) selectedPV = offlinePrimaryVertices->begin();//some better choice here?
         for (reco::MuonCollection::const_iterator imu = muons->begin(); imu != muons->end(); ++imu) {
-            // POG recommendation: 2011 baseline selection
-            bool isRecommendedMuon = true;
-            if (! muon::isGoodMuon(*imu, muon::GlobalMuonPromptTight)) {
-//                std::cout<<"muon: tight is "<<muon::isGoodMuon(*imu, muon::GlobalMuonPromptTight)<<std::endl;
-                isRecommendedMuon = false;
-            }
-            if (! imu->numberOfMatchedStations() > 1) {
-//                std::cout<<"muon: stations "<<imu->numberOfMatchedStations()<<std::endl;
-                isRecommendedMuon = false;
-            }
-            if (! beamSpot.isValid()) {
-//                std::cout<<"muon: no beamspot"<<std::endl;
-                isRecommendedMuon = false;
-            }
-            if (! imu->innerTrack()) {
-//                std::cout<<"muon: no track"<<std::endl;
-                isRecommendedMuon = false;
-            } else {
-                if (! (fabs(imu->innerTrack()->dxy(beamSpot->position())) < 0.2)) {
-//                std::cout<<"muon: bad dxy "<<fabs(imu->innerTrack()->dxy(beamSpot->position()))<<std::endl;
-                //usually using the PV, but 2mm is loose enough. does not make any difference.
-                    isRecommendedMuon = false;
-                }
-                if (! imu->innerTrack()->hitPattern().numberOfValidPixelHits() > 0) {
-//                std::cout<<"muon: bad pixel hits "<<imu->innerTrack()->hitPattern().numberOfValidPixelHits()<<std::endl;
-                    isRecommendedMuon = false;
-                }
-                if (! imu->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 8) {
-//                std::cout<<"muon: bad tracker layers "<<imu->innerTrack()->hitPattern().trackerLayersWithMeasurement()<<std::endl;
-                    isRecommendedMuon = false;
-                }
-            }
+            bool isRecommendedMuon = false;
+            if (selectedPV != offlinePrimaryVertices->end()) isRecommendedMuon = muonID(*imu, *selectedPV, era_);
+            else std::cout<<"FinalTreeFiller::storeEvent:ERROR! No PV found! Cannot determine muon ID!"<<std::endl;
             
             ACMuonConverter tmp(*imu, isRecommendedMuon, conversionLogTrack_);
             ACMuon * tmpP = new ACMuon();
@@ -591,6 +566,50 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             pileup_->push_back(tmpPileup);
         }
     }
+}
+
+bool FinalTreeFiller::muonID(const reco::Muon & muon, const reco::Vertex & vtx, const std::string & era) const {
+    if (!vtx.isValid()) {
+        std::cout<<"FinalTreeFiller::muonID:ERROR! The primary vertex is invalid!"<<std::endl;
+        return false;
+    }
+    
+    // POG recommendation: 2011 baseline selection
+    if (era == "2011") {
+        bool muID = muon::isGoodMuon(muon, muon::GlobalMuonPromptTight) && (muon.numberOfMatchedStations() > 1);//equals: muon.isGlobalMuon() && muon.globalTrack()->normalizedChi2()<10. && muon.globalTrack()->hitPattern().numberOfValidMuonHits() >0
+        if (!muID) return false;
+
+        if (!muon.innerTrack()) return false;
+        bool hits = muon.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 8 && muon.innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+        if (!hits) return false;
+     
+        bool ip = fabs(muon.innerTrack()->dxy(vtx.position())) < 0.2;
+        if (!ip) return false;
+
+        return muID && hits && ip;
+    }
+    
+    // POG recommendation: 2012 baseline selection (requires CMSSW_5_x_y)
+    if (era == "2012") {
+        // if (! muon::isTightMuon(*imu, muon::GlobalMuonPromptTight)) {}// I cannot use this combined selector. Since 2012 there is a dz cut which I can only apply once I selected my final vertex. Apply other cuts one-by-one.
+        if(!muon.isPFMuon() || !muon.isGlobalMuon() ) return false;
+        
+        bool muID = muon::isGoodMuon(muon, muon::GlobalMuonPromptTight) && (muon.numberOfMatchedStations() > 1);//equals: muon.isGlobalMuon() && muon.globalTrack()->normalizedChi2()<10. && muon.globalTrack()->hitPattern().numberOfValidMuonHits() >0
+        if (!muID) return false;
+
+        if (!muon.innerTrack()) return false;
+        bool hits = muon.innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && muon.innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+        if (!hits) return false;
+        
+        if (!muon.muonBestTrack()) return false;
+        bool ip = fabs(muon.muonBestTrack()->dxy(vtx.position())) < 0.2;// && fabs(muon.muonBestTrack()->dz(vtx.position())) < 0.5;
+        if (!ip) return false;
+        
+        return muID && hits && ip;
+    }
+    
+    std::cout<<"FinalTreeFiller::muonID:ERROR! Unknown muon ID for unexpected era "<<era_<<std::endl;
+    return false;
 }
 
 //define this as a plug-in

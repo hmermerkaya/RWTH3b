@@ -40,7 +40,7 @@ void ACCounter::count(const std::string & name, double amount) {
         std::cerr << "Error in ACCounter::count: ACCounter '" << name << "' does not exists!" << std::endl;
     }
 }
-double ACCounter::ratio(const std::string & numerator, const std::string & denominator) const {
+double ACCounter::ratio(const std::string & numerator, const std::string & denominator, int precision) const {
     double eff = -1.0;
     std::map<std::string,double>::const_iterator iternum = counts_.find(numerator);
     std::map<std::string,double>::const_iterator iterdenom = counts_.find(denominator);
@@ -51,7 +51,9 @@ double ACCounter::ratio(const std::string & numerator, const std::string & denom
     } else {
         std::cerr << "Error in ACCounter::ratio: ACCounter '" << numerator << "' or '" << denominator << "' does not exists!" << std::endl;
     }
-    return eff;
+    
+    if (precision == -1000) return eff;
+    return round(eff, precision);
 }
 ACCounter & ACCounter::operator+=(const ACCounter & rhs) {
     for (std::map<std::string, double>::const_iterator iter = rhs.counts_.begin(); iter != rhs.counts_.end(); ++iter) {

@@ -31,6 +31,7 @@ FinalTreeFiller = cms.EDAnalyzer('FinalTreeFiller',
     pileUpDistributionHistMC = cms.untracked.string("pileup"),
     pileUpDistributionFileData = cms.untracked.string(""),
     pileUpDistributionHistData = cms.untracked.string("pileup"),
+    era = cms.untracked.string("era"), #datataking period that defines the choice of object IDs and so forth
 )
 
 chargedTauDaughterTruth = cms.EDProducer("MCTruthDeltaRMatcherNew",#keep both collection as small as possible to prevent fake matches 
