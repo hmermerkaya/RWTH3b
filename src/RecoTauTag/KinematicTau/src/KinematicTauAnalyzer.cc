@@ -171,6 +171,9 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  if(fabs(DecayProd.at(dp)->pdgId())!=fabs(PdtPdgMini::tau_minus))
 		    TruthSvtx=TVector3(DecayProd.at(dp)->vx(),DecayProd.at(dp)->vy(),DecayProd.at(dp)->vz());
 		}
+
+		TVector3 dist=TruthSvtx-TruthPvtx;
+		double length=dist.Mag();
 		std::cout << "KinematicTauAnalyzer::analyze F1" << std::endl;
 
 		if(JAKIDtoIndex.count(jak_id)==1){
@@ -187,7 +190,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  std::cout << "KinematicTauAnalyzer::analyze F3" << std::endl;
                   TMatrixDSym Truth_cov(3);
                   Truth_cov.ResizeTo(TMatrixDSym(3));
-                  for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = 0.0;
+                  for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = Secvtx.covariance(i,j);
 		  std::cout << "KinematicTauAnalyzer::analyze G" << std::endl;
 		  //Tau
 		  Truth_TauMatch_dPhi.at(ambiguity).at(idx)->Fill(Tau.DeltaPhi(mc),weight);
@@ -200,14 +203,24 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
                   Truth_TauMatch_dThetaInitial.at(ambiguity).at(idx)->Fill(Tau_initial.Theta()-mc.Theta(),weight);
                   Truth_TauMatch_dEInitial.at(ambiguity).at(idx)->Fill(Tau_initial.E()-mc.E(),weight);
 
-		  TruthVtxXChange.at(ambiguity).at(idx)->Fill(Pvtx.position().x()-TruthPvtx.X(),weight);
-		  TruthVtxYChange.at(ambiguity).at(idx)->Fill(Pvtx.position().y()-TruthPvtx.Y(),weight);
-		  TruthVtxZChange.at(ambiguity).at(idx)->Fill(Pvtx.position().z()-TruthPvtx.Z(),weight);
+		  TruthVtxX.at(ambiguity).at(idx)->Fill(Pvtx.position().x()-TruthPvtx.X(),weight);
+		  TruthVtxY.at(ambiguity).at(idx)->Fill(Pvtx.position().y()-TruthPvtx.Y(),weight);
+		  TruthVtxZ.at(ambiguity).at(idx)->Fill(Pvtx.position().z()-TruthPvtx.Z(),weight);
 
-		  TruthSecVtxXChange.at(ambiguity).at(idx)->Fill(Secvtx.position().x()-TruthSvtx.X(),weight);
-		  TruthSecVtxYChange.at(ambiguity).at(idx)->Fill(Secvtx.position().y()-TruthSvtx.Y(),weight);
-		  TruthSecVtxZChange.at(ambiguity).at(idx)->Fill(Secvtx.position().z()-TruthSvtx.Z(),weight);
-		  std::cout << "KinematicTauAnalyzer::analyze H" << std::endl;
+                  PullVtxX.at(ambiguity).at(idx)->Fill((Pvtx.position().x()-TruthPvtx.X())/sqrt(Pvtx_cov(0,0)),weight);
+		  PullVtxY.at(ambiguity).at(idx)->Fill((Pvtx.position().y()-TruthPvtx.Y())/sqrt(Pvtx_cov(1,1)),weight);
+		  PullVtxZ.at(ambiguity).at(idx)->Fill((Pvtx.position().z()-TruthPvtx.Z())/sqrt(Pvtx_cov(2,2)),weight);
+
+		  TruthSecVtxX.at(ambiguity).at(idx)->Fill(Secvtx.position().x()-TruthSvtx.X(),weight);
+		  TruthSecVtxY.at(ambiguity).at(idx)->Fill(Secvtx.position().y()-TruthSvtx.Y(),weight);
+		  TruthSecVtxZ.at(ambiguity).at(idx)->Fill(Secvtx.position().z()-TruthSvtx.Z(),weight);
+
+                  PullSecVtxX.at(ambiguity).at(idx)->Fill((Secvtx.position().x()-TruthSvtx.X())/sqrt(Svtx_cov(0,0)),weight);
+                  PullSecVtxY.at(ambiguity).at(idx)->Fill((Secvtx.position().y()-TruthSvtx.Y())/sqrt(Svtx_cov(1,1)),weight);
+		  PullSecVtxZ.at(ambiguity).at(idx)->Fill((Secvtx.position().z()-TruthSvtx.Z())/sqrt(Svtx_cov(2,2)),weight);
+
+		  std::cout << "Pull " << (Secvtx.position().x()-TruthSvtx.X())/sqrt(Svtx_cov(0,0)) << " Fit " << Secvtx.position().x() << " truth " << TruthSvtx.X() << " error " << sqrt(Svtx_cov(0,0)) << std::endl;
+		  
 		  VertexRotation vtxC;
 		  TruthPVtxSig.at(ambiguity).at(idx)->Fill(vtxC.vtxDistanceSignificance(Pvtx_point,Pvtx_cov,TruthPvtx,Truth_cov),weight);
 		  TruthSecVtxSig.at(ambiguity).at(idx)->Fill(vtxC.vtxDistanceSignificance(Svtx_point,Svtx_cov,TruthSvtx,Truth_cov),weight);
@@ -217,8 +230,11 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  TruthTauFlightDirCheck.at(ambiguity).at(idx)->Fill(fabs(TruthFlightDir.Angle(mc.Vect())),weight);
 		  TruthTauFlightDirInitial.at(ambiguity).at(idx)->Fill(fabs(Tau_initial.Angle(mc.Vect())),weight);
 
-                  Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),mc.Pt()-Tau.Pt(),weight);
-                  Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),mc.E()-Tau.E(),weight);
+                  Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.Pt()-mc.Pt(),weight);
+                  Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.E()-mc.E(),weight);
+		  Truth_TauMatch_dphivsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.DeltaPhi(mc),weight);
+		  Truth_TauMatch_dthetavsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.Theta()-mc.Theta(),weight);
+
 		  std::cout << "KinematicTauAnalyzer::analyze I" << std::endl;
 		  TLorentzVector mc_a1(0,0,0,0);
 		  for(unsigned int j=0;j<DecayProd.size();j++){
@@ -232,11 +248,15 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 
 		  std::cout << "Tau  " << ambiguity << " " << idx << std::endl;
-		  Truth_A1Match_dPhi.at(ambiguity).at(idx)->Fill(a1.Phi()-mc_a1.Phi());
+		  Truth_A1Match_dPhi.at(ambiguity).at(idx)->Fill(a1.DeltaPhi(mc_a1.Phi()));
 		  Truth_A1Match_dTheta.at(ambiguity).at(idx)->Fill(a1.Theta()-mc_a1.Theta());
 		  Truth_A1Match_dE.at(ambiguity).at(idx)->Fill(a1.E()-mc_a1.E());
 		  Truth_A1Match_dPt.at(ambiguity).at(idx)->Fill(a1.Pt()-mc_a1.Pt());
 		  Truth_A1Match_M.at(ambiguity).at(idx)->Fill(a1.M()-mc_a1.M());
+		  //
+		  Truth_A1Match_dPtvslength.at(ambiguity).at(idx)->Fill(length,a1.Pt()-mc_a1.Pt());
+		  Truth_A1Match_dphivslength.at(ambiguity).at(idx)->Fill(length,a1.DeltaPhi(mc_a1));
+		  Truth_A1Match_dthetavslength.at(ambiguity).at(idx)->Fill(length,a1.Theta()-mc_a1.Theta());
 		  std::cout << "KinematicTauAnalyzer::analyze J" << std::endl;
 		  //charged hadrons (pi/K)
 		  for(unsigned int i=0; i<Pions.size();i++){
@@ -253,8 +273,12 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		    }
 		    if(pidrmin<0.1){
 		      Truth_PionMatch_dPhi.at(ambiguity).at(idx)->Fill(mcpion.DeltaPhi(Pions.at(i)),weight);
-		      Truth_PionMatch_dTheta.at(ambiguity).at(idx)->Fill(mcpion.Theta()-Pions.at(i).Theta(),weight);
-		      Truth_PionMatch_dE.at(ambiguity).at(idx)->Fill(mcpion.E()-Pions.at(i).E(),weight);
+		      Truth_PionMatch_dTheta.at(ambiguity).at(idx)->Fill(Pions.at(i).Theta()-mcpion.Theta(),weight);
+		      Truth_PionMatch_dE.at(ambiguity).at(idx)->Fill(Pions.at(i).E()-mcpion.E(),weight);
+		      //
+		      Truth_PionMatch_dPtvslength.at(ambiguity).at(idx)->Fill(length,Pions.at(i).Pt()-mcpion.Pt());
+		      Truth_PionMatch_dphivslength.at(ambiguity).at(idx)->Fill(length,Pions.at(i).DeltaPhi(mcpion));
+		      Truth_PionMatch_dPtvslength.at(ambiguity).at(idx)->Fill(length,Pions.at(i).Theta()-mcpion.Theta());
 		    }
 		  }
 		  std::cout << "KinematicTauAnalyzer::analyze K" << std::endl;
@@ -326,12 +350,12 @@ void KinematicTauAnalyzer::beginJob(){
 
       ////////////////////////////////////////////////////////////////////
       dbe->setCurrentFolder("KinematicFitTau/InitialtoFit");
-      VtxXChange.push_back(dbe->book1D("VtxXChange"+amb,"Vtx_{X} "+amb,100,-0.5,0.5));       VtxXChange.at(ambiguity)->setAxisTitle("Vtx_{X} (mm)"); 
-      VtxYChange.push_back(dbe->book1D("VtxYChange"+amb,"Vtx_{Y} "+amb,100,-0.5,0.5));       VtxYChange.at(ambiguity)->setAxisTitle("Vtx_{Y} (mm)");
-      VtxZChange.push_back(dbe->book1D("VtxZChange"+amb,"Vtx_{Z} "+amb,100,-0.5,0.5));       VtxZChange.at(ambiguity)->setAxisTitle("Vtx_{Z} (mm)");
-      SecVtxXChange.push_back(dbe->book1D("SecVtxXChange"+amb,"Vtx_{X}^{Sec} "+amb,100,-0.02,0.02)); SecVtxXChange.at(ambiguity)->setAxisTitle("Vtx_{X}^{Sec} (mm)");
-      SecVtxYChange.push_back(dbe->book1D("SecVtxYChange"+amb,"Vtx_{Y}^{Sec} "+amb,100,-0.02,0.02)); SecVtxYChange.at(ambiguity)->setAxisTitle("Vtx_{Y}^{Sec} (mm)");
-      SecVtxZChange.push_back(dbe->book1D("SecVtxZChange"+amb,"Vtx_{Z}^{Sec} "+amb,100,-0.02,0.02)); SecVtxZChange.at(ambiguity)->setAxisTitle("Vtx_{Z}^{Sec} (mm)");
+      VtxXChange.push_back(dbe->book1D("VtxXChange"+amb,"Vtx_{X} "+amb,100,-0.5,0.5));       VtxXChange.at(ambiguity)->setAxisTitle("Vtx_{X} (cm)"); 
+      VtxYChange.push_back(dbe->book1D("VtxYChange"+amb,"Vtx_{Y} "+amb,100,-0.5,0.5));       VtxYChange.at(ambiguity)->setAxisTitle("Vtx_{Y} (cm)");
+      VtxZChange.push_back(dbe->book1D("VtxZChange"+amb,"Vtx_{Z} "+amb,100,-0.5,0.5));       VtxZChange.at(ambiguity)->setAxisTitle("Vtx_{Z} (cm)");
+      SecVtxXChange.push_back(dbe->book1D("SecVtxXChange"+amb,"Vtx_{X}^{Sec} "+amb,100,-0.02,0.02)); SecVtxXChange.at(ambiguity)->setAxisTitle("Vtx_{X}^{Sec} (cm)");
+      SecVtxYChange.push_back(dbe->book1D("SecVtxYChange"+amb,"Vtx_{Y}^{Sec} "+amb,100,-0.02,0.02)); SecVtxYChange.at(ambiguity)->setAxisTitle("Vtx_{Y}^{Sec} (cm)");
+      SecVtxZChange.push_back(dbe->book1D("SecVtxZChange"+amb,"Vtx_{Z}^{Sec} "+amb,100,-0.02,0.02)); SecVtxZChange.at(ambiguity)->setAxisTitle("Vtx_{Z}^{Sec} (cm)");
       
       TauPhiChange.push_back(dbe->book1D("TauPhiChange"+amb,"#delta#phi_{#tau} "+amb,100,-0.5,0.05));         TauPhiChange.at(ambiguity)->setAxisTitle("#delta#phi_{#tau} (rad)");
       TauThetaChange.push_back(dbe->book1D("TauThetaChange"+amb,"#delta#theta_{#tau} "+amb,100,-0.05,0.05));  TauThetaChange.at(ambiguity)->setAxisTitle("#delta#theta_{#tau} (rad)");
@@ -386,19 +410,36 @@ void KinematicTauAnalyzer::beginJob(){
       Truth_A1Match_dPt.push_back(std::vector<MonitorElement*>());
       Truth_A1Match_M.push_back(std::vector<MonitorElement*>());
 
+      Truth_A1Match_dPtvslength.push_back(std::vector<MonitorElement*>());
+      Truth_A1Match_dphivslength.push_back(std::vector<MonitorElement*>());
+      Truth_A1Match_dthetavslength.push_back(std::vector<MonitorElement*>());
+
       Truth_PionMatch_dPhi.push_back(std::vector<MonitorElement*>());
       Truth_PionMatch_dTheta.push_back(std::vector<MonitorElement*>());
       Truth_PionMatch_dE.push_back(std::vector<MonitorElement*>());
+
+      Truth_PionMatch_dPtvslength.push_back(std::vector<MonitorElement*>());
+      Truth_PionMatch_dphivslength.push_back(std::vector<MonitorElement*>());
+      Truth_PionMatch_dthetavslength.push_back(std::vector<MonitorElement*>());
+
       Truth_NuMatch_dPhi.push_back(std::vector<MonitorElement*>());
       Truth_NuMatch_dTheta.push_back(std::vector<MonitorElement*>());
       Truth_NuMatch_dE.push_back(std::vector<MonitorElement*>());
 
-      TruthVtxXChange.push_back(std::vector<MonitorElement*>());
-      TruthVtxYChange.push_back(std::vector<MonitorElement*>());
-      TruthVtxZChange.push_back(std::vector<MonitorElement*>());
-      TruthSecVtxXChange.push_back(std::vector<MonitorElement*>());
-      TruthSecVtxYChange.push_back(std::vector<MonitorElement*>());
-      TruthSecVtxZChange.push_back(std::vector<MonitorElement*>());
+      TruthVtxX.push_back(std::vector<MonitorElement*>());
+      TruthVtxY.push_back(std::vector<MonitorElement*>());
+      TruthVtxZ.push_back(std::vector<MonitorElement*>());
+      TruthSecVtxX.push_back(std::vector<MonitorElement*>());
+      TruthSecVtxY.push_back(std::vector<MonitorElement*>());
+      TruthSecVtxZ.push_back(std::vector<MonitorElement*>());
+
+      PullVtxX.push_back(std::vector<MonitorElement*>());
+      PullVtxY.push_back(std::vector<MonitorElement*>());
+      PullVtxZ.push_back(std::vector<MonitorElement*>());
+      PullSecVtxX.push_back(std::vector<MonitorElement*>());
+      PullSecVtxY.push_back(std::vector<MonitorElement*>());
+      PullSecVtxZ.push_back(std::vector<MonitorElement*>());
+
       TruthPVtxSig.push_back(std::vector<MonitorElement*>());
       TruthSecVtxSig.push_back(std::vector<MonitorElement*>());
       TruthTauFlightDir.push_back(std::vector<MonitorElement*>());
@@ -409,6 +450,8 @@ void KinematicTauAnalyzer::beginJob(){
       Truth_TauMatch_dPz.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dPtvsL.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dEvsL.push_back(std::vector<MonitorElement*>());
+      Truth_TauMatch_dthetavsL.push_back(std::vector<MonitorElement*>());
+      Truth_TauMatch_dphivsL.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dGFAnglevsL.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dGFAngle.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dGFInitialAngle.push_back(std::vector<MonitorElement*>());
@@ -438,12 +481,36 @@ void KinematicTauAnalyzer::beginJob(){
 	  Truth_A1Match_dPt.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdEnergy"+tmp+amb,"dE_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-15.0,15.0));       axis="dE_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	  Truth_A1Match_M.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdM"+tmp+amb,"dM_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-2.0,2.0));       axis="dM_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	 
-	  TruthVtxXChange.at(ambiguity).push_back(dbe->book1D("TruthPVtxXChange"+tmp+amb,"Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} "+amb,100 ,-0.1,0.1)); axis="Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} (mm)"; TruthVtxXChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-	  TruthVtxYChange.at(ambiguity).push_back(dbe->book1D("TruthPVtxYChange"+tmp+amb,"Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} (mm)"; TruthVtxYChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-	  TruthVtxZChange.at(ambiguity).push_back(dbe->book1D("TruthPVtxZChange"+tmp+amb,"Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} (mm)"; TruthVtxZChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-	  TruthSecVtxXChange.at(ambiguity).push_back(dbe->book1D("TruthSecVtxXChange"+tmp+amb,"Vtx_{x,"+tmp+"}^{Sec.,KF}-Vtx_{x}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{x,"+tmp+"}^{Sec.,KF}-Vtx_{x}^{Sec.,Truth} (mm)"; TruthSecVtxXChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-          TruthSecVtxYChange.at(ambiguity).push_back(dbe->book1D("TruthSecVtxYChange"+tmp+amb,"Vtx_{y,"+tmp+"}^{Sec,KF}-Vtx_{y}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{y,"+tmp+"}^{Sec.,KF}-Vtx_{y}^{Sec.,Truth} (mm)"; TruthSecVtxYChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-          TruthSecVtxZChange.at(ambiguity).push_back(dbe->book1D("TruthSecVtxZChange"+tmp+amb,"Vtx_{z,"+tmp+"}^{Sec,KF}-Vtx_{z}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{z,"+tmp+"}^{Sec.,KF}-Vtx_{z}^{Sec.,Truth} (mm)"; TruthSecVtxZChange.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  Truth_A1Match_dPtvslength.at(ambiguity).push_back(dbe->book2D("Truth_A1Match_dPtvslength"+tmp+amb,"Truth A1 Tau-Matchd dP_{t}^{Lab} vs L( "+tmp+amb+")",20,0.0,5.0,100,-5,5)); Truth_A1Match_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("P_{T}-P_{T}^{Truth} (GeV)",2); Truth_A1Match_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_A1Match_dphivslength.at(ambiguity).push_back(dbe->book2D("Truth_A1Match_dphivslength"+tmp+amb,"Truth A1 Tau-Matchd d#phi^{Lab} vs L( "+tmp+amb+")",20,0.0,5.0,100,-0.1,0.1)); Truth_A1Match_dphivslength.at(ambiguity).at(idx)->setAxisTitle("#phi-#phi^{Truth} (rad)",2); Truth_A1Match_dphivslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_A1Match_dthetavslength.at(ambiguity).push_back(dbe->book2D("Truth_A1Match_dthetavslength"+tmp+amb,"Truth A1 Tau-Matchd d#theta^{Lab} vs L( "+tmp+amb+")",20,0.0,5.0,100,-0.1,0.1)); Truth_A1Match_dthetavslength.at(ambiguity).at(idx)->setAxisTitle("#theta-#theta^{Truth} (rad)",2); Truth_A1Match_dthetavslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+
+	  Truth_PionMatch_dPtvslength.at(ambiguity).push_back(dbe->book2D("Truth_PionMatch_dPtvslength"+tmp+amb,"Truth Pion Tau-Matchd dP_{t}^{Lab} vs L( "+tmp+amb+")",20,0.0,5.0,100,-5,5)); Truth_PionMatch_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("P_{T}-P_{T}^{Truth} (GeV)",2); Truth_PionMatch_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_PionMatch_dphivslength.at(ambiguity).push_back(dbe->book2D("Truth_PionMatch_dphivslength"+tmp+amb,"Truth Pion Tau-Matchd d#phi^{Lab} vs L( "+tmp+amb+")",20,0.0,5.0,64,-0.1,0.1)); Truth_PionMatch_dphivslength.at(ambiguity).at(idx)->setAxisTitle("#phi-#phi^{Truth} (rad)",2); Truth_PionMatch_dphivslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_PionMatch_dthetavslength.at(ambiguity).push_back(dbe->book2D("Truth_PionMatch_dthetavslength"+tmp+amb,"Truth Pion Tau-Matchd d#theta^{Lab} vs L( "+tmp+amb+")",20,0.0,5.0,64,-0.1,0.1)); Truth_PionMatch_dthetavslength.at(ambiguity).at(idx)->setAxisTitle("#theta-#theta^{Truth} (rad)",2); Truth_PionMatch_dthetavslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+
+
+
+	  TruthVtxX.at(ambiguity).push_back(dbe->book1D("TruthPVtxX"+tmp+amb,"Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} "+amb,100 ,-0.1,0.1)); axis="Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} (cm)"; TruthVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  TruthVtxY.at(ambiguity).push_back(dbe->book1D("TruthPVtxY"+tmp+amb,"Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} (cm)"; TruthVtxY.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  TruthVtxZ.at(ambiguity).push_back(dbe->book1D("TruthPVtxZ"+tmp+amb,"Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} (cm)"; TruthVtxZ.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+
+
+	  TruthSecVtxX.at(ambiguity).push_back(dbe->book1D("TruthSecVtxX"+tmp+amb,"Vtx_{x,"+tmp+"}^{Sec.,KF}-Vtx_{x}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{x,"+tmp+"}^{Sec.,KF}-Vtx_{x}^{Sec.,Truth} (cm)"; TruthSecVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+          TruthSecVtxY.at(ambiguity).push_back(dbe->book1D("TruthSecVtxY"+tmp+amb,"Vtx_{y,"+tmp+"}^{Sec,KF}-Vtx_{y}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{y,"+tmp+"}^{Sec.,KF}-Vtx_{y}^{Sec.,Truth} (cm)"; TruthSecVtxY.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+          TruthSecVtxZ.at(ambiguity).push_back(dbe->book1D("TruthSecVtxZ"+tmp+amb,"Vtx_{z,"+tmp+"}^{Sec,KF}-Vtx_{z}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{z,"+tmp+"}^{Sec.,KF}-Vtx_{z}^{Sec.,Truth} (cm)"; TruthSecVtxZ.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+
+
+          PullVtxX.at(ambiguity).push_back(dbe->book1D("PullPVtxX"+tmp+amb,"Pull Vtx_{x,"+tmp+"}^{Prime,KF} "+amb,100 ,-5.0,5.0)); axis="Pull Vtx_{x,"+tmp+"}^{Prime,KF}"; PullVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+          PullVtxY.at(ambiguity).push_back(dbe->book1D("PullPVtxY"+tmp+amb,"Pull Vtx_{y,"+tmp+"}^{Prime,KF} "+amb,100 ,-5.0,5.0));axis="Pull Vtx_{y,"+tmp+"}^{Prime,KF}"; PullVtxY.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+          PullVtxZ.at(ambiguity).push_back(dbe->book1D("PullPVtxZ"+tmp+amb,"Pull Vtx_{z,"+tmp+"}^{Prime,KF} "+amb,100 ,-5.0,5.0));axis="Pull Vtx_{z,"+tmp+"}^{Prime,KF}"; PullVtxZ.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+
+          PullSecVtxX.at(ambiguity).push_back(dbe->book1D("PullSecVtxX"+tmp+amb,"Pull Vtx_{x,"+tmp+"}^{Sec.,KF} "+amb,100 ,-5.0,5.0));axis="Pull Vtx_{x,"+tmp+"}^{Sec.,KF}"; PullSecVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+          PullSecVtxY.at(ambiguity).push_back(dbe->book1D("PullSecVtxY"+tmp+amb,"Pull Vtx_{y,"+tmp+"}^{Sec,KF} "+amb,100 ,-5.0,5.0));axis="Pull Vtx_{y,"+tmp+"}^{Sec.,KF}"; PullSecVtxY.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+          PullSecVtxZ.at(ambiguity).push_back(dbe->book1D("PullSecVtxZ"+tmp+amb,"Pull Vtx_{z,"+tmp+"}^{Sec,KF} "+amb,100 ,-5.0,5.0));axis="Pull Vtx_{z,"+tmp+"}^{Sec.,KF}"; PullSecVtxZ.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+
+
+
 
 	  TruthPVtxSig.at(ambiguity).push_back(dbe->book1D("TruthPVtxSig"+tmp+amb,"#sigma_{Prime Vtx,"+tmp+"}^{Truth} "+amb,100 ,0.0,10.0)); axis="#sigma_{Prime Vtx,"+tmp+"}^{Truth}"; TruthPVtxSig.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	  TruthSecVtxSig.at(ambiguity).push_back(dbe->book1D("TruthSecVtxSig"+tmp+amb,"#sigma_{Sec. Vtx"+tmp+"}^{Truth} "+amb,100 ,0.0,10.0));axis="#sigma_{Sec. Vtx"+tmp+"}^{Truth} "; TruthSecVtxSig.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
@@ -454,10 +521,12 @@ void KinematicTauAnalyzer::beginJob(){
 	  Truth_TauMatch_dPt.at(ambiguity).push_back(dbe->book1D("TruthTauMatchdPt"+tmp+amb,"dP_{t,"+tmp+"}^{#tau Match} "+amb,100 ,-50.0,50.0));   axis="dP_{t,"+tmp+"}^{#tau Match} (GeV)"; Truth_TauMatch_dPt.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	  Truth_TauMatch_dPz.at(ambiguity).push_back(dbe->book1D("TruthTauMatchdPz"+tmp+amb,"dP_{z,"+tmp+"}^{#tau Match} "+amb,100 ,-50.0,50.0));   axis="dP_{z,"+tmp+"}^{#tau Match} (GeV)"; Truth_TauMatch_dPz.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 
-	  Truth_TauMatch_dPtvsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchdPtvsL"+tmp+amb,"Truth Tau-Matchd P_{t} vs L( "+tmp+amb+")",10,0.0,5.0,100,-50,50)); Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->setAxisTitle("P_{t,#tau} (GeV)",2); Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->setAxisTitle("L (mm)",1);
-	  Truth_TauMatch_dEvsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchdEvsL"+tmp+amb,"Truth Tau Matchd E vs L "+tmp+amb+")",100,0.0,5.0,100,-50,50)); Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->setAxisTitle("E_{#tau} (GeV)",2); Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->setAxisTitle("L (mm)",1);
+	  Truth_TauMatch_dPtvsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchdPtvsL"+tmp+amb,"Truth Tau-Matchd P_{t} vs L( "+tmp+amb+")",10,0.0,5.0,100,-50,50)); Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->setAxisTitle("P_{t,#tau} (GeV)",2); Truth_TauMatch_dPtvsL.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_TauMatch_dEvsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchdEvsL"+tmp+amb,"Truth Tau Matchd E vs L "+tmp+amb+")",100,0.0,5.0,100,-50,50)); Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->setAxisTitle("E_{#tau} (GeV)",2); Truth_TauMatch_dEvsL.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_TauMatch_dphivsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchdphivsL"+tmp+amb,"Truth Tau-Matchd P_{t} vs L( "+tmp+amb+")",10,0.0,5.0,100,-0.1,0.1)); Truth_TauMatch_dphivsL.at(ambiguity).at(idx)->setAxisTitle("#phi-#phi^{Truth} (rad)",2); Truth_TauMatch_dphivsL.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
+	  Truth_TauMatch_dthetavsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchdthetavsL"+tmp+amb,"Truth Tau-Matchd P_{t} vs L( "+tmp+amb+")",10,0.0,5.0,100,-0.1,0.1)); Truth_TauMatch_dthetavsL.at(ambiguity).at(idx)->setAxisTitle("$theta-#theta^{truth} (rad)",2); Truth_TauMatch_dthetavsL.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
 
-	  Truth_TauMatch_dGFAnglevsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchddGFAnglevsL"+tmp+amb,"Truth Tau-Matchd d#theta_{GF}^{Lab} vs L( "+tmp+amb+")",10,0.0,5.0,64,-0.1,0.1)); Truth_TauMatch_dGFAnglevsL.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (GeV)",2); Truth_TauMatch_dGFAnglevsL.at(ambiguity).at(idx)->setAxisTitle("L (mm)",1);
+	  Truth_TauMatch_dGFAnglevsL.at(ambiguity).push_back(dbe->book2D("TruthTauMatchddGFAnglevsL"+tmp+amb,"Truth Tau-Matchd d#theta_{GF}^{Lab} vs L( "+tmp+amb+")",10,0.0,5.0,64,-0.1,0.1)); Truth_TauMatch_dGFAnglevsL.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (GeV)",2); Truth_TauMatch_dGFAnglevsL.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
 
 	  Truth_TauMatch_dGFAngle.at(ambiguity).push_back(dbe->book1D("TruthTauMatchddGFAngle"+tmp+amb,"Truth Tau-Matchd d#theta_{GF}^{Lab} "+tmp+amb+")",100,-0.1,0.1)); Truth_TauMatch_dGFAngle.at(ambiguity).at(idx)->setAxisTitle("d#theta_{GF,#tau} (GeV)"); 
 	  Truth_TauMatch_dGFInitialAngle.at(ambiguity).push_back(dbe->book1D("TruthTauMatchddGFInitialAngle"+tmp+amb,"Truth Tau-Matchd d#theta_{GF}^{Initial,Lab} "+tmp+amb+")",100,-0.1,0.1)); Truth_TauMatch_dGFAngle.at(ambiguity).at(idx)->setAxisTitle("d#theta_{GF,#tau}^{Initial} (GeV)");

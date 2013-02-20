@@ -17,7 +17,7 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   if(pions.size()!=3)return status;
   SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
   TransientVertex secVtx=SVH.InitialSecondaryVertex();
-  if(!FitA1(pions,secVtx)){return status;}
+  if(!FitA1(pions,/*secVtx*/PV_)){return status;}
   A1=mother();
   // Tau fit
   ConfigureNeutrino(KFTau,ambiguity,A1,neutrino);
@@ -137,7 +137,15 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   TauA1NU.SetNIterMax(1000);
   TauA1NU.Fit();
   if (TauA1NU.isConverged()) {
-    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
+    std::vector<LorentzVectorParticle> fitDaughters=TauA1NU.GetReFitDaughters();
+    for(unsigned int i=0;i<fitDaughters.size();i++){
+      for(unsigned int j=0;j<unfitDaughters.size();j++){
+	fitDaughters.erase (fitDaughters.begin()+i);
+	fitDaughters.push_back(unfitDaughters.at(j));
+      }
+    }
+
+    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),/*TauA1NU.GetReFitDaughters()*/fitDaughters,TauA1NU.GetMother());
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 

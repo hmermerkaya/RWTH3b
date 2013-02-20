@@ -67,11 +67,14 @@ private:
   std::vector<std::vector<MonitorElement*> >  Truth_TauMatch_dPhi, Truth_TauMatch_dTheta, Truth_TauMatch_dE, 
     Truth_PionMatch_dPhi, Truth_PionMatch_dTheta, Truth_PionMatch_dE,Truth_NuMatch_dPhi,Truth_NuMatch_dTheta,Truth_NuMatch_dE,
     Truth_A1Match_dPhi, Truth_A1Match_dTheta, Truth_A1Match_dE, Truth_A1Match_dPt, Truth_A1Match_M,
-    TruthVtxXChange, TruthVtxYChange, TruthVtxZChange, TruthSecVtxXChange, TruthSecVtxYChange, 
-    TruthSecVtxZChange, TruthPVtxSig, TruthSecVtxSig, TruthTauFlightDir, TruthTauFlightDirCheck,
-    Truth_TauMatch_dPt,Truth_TauMatch_dPz, Truth_TauMatch_dPtvsL, Truth_TauMatch_dEvsL,Truth_TauMatch_dGFAnglevsL, 
+    TruthVtxX, TruthVtxY, TruthVtxZ, TruthSecVtxX, TruthSecVtxY, TruthSecVtxZ, 
+    PullVtxX, PullVtxY, PullVtxZ, PullSecVtxX, PullSecVtxY, PullSecVtxZ,
+    TruthPVtxSig, TruthSecVtxSig, TruthTauFlightDir, TruthTauFlightDirCheck,
+    Truth_TauMatch_dPt,Truth_TauMatch_dPz, Truth_TauMatch_dPtvsL, Truth_TauMatch_dEvsL,Truth_TauMatch_dphivsL,Truth_TauMatch_dthetavsL, Truth_TauMatch_dGFAnglevsL, 
     Truth_TauMatch_dGFAngle, TruthTauFlightDirInitial, Truth_TauMatch_dGFInitialAngle,
-    Truth_TauMatch_dPhiInitial, Truth_TauMatch_dThetaInitial, Truth_TauMatch_dEInitial;
+    Truth_TauMatch_dPhiInitial, Truth_TauMatch_dThetaInitial, Truth_TauMatch_dEInitial,Truth_A1Match_dPtvslength, Truth_A1Match_dphivslength, Truth_A1Match_dthetavslength,
+    Truth_PionMatch_dPtvslength, Truth_PionMatch_dphivslength, Truth_PionMatch_dthetavslength;
+
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  
 
