@@ -8,12 +8,13 @@
  */
 
 #include "../../ACEvent/interface/ACEvent.h"
+#include "../../ACProvenance/interface/ACProvenance.h"
 
 class ACAnalyzer {
 public:
     ACAnalyzer();
     virtual void analyze(const ACEvent & event) = 0;
-    virtual void beginJob() {};
+    virtual void beginJob(const ACProvenance & provenance) {};
     virtual void endJob() {};
     virtual void beginRun() {};
     virtual void endRun() {};

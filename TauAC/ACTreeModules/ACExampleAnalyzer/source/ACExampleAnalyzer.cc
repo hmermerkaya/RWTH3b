@@ -11,9 +11,11 @@ int main(int argc, char* argv[]) {
     std::vector<ACTreeReader* > loops;
     std::vector<std::string> filenames;
     //filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/SingleMuNov2011A_100_7TeV.root");
-    filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/tauSMBrFromZ_100_7TeV.root");    
+    //filenames.push_back("/user/perchalla/output/analysis/CMSSW_4_4_2/development/tauSMBrFromZ_100_7TeV.root");
+    filenames.push_back("/user/perchalla/output/TauAC/CMSSW_5_3_8/development/TauPlusX2012A_all.root");
     ACTreeReader::SetVerbosity(true);
-    loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
+    //loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent"));
+    loops.push_back(new ACTreeReader(filenames, "FinalTreeFiller/TauACEvent", "EventLogger/ModuleSummary"));
     loops.back()->loop(anlzr, -1);
 
     return 0;
@@ -135,8 +137,11 @@ void ACExampleAnalyzer::beginLuminosityBlock() {
 void ACExampleAnalyzer::endLuminosityBlock() {
     printf("This is the endLuminosityBlock!\n");
 }
-void ACExampleAnalyzer::beginJob() {
+void ACExampleAnalyzer::beginJob(const ACProvenance & provenance) {
     printf("This is the beginJob!\n");
+    std::cout<<"   Counter Report stores "<<provenance.counter().counts().size()<<" unweighted elements."<<std::endl;
+    if (provenance.counter().counts().size() > 0) std::cout<<provenance.counter()<<std::endl;
+    if (provenance.counterWeighted().counts().size() > 0) std::cout<<provenance.counterWeighted()<<std::endl;
 }
 void ACExampleAnalyzer::endJob() {
     printf("This is the endJob!\n");

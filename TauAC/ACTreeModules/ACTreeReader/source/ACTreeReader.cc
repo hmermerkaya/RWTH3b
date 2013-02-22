@@ -2,40 +2,54 @@
 
 ACTreeReader::ACTreeReader(const std::vector<std::string>& fileNames, const std::string& treeName, TChain *chain) {
     branchNames_.clear();
-    
-    if (chain == 0) {
-        fChain_ = new TChain(treeName.c_str());
-        
-        //check for white spaces and split the string if needed
-        for (std::vector<std::string>::const_iterator ifile = fileNames.begin(); ifile != fileNames.end(); ++ifile) {
-            std::vector<std::string> tmp;
-            tokenize(*ifile, tmp);
-            fileNames_.insert(fileNames_.end(), tmp.begin(), tmp.end());
-        }
-        for (std::vector<std::string>::const_iterator ifile = fileNames_.begin(); ifile != fileNames_.end(); ++ifile) {
-            std::string abspath = "";
-            if (ifile->substr(0,1) != "/" && ifile->substr(0,4) != "dcap") {
-                abspath = "file:"+std::string(gSystem->pwd())+"/"+(*ifile);
-            } else if (ifile->substr(0,4) == "dcap") {
-                abspath = (*ifile);
-            } else {
-                abspath = "file:"+(*ifile);
-            }
-            int status = fChain_->AddFile(abspath.c_str(),0);
-            if (status != 1) {
-                std::cerr << "ERROR: File '" << abspath << "' could not be connected to the chain of input files! Maybe the tree '" << treeName << "' does not exist in this file?!" << std::endl;
-                throw 404;
-            }
-        }
-    }
+    loadFiles(fileNames);
+    if (chain == 0) fChain_ = setupChain(treeName);
     Init(fChain_);
 }
-
 //ACTreeReader::ACTreeReader(std::string fileName, std::string treeName, std::vector<std::string> branchNames):
 //ACTreeReader(fileName, treeName),
 //branchNames_(branchNames)
 //{
 //}
+ACTreeReader::ACTreeReader(const std::vector<std::string>& fileNames, const std::string& treeName, const std::string& provenanceTreeName, TChain *chain) {
+    branchNames_.clear();
+    loadFiles(fileNames);
+    if (chain == 0) fChain_ = setupChain(treeName);
+    Init(fChain_);
+
+    pChain_ = setupChain(provenanceTreeName);
+    InitProvenance(pChain_);
+    mergeProvenance();
+}
+
+void ACTreeReader::loadFiles(const std::vector<std::string> & fileNames) {
+    //check for white spaces and split the string if needed
+    for (std::vector<std::string>::const_iterator ifile = fileNames.begin(); ifile != fileNames.end(); ++ifile) {
+        std::vector<std::string> tmp;
+        tokenize(*ifile, tmp);
+        fileNames_.insert(fileNames_.end(), tmp.begin(), tmp.end());
+    }
+}
+TChain * ACTreeReader::setupChain(const std::string& treeName) {
+    TChain * chain = new TChain(treeName.c_str());
+    
+    for (std::vector<std::string>::const_iterator ifile = fileNames_.begin(); ifile != fileNames_.end(); ++ifile) {
+        std::string abspath = "";
+        if (ifile->substr(0,1) != "/" && ifile->substr(0,4) != "dcap") {
+            abspath = "file:"+std::string(gSystem->pwd())+"/"+(*ifile);
+        } else if (ifile->substr(0,4) == "dcap") {
+            abspath = (*ifile);
+        } else {
+            abspath = "file:"+(*ifile);
+        }
+        int status = chain->AddFile(abspath.c_str(),0);
+        if (status != 1) {
+            std::cerr << "ERROR: File '" << abspath << "' could not be connected to the chain of input files! Maybe the tree '" << treeName << "' does not exist in this file?!" << std::endl;
+            throw 404;
+        }
+    }
+    return chain;
+}
 
 bool ACTreeReader::verbosity_ = false; 
 
@@ -58,8 +72,9 @@ void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
     Long64_t nbytes = 0, nb = 0;
     int run = -1;
     int lumi = -1;
+    fCurrent_ = -1;
     for (Long64_t jentry=0; jentry<nentries;jentry++) {
-        Long64_t ientry = LoadTree(jentry);
+        Long64_t ientry = LoadTree(fChain_, jentry);
         if (ientry < 0) break;
         nb = fChain_->GetEntry(jentry);
         nbytes += nb;
@@ -81,7 +96,7 @@ void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
         
         if (jentry == 0) {
             if (verbosity_) printTreeStatistics();
-            analyzer.beginJob();
+            analyzer.beginJob(provenance_);//empty object if there is no pChain_
             run = irun;
             analyzer.beginRun();
             lumi = ilumi;
@@ -110,82 +125,114 @@ void ACTreeReader::loop(ACAnalyzer & analyzer, int maxEvents) {
         }
     }
 }
+void ACTreeReader::mergeProvenance() {
+    if (pChain_ == 0) return;
+    Long64_t nentries = pChain_->GetEntriesFast();
+    
+    //increase cache size
+    int cachesize = 30000000;   //30 MBytes
+    pChain_->SetCacheSize(cachesize);
+    pChain_->SetCacheLearnEntries();
+    //pChain_->AddBranchToCache("*",kTRUE);//speedup (gain like 1s in 10000 events)
+    
+    fCurrent_ = -1;
+    for (Long64_t jentry=0; jentry<nentries;jentry++) {
+        Long64_t ientry = LoadTree(pChain_, jentry);
+        if (ientry < 0) break;
+        pChain_->GetEntry(jentry);
+        // now merge the provenance contents
+        provenance_.merge();
+    }
+}
 
 void ACTreeReader::Init(TChain *chain) {
     /// Set branch addresses and branch pointers
     if (!chain) return;
-    fCurrent_ = -1;
     
-    
-    //    fChain_->SetBranchStatus("*",0);  // disable all branches
-    //    fChain_->SetBranchStatus("branchname",1);  // activate branchname
+    //    chain->SetBranchStatus("*",0);  // disable all branches
+    //    chain->SetBranchStatus("branchname",1);  // activate branchname
     event_ = ACEvent(); // empty default c'tor. fill by set functions
     
     int status = 0;
     
-    status = fChain_->SetBranchAddress("ACEventInfo", event_.linkEventInfo());
-    testBranch("ACEventInfo", status);
+    bool listAvailableBranches = true;//report only once
     
-    status = fChain_->SetBranchAddress("ACEventWeight", event_.linkEventWeight());
-    testBranch("ACEventWeight", status);
+    status = chain->SetBranchAddress("ACEventInfo", event_.linkEventInfo());
+    listAvailableBranches = testBranch(chain, "ACEventInfo", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("ACEventGlobals", event_.linkEventGlobals());
-    testBranch("ACEventGlobals", status);
+    status = chain->SetBranchAddress("ACEventWeight", event_.linkEventWeight());
+    listAvailableBranches = testBranch(chain, "ACEventWeight", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("ACTrigger", event_.linkTrigger());
-    testBranch("ACTrigger", status);
+    status = chain->SetBranchAddress("ACEventGlobals", event_.linkEventGlobals());
+    listAvailableBranches = testBranch(chain, "ACEventGlobals", status, listAvailableBranches);
+    
+    status = chain->SetBranchAddress("ACTrigger", event_.linkTrigger());
+    listAvailableBranches = testBranch(chain, "ACTrigger", status, listAvailableBranches);
 
-    status = fChain_->SetBranchAddress("triggerObjects", event_.linkTriggerObjects());
-    testBranch("triggerObjects", status);
+    status = chain->SetBranchAddress("triggerObjects", event_.linkTriggerObjects());
+    listAvailableBranches = testBranch(chain, "triggerObjects", status, listAvailableBranches);
 
-    status = fChain_->SetBranchAddress("ACBeamSpot", event_.linkBeamSpot());
-    testBranch("ACBeamSpot", status);
+    status = chain->SetBranchAddress("ACBeamSpot", event_.linkBeamSpot());
+    listAvailableBranches = testBranch(chain, "ACBeamSpot", status, listAvailableBranches);
 
-    status = fChain_->SetBranchAddress("offlinePV", event_.linkOfflinePV());
-    testBranch("offlinePV", status);
-    status = fChain_->SetBranchAddress("reducedPV", event_.linkReducedPV());
-    testBranch("reducedPV", status);
+    status = chain->SetBranchAddress("offlinePV", event_.linkOfflinePV());
+    listAvailableBranches = testBranch(chain, "offlinePV", status, listAvailableBranches);
+    status = chain->SetBranchAddress("reducedPV", event_.linkReducedPV());
+    listAvailableBranches = testBranch(chain, "reducedPV", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("generator", event_.linkGenerator());
-    testBranch("generator", status);
+    status = chain->SetBranchAddress("generator", event_.linkGenerator());
+    listAvailableBranches = testBranch(chain, "generator", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("genTauDecays", event_.linkGenTauDecays());
-    testBranch("genTauDecays", status);
+    status = chain->SetBranchAddress("genTauDecays", event_.linkGenTauDecays());
+    listAvailableBranches = testBranch(chain, "genTauDecays", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("Tracks", event_.linkTracks());
-    testBranch("Tracks", status);
+    status = chain->SetBranchAddress("Tracks", event_.linkTracks());
+    listAvailableBranches = testBranch(chain, "Tracks", status, listAvailableBranches);
 
-    status = fChain_->SetBranchAddress("Muons", event_.linkMuons());
-    testBranch("Muons", status);
+    status = chain->SetBranchAddress("Muons", event_.linkMuons());
+    listAvailableBranches = testBranch(chain, "Muons", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("Electrons", event_.linkElectrons());
-    testBranch("Electrons", status);
+    status = chain->SetBranchAddress("Electrons", event_.linkElectrons());
+    listAvailableBranches = testBranch(chain, "Electrons", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("ACFittedThreeProngParticles", event_.linkFittedThreeProngParticles());
-    testBranch("ACFittedThreeProngParticles", status);
+    status = chain->SetBranchAddress("ACFittedThreeProngParticles", event_.linkFittedThreeProngParticles());
+    listAvailableBranches = testBranch(chain, "ACFittedThreeProngParticles", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("ACFittedThreeProngDecays", event_.linkTauDecays());
-    testBranch("ACFittedThreeProngDecays", status);
+    status = chain->SetBranchAddress("ACFittedThreeProngDecays", event_.linkTauDecays());
+    listAvailableBranches = testBranch(chain, "ACFittedThreeProngDecays", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("PFJets", event_.linkPFJets());
-    testBranch("PFJets", status);
+    status = chain->SetBranchAddress("PFJets", event_.linkPFJets());
+    listAvailableBranches = testBranch(chain, "PFJets", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("PFTaus", event_.linkPFTaus());
-    testBranch("PFTaus", status);
+    status = chain->SetBranchAddress("PFTaus", event_.linkPFTaus());
+    listAvailableBranches = testBranch(chain, "PFTaus", status, listAvailableBranches);
     
-    status = fChain_->SetBranchAddress("ACPileupInfo", event_.linkPileup());
-    testBranch("ACPileupInfo", status);
+    status = chain->SetBranchAddress("ACPileupInfo", event_.linkPileup());
+    listAvailableBranches = testBranch(chain, "ACPileupInfo", status, listAvailableBranches);
+}
+void ACTreeReader::InitProvenance(TChain *chain) {
+    /// Set branch addresses and branch pointers
+    if (!chain) return;
+    
+    int status = 0;
+    
+    status = chain->SetBranchAddress("ModuleCounter", provenance_.linkCounter());
+    testBranch(chain, "ModuleCounter", status, false);
+    
+    status = chain->SetBranchAddress("ModuleCounterWeighted", provenance_.linkCounterWeighted());
+    testBranch(chain, "ModuleCounterWeighted", status, false);
+    
 }
 
-Long64_t ACTreeReader::LoadTree(Long64_t entry) {
+Long64_t ACTreeReader::LoadTree(TChain * chain, Long64_t entry) {
     /// Set the environment to read one entry
-    if (!fChain_) return -5;
-    Long64_t centry = fChain_->LoadTree(entry);
+    if (!chain) return -5;
+    Long64_t centry = chain->LoadTree(entry);
     if (centry < 0) return centry;
-    if (!fChain_->InheritsFrom(TChain::Class()))  return centry;
-    TChain *chain = (TChain*)fChain_;
-    if (chain->GetTreeNumber() != fCurrent_) {
-        fCurrent_ = chain->GetTreeNumber();
+    if (!chain->InheritsFrom(TChain::Class()))  return centry;
+    TChain *newchain = (TChain*)chain;
+    if (newchain->GetTreeNumber() != fCurrent_) {
+        fCurrent_ = newchain->GetTreeNumber();
         Notify();
     }
     return centry;
@@ -199,9 +246,15 @@ Bool_t ACTreeReader::Notify() {
     
     return kTRUE;
 }
-bool ACTreeReader::testBranch(std::string branchname, int status) const {
-    if (!fChain_->GetBranchStatus(branchname.c_str())) {
-        printf("ACTreeReader::checkBranch: branch %s is invalid!\n", branchname.c_str());
+bool ACTreeReader::testBranch(TChain * chain, std::string branchname, int status, bool listAvailableBranches) const {
+    //std::cout<<"branchstatus "<<branchname<<": "<<status<<std::endl;
+    if (!chain->GetBranchStatus(branchname.c_str())) {
+        std::cout<<"ACTreeReader::checkBranch: branch '"<<branchname<<"' is invalid and will be ignored!"<<std::endl;
+        //chain->SetBranchStatus(branchname.c_str(), 0);
+        if (listAvailableBranches) {
+            std::cout<<"Here is a list of available branches:"<<std::endl;
+            chain->GetListOfBranches()->Print();
+        }
         return false;
     }
     return true;

@@ -5,11 +5,8 @@ CXX				:= g++
 LIBRARYDIR		:= $(CMSSW_BASE)/lib/$(SCRAM_ARCH)
 endif
 
-ROOTCXXFLAGS	:= $(shell $(ROOTSYS)/bin/root-config --cflags)
+ROOTCXXFLAGS	:= $(shell $(ROOTSYS)/bin/root-config --cflags) 
 ROOTLIBS		:= $(shell $(ROOTSYS)/bin/root-config --libs) 
-BOOST_INCLUDE	:= $(shell scram tool info boost 2>&1 | grep 'INCLUDE=' | sed -e "s/INCLUDE=//")
-BOOST_LIBRARY	:= $(shell scram tool info boost 2>&1 | grep 'LIBDIR=' | sed -e "s/LIBDIR=//")
-BOOST_LIBNAMES	:=
 
 IDIR			:= $(CURDIR)/interface
 SDIR			:= $(CURDIR)/source
@@ -19,9 +16,9 @@ LDIR			:= ../lib
 $(shell [ -d '$(ODIR)' ] || mkdir -p $(ODIR))
 $(shell [ -d '$(LDIR)' ] || mkdir -p $(LDIR))
 
-CXXFLAGS		:= -O -Wall -fPIC $(ROOTCXXFLAGS) -I$(BOOST_INCLUDE) -I$(IDIR)
+CXXFLAGS		:= -O -Wall -fPIC $(ROOTCXXFLAGS) -I$(IDIR)
 
-TARGET			:= ACHarvester
+TARGET			:= ACProvenance
 _OBJ			:= $(addsuffix .o, $(TARGET))
 _DEPS			:= $(addsuffix .h, $(TARGET))
 

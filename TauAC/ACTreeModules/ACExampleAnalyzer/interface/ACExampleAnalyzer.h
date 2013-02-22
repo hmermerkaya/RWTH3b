@@ -18,7 +18,7 @@ public:
     virtual void endRun();
     virtual void beginLuminosityBlock();
     virtual void endLuminosityBlock();
-    virtual void beginJob();
+    virtual void beginJob(const ACProvenance & provenance);
     virtual void endJob();
 
 protected:

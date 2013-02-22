@@ -6,10 +6,9 @@ LIBRARYDIR		:= $(CMSSW_BASE)/lib/$(SCRAM_ARCH)
 ACLIBS			:= $(shell find $(LIBRARYDIR) -name 'libACDataFormats*' -prune -printf '%f ')
 ACLIBS			:= $(subst lib,-l,$(ACLIBS))
 ACLIBS			:= $(subst .so,,$(ACLIBS))
-BOOST_VERSION	:= 1.44.0-cms3
-BOOST_INCLUDE	:= $(CMS_PATH)/$(SCRAM_ARCH)/external/boost/$(BOOST_VERSION)/include
-BOOST_LIBRARY	:= $(CMS_PATH)/$(SCRAM_ARCH)/external/boost/$(BOOST_VERSION)/lib
-BOOST_LIBNAMES	:= 
+BOOST_INCLUDE	:= $(shell scram tool info boost 2>&1 | grep 'INCLUDE=' | sed -e "s/INCLUDE=//")
+BOOST_LIBRARY	:= $(shell scram tool info boost 2>&1 | grep 'LIBDIR=' | sed -e "s/LIBDIR=//")
+BOOST_LIBNAMES	:= -lboost_filesystem
 endif
 ACTREELIBS		:= -lACHarvester
 ACTREELIBSDIR	:= ../lib

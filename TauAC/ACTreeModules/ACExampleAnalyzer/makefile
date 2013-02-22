@@ -6,12 +6,8 @@ LIBRARYDIR		:= $(CMSSW_BASE)/lib/$(SCRAM_ARCH)
 ACLIBS			:= $(shell find $(LIBRARYDIR) -name 'libACDataFormats*' -prune -printf '%f ')
 ACLIBS			:= $(subst lib,-l,$(ACLIBS))
 ACLIBS			:= $(subst .so,,$(ACLIBS))
-BOOST_VERSION	:= 1.44.0-cms3
-BOOST_INCLUDE	:= $(CMS_PATH)/$(SCRAM_ARCH)/external/boost/$(BOOST_VERSION)/include
-BOOST_LIBRARY	:= $(CMS_PATH)/$(SCRAM_ARCH)/external/boost/$(BOOST_VERSION)/lib
-BOOST_LIBNAMES	:= 
 endif
-ACTREELIBS		:= -lACAnalyzer -lACEvent -lACTreeReader
+ACTREELIBS		:= -lACAnalyzer -lACEvent -lACProvenance -lACTreeReader
 ACTREELIBSDIR	:= ../lib
 
 ROOTCXXFLAGS	:= $(shell $(ROOTSYS)/bin/root-config --cflags) 
@@ -37,7 +33,7 @@ $(ODIR)/%.o: $(SDIR)/%.cc $(DEPS) $(join $(patsubst -l%,../%,$(ACTREELIBS)), $(p
 
 $(TARGET).exe: $(OBJ)
 	@echo " --> $(TARGET): Building executable."
-	$(CXX) $(CXXFLAGS) $(ROOTLIBS) -L$(BOOST_LIBRARY) $(BOOST_LIBNAMES) -L$(LIBRARYDIR) $(ACLIBS) -L$(ACTREELIBSDIR) $(ACTREELIBS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $(ROOTLIBS) -L$(LIBRARYDIR) $(ACLIBS) -L$(ACTREELIBSDIR) $(ACTREELIBS) $^ -o $@
 
 all: $(TARGET).exe
 
