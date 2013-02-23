@@ -185,6 +185,9 @@ def LoadUserParameters(options):
     elif jobName == 'TauPlusX2012A':
         inputPath = 'Run2012A/TauPlusX/AOD/'
         isData = True
+    elif jobName == 'TTJetsSemiL':
+        ##/GluGluToHToTauTau_M-135_7TeV-powheg-pythia6/Fall11-PU_S6_START44_V9B-v1/AODSIM
+        inputPath = 'Summer12_DR53X/TTJets_SemiLeptMGDecays_8TeV-madgraph/AODSIM/PU_S10_START53_V7A_ext-v1/'
 
 
     disk = 'disk1'

@@ -426,6 +426,7 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
             kinematicParticleMatching_->logConversion(reco::GenParticleRef(genCands, index), tmpRef);
 
             // store mother/daughter relation. additional loop needed!!!
+            // WARNING: not all relations can be stored: tau->tau+photon->tauDaughters+photon (here only the photon stores a mother link to the tau)
             if (candidate->motherRefVector().size()==1) {
                 const reco::GenParticleRef & genMother = candidate->motherRef(0);//WARNING!!! mother is stored in the initial collection. not the one I had to use for the matching!!!
                 // ugly: need the references to the initial collection here, due to mother() function
@@ -435,10 +436,13 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
                     unsigned int refIndex = 0;
                     for (reco::GenParticleRefVector::const_iterator candidateRef = genCandRefs->begin(); candidateRef != genCandRefs->end(); ++candidateRef, refIndex++) {
                         if (genMother == *candidateRef){//as not all unstable particles are stored, a mother is not always found!
-                            //printf("for particle with pdgID %i found mother with pdgID %i at refIndex %i. size is %lu!\n", tmpRef->pdgId(), genMother->pdgId(), refIndex, generator_->size());
+                            //printf("for particle with pdgID %i found mother with pdgID %i at refIndex %i. stored generator size is %lu!\n", tmpRef->pdgId(), genMother->pdgId(), refIndex, generator_->size());
                             if (refIndex >= generator_->size()) {
-                                printf("FinalTreeFiller::storeEvent:ERROR! Bad order in generator collection. Mother stored after daughter.\n");
-                                throw 404;
+                                printf("FinalTreeFiller::storeEvent:ERROR! Bad order in generator collection. Mother stored after daughter. Here is the entire decay tree:\n");
+                                for (reco::GenParticleCollection::const_iterator cIter = genCands->begin(); cIter != genCands->end(); ++cIter) {
+                                    std::cout<<"pdgID "<<cIter->pdgId()<<" pt "<<cIter->pt()<<std::endl;
+                                }
+                                break;
                             }    
                             ACGenParticleRef motherRef(generator_->at(refIndex));
                             ACGenParticleConverter * tmpConverter = static_cast<ACGenParticleConverter*>(generator_->back());
@@ -474,6 +478,14 @@ void FinalTreeFiller::storeEvent(const edm::Event& evt) {
                 tmpConverter->setGenDecayRef(ACGenDecayRef(genTauDecays_->back()));
             }
         }
+        //some test cout
+//        for (std::vector<ACGenParticle *>::const_iterator ip = generator_->begin(); ip != generator_->end(); ++ip) {
+//            printf("\t gen particle name=%s, pdgID=%d, status=%i, pt %f", (*ip)->name().c_str(), (*ip)->pdgId(), (*ip)->status(), (*ip)->pt());
+//            if ((*ip)->mother().isValid()) printf("\t mother: gen particle name=%s, pdgID %i, pt %f", (*ip)->mother()->name().c_str(), (*ip)->mother()->pdgId(), (*ip)->mother()->pt());
+//            printf("\t daughters: %lu\n", (*ip)->daughters().size());
+//            if ((*ip)->genDecayRef().isValid()) printf("\t gen tau decay ref name=%s\n", (*ip)->genDecayRef()->name().c_str());
+//        }
+
     }
     
     // set muon collection

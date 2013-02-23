@@ -107,10 +107,24 @@ bool GenSelector::storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollecti
             }
         }
         // store taus
-        if (abs(candIter->pdgId()) == 15 && candIter->numberOfDaughters()>1) {//ignore tau->tau
+        if (abs(candIter->pdgId()) == 15 && candIter->numberOfDaughters()>1) {//ignore tau(status3) -> tau (status2)
             const reco::Candidate *genMother = (*candIter).mother();
             if (!genMother) continue;
-            genMother = ((*candIter).mother())->mother();
+            reco::GenParticleRef tauRef(genCandidate_, index);
+            if (hasDescendent(tauRef, 2, 15)) continue; //ignore rare tau(status2) -> tau (status2). here the last tau is stored (ignores a possible photon)
+            //if (abs(genMother->pdgId()) == 15 && genMother->status() != 3) continue; //ignore rare tau(status2) -> tau (status2). here the second tau is stored (treating the photon as descendant of the tau, but screwes mother/daughter relation between tau and other daughters)
+            //occurs like in TTJetsSemiL found photon radiation where tau is repeatet 3 times:
+            //idx  |    ID -       Name |Stat|  Mo1  Mo2  Da1  Da2 |nMo nDa|    pt
+            //  14 |   -15 -       tau+ |  3 |    9    9   20   20 |  1  1 |  47.685
+            //  20 |   -15 -       tau+ |  2 |   14   14   23   24 |  1  2 |  47.500
+            //  23 |   -15 -       tau+ |  2 |   20   20  134  136 |  1  3 |  47.500
+            //  24 |    22 -      gamma |  1 |   20   20   -1   -1 |  1  0 |   0.000
+            
+            //find the first non-tau mother
+            while (abs(genMother->pdgId()) != 15) {
+                genMother = genMother->mother();
+                if (!genMother) break;
+            }
             if (!genMother) continue;
             if (motherPdgID != 0) {
                 if (particlesRef.size() < 1) {
@@ -122,18 +136,17 @@ bool GenSelector::storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollecti
                     continue;
                 }
             }
-            reco::GenParticleRef tauRef(genCandidate_, index);
-
+            
             std::vector<reco::GenParticleRef> daughtersRef;
             findDescendents(tauRef, daughtersRef, 2, 111);// add unstable pi0's
             findDescendents(tauRef, daughtersRef, 1);//add stable daughters
             //std::cout<<"GenSelector:: found tau from "<<genMother->pdgId()<<" decaying into "<<daughtersRef.size()<<" daughters."<<std::endl;
-            particlesRef.push_back(tauRef);
-            particlesRef.insert(particlesRef.end(), daughtersRef.begin(), daughtersRef.end());
+            particlesRef.push_back(tauRef);//store tau
+            particlesRef.insert(particlesRef.end(), daughtersRef.begin(), daughtersRef.end());//store tau daughters
         }
     }
     if (particlesRef.size()>0) {
-        // printf("GenSelector:: found %lu particles (either taus or their stable descendents).\n", particlesRef.size());
+        //printf("GenSelector:: found %lu particles (either taus or their stable descendents).\n", particlesRef.size());
         cntFound_++;
         gen = true;
 
@@ -154,6 +167,14 @@ bool GenSelector::storeEventAllTau(edm::Event& iEvent, reco::GenParticleCollecti
     }
 
     return gen;
+}
+bool GenSelector::hasDescendent(const reco::GenParticleRef& base, int status, int pdgId) const {
+    const reco::GenParticleRefVector& daughterRefs = base->daughterRefVector();
+    for (reco::GenParticleRefVector::const_iterator idr = daughterRefs.begin(); idr!= daughterRefs.end(); ++idr) {
+        if ((*idr)->status() == status && (!pdgId || abs((*idr)->pdgId()) == pdgId)) return true;
+        else hasDescendent(*idr, status, pdgId);
+    }
+    return false;
 }
 void GenSelector::findDescendents(const reco::GenParticleRef& base, std::vector<reco::GenParticleRef> & descendents, int status, int pdgId) {
     const reco::GenParticleRefVector& daughterRefs = base->daughterRefVector();
