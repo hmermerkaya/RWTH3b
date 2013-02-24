@@ -3,6 +3,7 @@
 
  @author Lars Perchalla & Philip Sauerland
  @date 2010
+Modified by Ian M. Nugent 
  */
 
 #ifndef KinematicTauAnalyzer_h
@@ -73,7 +74,10 @@ private:
     Truth_TauMatch_dPt,Truth_TauMatch_dPz, Truth_TauMatch_dPtvsL, Truth_TauMatch_dEvsL,Truth_TauMatch_dphivsL,Truth_TauMatch_dthetavsL, Truth_TauMatch_dGFAnglevsL, 
     Truth_TauMatch_dGFAngle, TruthTauFlightDirInitial, Truth_TauMatch_dGFInitialAngle,
     Truth_TauMatch_dPhiInitial, Truth_TauMatch_dThetaInitial, Truth_TauMatch_dEInitial,Truth_A1Match_dPtvslength, Truth_A1Match_dphivslength, Truth_A1Match_dthetavslength,
-    Truth_PionMatch_dPtvslength, Truth_PionMatch_dphivslength, Truth_PionMatch_dthetavslength;
+    Truth_PionMatch_dPtvslength, Truth_PionMatch_dphivslength, Truth_PionMatch_dthetavslength,
+    Truth_TauMatch_TrueMaxGFAngle,
+    Truth_TauMatch_TrueGFAngle,
+    Truth_TauMatch_TrueGFAngleoverMaxGFAngle;
 
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  

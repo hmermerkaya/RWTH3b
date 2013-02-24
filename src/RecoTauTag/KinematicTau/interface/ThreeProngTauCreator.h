@@ -3,6 +3,11 @@
 // Package:    KinematicTau
 // Class:      ThreeProngTauCreator
 // 
+/*
+ @author Lars Perchalla, Philip Sauerland
+ @date 2009
+ Modified by Ian M. Nugent
+*/
 
 #ifndef ThreeProngTauCreator_h
 #define ThreeProngTauCreator_h
@@ -38,8 +43,6 @@ public:
 private:
   int  create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau);
   void ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions);
-  void ConfigureNeutrino(SelectedKinematicDecay &KFTau,int ambiguity,LorentzVectorParticle &a1,std::vector<LorentzVectorParticle> &neutrinos);
-  LorentzVectorParticle EstimateNu(LorentzVectorParticle &a1,TLorentzVector &nuGuess);
   bool FitA1(std::vector<TrackParticle> &pions,const reco::Vertex & primaryVertex);
   bool FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex & primaryVertex,unsigned int &ambiguity);
 

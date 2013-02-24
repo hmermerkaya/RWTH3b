@@ -37,10 +37,6 @@ TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, 
     par(TrackParticle::NHelixPar,0)=transTrackBuilder->field()->inInverseGeV(p).z();
     SFpar=ConvertCMSSWTrackPerigeeToSFTrackPar(par);
     SFcov=ErrorMatrixPropagator::PropogateError(&ParticleBuilder::ConvertCMSSWTrackPerigeeToSFTrackPar,par,cov);
-  
-  GlobalPoint pv=transTrk.trajectoryStateClosestToPoint(origin).position();
-  std::cout << "BField Z pv " << transTrackBuilder->field()->inInverseGeV(pv).z()  << " Bz/B "<< transTrackBuilder->field()->inInverseGeV(pv).z()/transTrackBuilder->field()->inInverseGeV(pv).mag() << std::endl;
-  std::cout << "BField Z sv " << transTrackBuilder->field()->inInverseGeV(p).z()  << " Bz/B "<< transTrackBuilder->field()->inInverseGeV(p).z()/transTrackBuilder->field()->inInverseGeV(p).mag() << std::endl;
   }
   ParticleMassHelper PMH;
   double c=track->charge();
