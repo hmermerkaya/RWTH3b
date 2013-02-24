@@ -17,12 +17,15 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   if(pions.size()!=3)return status;
   SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
   TransientVertex secVtx=SVH.InitialSecondaryVertex();
+  std::cout << "Fit start before vertex fit" << std::endl;
   if(!FitA1(pions,/*secVtx*/PV_)){return status;}
+  std::cout << "Fit start after vertex fit" << std::endl;
   A1=mother();
   // Tau fit
   daughters.push_back(A1);
-
+  std::cout << "Fit start before Tau fit" << std::endl;
   if(!FitTau(daughters,PV_,ambiguity)){return status;}
+  std::cout << "Fit start After vertex fit" << std::endl;
   Tau=mother();
   // Fit sequence complete
   status=1;
@@ -59,11 +62,16 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   TauA1NuConstrainedFitter TauA1NU(/*ambiguity*/2,unfitDaughters.at(0),pv,pvcov,PMH.Get_tauMass());
   TauA1NU.SetMaxDelta(0.01);
   TauA1NU.SetNIterMax(1000);
+  std::cout << "before fit" << std::endl;
   TauA1NU.Fit();
+  std::cout << "after fit" << std::endl;
   if (TauA1NU.isConverged()) {
     //////////////////////////////////////////////////////////////////////////////////
+    // debug statments 
+    /*
     std::vector<LorentzVectorParticle> fitDaughters=TauA1NU.GetReFitDaughters();
     LorentzVectorParticle Mother=TauA1NU.GetMother();
+
     for(reco::GenParticleCollection::const_iterator itr = GenPart_->begin(); itr!= GenPart_->end(); ++itr){
       if(fabs(itr->pdgId())==15){
 	const reco::GenParticle mytau=(*itr);
@@ -94,16 +102,17 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
 	}
       }
     }
+    
+    ///////////////////////////////////////////////////
     for(unsigned int i=0;i<fitDaughters.size();i++){
       for(unsigned int j=0;j<unfitDaughters.size();j++){
         fitDaughters.erase (fitDaughters.begin()+i);
         fitDaughters.push_back(unfitDaughters.at(j));
       }
     }
-
+    */
     /////////////////////
-    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),/*TauA1NU.GetReFitDaughters()*/fitDaughters,TauA1NU.GetMother());
-    exit(0);
+    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters()/*fitDaughters*/,TauA1NU.GetMother());
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 
@@ -120,7 +129,7 @@ bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::V
 
   ////////////////////////////////////////////////////////////
   // debug
-
+  /*
   LorentzVectorParticle LV=chi2v.GetMother(pdgid);
   TLorentzVector A1;
   double vx,vy,vz;
@@ -167,8 +176,9 @@ bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::V
   par(LorentzVectorParticle::pz,0)=A1.Pz();
   par(LorentzVectorParticle::m,0)=A1.M();
   LorentzVectorParticle newA1(par,cov, LV.PDGID(),LV.Charge(), LV.BField());
+  */
   ////////////////////////////////////////////////////////////
-  StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),newA1);//chi2v.GetMother(pdgid));
+  StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),chi2v.GetMother(pdgid));  
   return  true;
 }
 
