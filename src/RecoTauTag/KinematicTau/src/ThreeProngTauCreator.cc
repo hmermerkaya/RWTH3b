@@ -59,7 +59,7 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
       pvcov(j,i)=pvCov(i,j);
     }
   }
-  TauA1NuConstrainedFitter TauA1NU(/*ambiguity*/2,unfitDaughters.at(0),pv,pvcov,PMH.Get_tauMass());
+  TauA1NuConstrainedFitter TauA1NU(ambiguity,unfitDaughters.at(0),pv,pvcov,PMH.Get_tauMass());
   TauA1NU.SetMaxDelta(0.01);
   TauA1NU.SetNIterMax(1000);
   std::cout << "before fit" << std::endl;
