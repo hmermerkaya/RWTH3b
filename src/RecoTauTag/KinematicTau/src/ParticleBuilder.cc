@@ -1,4 +1,5 @@
 #include "SimpleFits/FitSoftware/interface/ErrorMatrixPropagator.h"
+#include "SimpleFits/FitSoftware/interface/TrackHelixVertexFitter.h"
 #include "RecoTauTag/KinematicTau/interface/ParticleBuilder.h"
 #include "RecoTauTag/KinematicTau/interface/ParticleMassHelper.h"
 #include "Validation/EventGenerator/interface/PdtPdgMini.h"
@@ -7,7 +8,7 @@
 #include "TrackingTools/TrajectoryParametrization/interface/PerigeeTrajectoryError.h"
 #include <TVector3.h>
 
-TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const GlobalPoint p, bool fromPerigee){
+TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const GlobalPoint p, bool fromPerigee,bool useTrackHelixPropogation){
   // Configured for CMSSW Tracks only
   reco::TransientTrack transTrk=transTrackBuilder->build(track); 
   TMatrixT<double>    par(TrackParticle::NHelixPar+1,1);
@@ -37,6 +38,23 @@ TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, 
     par(TrackParticle::NHelixPar,0)=transTrackBuilder->field()->inInverseGeV(p).z();
     SFpar=ConvertCMSSWTrackPerigeeToSFTrackPar(par);
     SFcov=ErrorMatrixPropagator::PropogateError(&ParticleBuilder::ConvertCMSSWTrackPerigeeToSFTrackPar,par,cov);
+    if(useTrackHelixPropogation){
+      /////////////////////////////////////////////////////////////////
+      // correct dxy dz neglecting material and radiative corrections
+      //std::cout << "Offical CMS dxy " << par(TrackParticle::dxy,0) << " dz " << par(TrackParticle::dz,0) << " " <<  std::endl;
+      double x,y,z,dxy,dz,s,kappa,lambda,phi;
+      TMatrixT<double>    freehelix(TrackHelixVertexFitter::NFreeTrackPar,1);
+      freehelix(TrackHelixVertexFitter::x0,0)=transTrk.initialFreeState().position().x();
+      freehelix(TrackHelixVertexFitter::y0,0)=transTrk.initialFreeState().position().y();
+      freehelix(TrackHelixVertexFitter::z0,0)=transTrk.initialFreeState().position().z();
+      freehelix(TrackHelixVertexFitter::kappa0,0)=SFpar(TrackParticle::kappa,0);
+      freehelix(TrackHelixVertexFitter::lambda0,0)=SFpar(TrackParticle::lambda,0);
+      freehelix(TrackHelixVertexFitter::phi0,0)=SFpar(TrackParticle::phi,0);
+      TrackHelixVertexFitter::Computedxydz(freehelix,0,kappa,lambda,phi,x,y,z,s,dxy,dz);
+      SFpar(TrackParticle::dxy,0) = dxy;
+      SFpar(TrackParticle::dz,0)  = dz;
+      ////////////////////////////////////////////////////////////////
+    }
   }
   ParticleMassHelper PMH;
   double c=track->charge();
