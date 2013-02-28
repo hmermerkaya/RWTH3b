@@ -212,17 +212,19 @@ bool ThreeProngInputSelector_Step1::GetNonTauTracksFromVertex(SelectedKinematicD
   for (reco::TrackCollection::const_iterator iTrk = trackCollection->begin(); iTrk != trackCollection->end(); ++iTrk, idx++) {
     reco::TrackRef tmpRef(trackCollection, idx);
     reco::TrackRef tmpRefForBase=tmpRef;
-    bool isTauTrk = false;
-    bool fromVertex=false;
-    for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
-      if (tmpRef==*tauTrk){isTauTrk = true; break;}
-    }
-    for(std::vector<reco::TrackBaseRef>::const_iterator vtxTrkRef=match.tracks_begin();vtxTrkRef<match.tracks_end();vtxTrkRef++){
-      if(match.trackWeight(*vtxTrkRef)>0 ){
-	if((*vtxTrkRef)==reco::TrackBaseRef(tmpRefForBase)){fromVertex=true; break;}
+    if(tmpRef->pt()<17.0){
+      bool isTauTrk = false;
+      bool fromVertex=false;
+      for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
+	if (tmpRef==*tauTrk){isTauTrk = true; break;}
       }
+      for(std::vector<reco::TrackBaseRef>::const_iterator vtxTrkRef=match.tracks_begin();vtxTrkRef<match.tracks_end();vtxTrkRef++){
+	if(match.trackWeight(*vtxTrkRef)>0 ){
+	  if((*vtxTrkRef)==reco::TrackBaseRef(tmpRefForBase)){fromVertex=true; break;}
+	}
+      }
+      if (!isTauTrk && fromVertex) nonTauTracks.push_back(*iTrk);
     }
-    if (!isTauTrk && fromVertex) nonTauTracks.push_back(*iTrk);
   }
   return true;
 }

@@ -198,7 +198,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   //combine a discriminator of loose quality cuts
   //test if fit could create the final decay tree
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality" << std::endl;
-  if(!fitStatus)return false;
+  if(!fitStatus){std::cout << "Fit Failed" << std::endl; return false;}
   // Configure required paramamters
   reco::PFTau refitPFTau = kinTauCreator->getPFTau();
   std::vector<LorentzVectorParticle> chargedDaughters = kinTauCreator->chargedDaughters();
@@ -226,7 +226,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   //if( chiSquared.probability() < 0.03 )return false;
   // Apply selection cuts
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality vtxSignPVRotSV " << vtxSignPVRotSV << std::endl;
-  if ( vtxSignPVRotSV < 2. )return false; // Sig. of secondary vertex
+  //if ( vtxSignPVRotSV < 2. )return false; // Sig. of secondary vertex
   //    if ( vtxSignPVRotPVRed > 2. )return false; //vertex sig. between modified and initial primary vertex
   //WARNING!!!
   //from now one we assume a tau decay into three pions and neutrino
@@ -235,12 +235,12 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality daughters " << chargedDaughters.size() << " " << neutralDaughters.size() << std::endl;
   //if(chargedDaughters.size()!=1 || neutralDaughters.size()!=1) return false; // number of decay products
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality signal cone " << KFTau.PFTauRef()->signalPFChargedHadrCands().size() << std::endl;
-  if(KFTau.PFTauRef()->signalPFChargedHadrCands().size() > 3 ) return false; //tracks in signal cone of initial pftau candidate
+  //if(KFTau.PFTauRef()->signalPFChargedHadrCands().size() > 3 ) return false; //tracks in signal cone of initial pftau candidate
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality  Ma1 " << a1Mass << std::endl;
-  if(a1Mass < 0.8) return false; //refitPFTau equals refitted a1 in 3-prong case
+  //if(a1Mass < 0.8) return false; //refitPFTau equals refitted a1 in 3-prong case
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality energyTFraction " << energyTFraction << std::endl;
-  if(energyTFraction == -1.) return false; //energy fraction
-  if(energyTFraction < 0 || energyTFraction > 1.) return false;  //energy fraction
+  //if(energyTFraction == -1.) return false; //energy fraction
+  // if(energyTFraction < 0 || energyTFraction > 1.) return false;  //energy fraction
   return true;
 
 

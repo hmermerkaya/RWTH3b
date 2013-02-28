@@ -276,6 +276,8 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
                   Truth_TauMatch_dGFAnglevsMinTrackPt.at(ambiguity).at(idx)->Fill(minPt,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
                   Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt.at(ambiguity).at(idx)->Fill(minPt/maxPt,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  Truth_TauMatch_dGFAnglevsHitFrac.at(ambiguity).at(idx)->Fill(HitFrac,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
+		  Truth_TauMatch_dGFAnglevsVertexchi2.at(ambiguity).at(idx)->Fill(a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),TMath::Prob(KFTau.chi2(ambiguity),3),weight);
+		  std::cout << "Prob " << TMath::Prob(KFTau.chi2(ambiguity),3) << " " << KFTau.chi2(ambiguity) << std::endl;
 		  ///////////////////
 
 		  Truth_TauMatch_TrueMaxGFAngle.at(ambiguity).at(idx)->Fill(MultiProngTauSolver::ThetaGJMax(mc_a1,mc.M()),weight);
@@ -499,7 +501,7 @@ void KinematicTauAnalyzer::beginJob(){
       Truth_TauMatch_dGFAnglevsMinTrackPt.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dGFAnglevsHitFrac.push_back(std::vector<MonitorElement*>());
-
+      Truth_TauMatch_dGFAnglevsVertexchi2.push_back(std::vector<MonitorElement*>());
       for(unsigned int i=0; i<TauDecay::NJAKID;i++){
 	if(doJAKID(i)){
 	  unsigned int idx=Truth_TauMatch_dPhi.at(ambiguity).size();
@@ -584,7 +586,7 @@ void KinematicTauAnalyzer::beginJob(){
 	  Truth_TauMatch_dGFAnglevsMinTrackPt.at(ambiguity).push_back(dbe->book2D("GFResAnglevsMinTrackPt"+tmp+amb,"Truth Tau-Matched d#theta_{GF}^{Lab} vs P_{t}^{min}( "+tmp+amb+")",40,0.0,10.0,64,-0.1,0.1)); Truth_TauMatch_dGFAnglevsMinTrackPt.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (rad)",2); Truth_TauMatch_dGFAnglevsMinTrackPt.at(ambiguity).at(idx)->setAxisTitle("P_{t}^{min} (GeV)",1);
 	  Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt.at(ambiguity).push_back(dbe->book2D("GFResAnglevsMinoverMaxTrackPt"+tmp+amb,"Truth Tau-Matched d#theta_{GF}^{Lab} vs P_{t}^{min}/P_{t}^{max}( "+tmp+amb+")",20,0.0,1.0,64,-0.1,0.1)); Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (rad)",2); Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt.at(ambiguity).at(idx)->setAxisTitle("P_{t}^{min}/P_{t}^{max}",1);
 	  Truth_TauMatch_dGFAnglevsHitFrac.at(ambiguity).push_back(dbe->book2D("GFResAnglevsHitFrac"+tmp+amb,"Truth Tau-Matched d#theta_{GF}^{Lab} vs Hit fraction( "+tmp+amb+")",22,0.0,1.1,64,-0.1,0.1)); Truth_TauMatch_dGFAnglevsHitFrac.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (rad)",2); Truth_TauMatch_dGFAnglevsHitFrac.at(ambiguity).at(idx)->setAxisTitle("HitFrac",1);
-
+	  Truth_TauMatch_dGFAnglevsVertexchi2.at(ambiguity).push_back(dbe->book2D("GFResAnglevsVertexchi2"+tmp+amb,"Truth Tau-Matched d#theta_{GF}^{Lab} vs prob( "+tmp+amb+")",20,0.0,1.0,64,-0.1,0.1)); Truth_TauMatch_dGFAnglevsVertexchi2.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (rad)",2); Truth_TauMatch_dGFAnglevsVertexchi2.at(ambiguity).at(idx)->setAxisTitle("Vertex Probability",1);
 
 	} 
       }

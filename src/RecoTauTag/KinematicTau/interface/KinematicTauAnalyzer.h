@@ -155,10 +155,10 @@ private:
     Truth_TauMatch_dGFAnglevsMinTrackPt,
     Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt,
     Truth_TauMatch_dGFAnglevsHitFrac,
+    Truth_TauMatch_dGFAnglevsVertexchi2,
     PullTauPx,
     PullTauPy,
     PullTauPz;
-
 
 
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
