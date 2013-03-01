@@ -35,24 +35,28 @@ TrackParticle ParticleBuilder::CreateTrackParticle(const reco::TrackRef &track, 
         cov(i,j)=transTrk.trajectoryStateClosestToPoint(origin).perigeeError().covarianceMatrix()(i,j);
       }
     }
+    std::cout << "Offical CMS dxy " << par(TrackParticle::dxy,0) << " dz " << par(TrackParticle::dz,0) << " kappa " <<  track->qoverp() << " " << par(reco::TrackBase::i_qoverp,0) <<  std::endl;
     par(TrackParticle::NHelixPar,0)=transTrackBuilder->field()->inInverseGeV(p).z();
     SFpar=ConvertCMSSWTrackPerigeeToSFTrackPar(par);
     SFcov=ErrorMatrixPropagator::PropogateError(&ParticleBuilder::ConvertCMSSWTrackPerigeeToSFTrackPar,par,cov);
     if(useTrackHelixPropogation){
       /////////////////////////////////////////////////////////////////
       // correct dxy dz neglecting material and radiative corrections
-      //std::cout << "Offical CMS dxy " << par(TrackParticle::dxy,0) << " dz " << par(TrackParticle::dz,0) << " " <<  std::endl;
+      //std::cout << "Offical CMS dxy " << par(TrackParticle::dxy,0) << " dz " << par(TrackParticle::dz,0) << " kappa " <<  track->qoverp() << " " << par(reco::TrackBase::i_qoverp,0) <<  std::endl;
       double x,y,z,dxy,dz,s,kappa,lambda,phi;
       TMatrixT<double>    freehelix(TrackHelixVertexFitter::NFreeTrackPar,1);
       freehelix(TrackHelixVertexFitter::x0,0)=transTrk.initialFreeState().position().x();
       freehelix(TrackHelixVertexFitter::y0,0)=transTrk.initialFreeState().position().y();
       freehelix(TrackHelixVertexFitter::z0,0)=transTrk.initialFreeState().position().z();
+      //std::cout << "inital free state: " << transTrk.initialFreeState().position().x() << " " << transTrk.initialFreeState().position().y() << " " << transTrk.initialFreeState().position().z() << std::endl;
+      //std::cout << "vertex " << track->referencePoint().x() << " " << track->referencePoint().y() << " " << track->referencePoint().z() << std::endl;
       freehelix(TrackHelixVertexFitter::kappa0,0)=SFpar(TrackParticle::kappa,0);
       freehelix(TrackHelixVertexFitter::lambda0,0)=SFpar(TrackParticle::lambda,0);
       freehelix(TrackHelixVertexFitter::phi0,0)=SFpar(TrackParticle::phi,0);
       TrackHelixVertexFitter::Computedxydz(freehelix,0,kappa,lambda,phi,x,y,z,s,dxy,dz);
       SFpar(TrackParticle::dxy,0) = dxy;
       SFpar(TrackParticle::dz,0)  = dz;
+      //exit(0);
       ////////////////////////////////////////////////////////////////
     }
   }
