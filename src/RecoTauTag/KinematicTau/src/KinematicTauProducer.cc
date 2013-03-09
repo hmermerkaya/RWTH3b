@@ -11,6 +11,7 @@
 #include "CommonTools/Statistics/interface/ChiSquared.h"
 #include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
 #include "RecoTauTag/KinematicTau/interface/ParticleBuilder.h"
+#include "SimpleFits/FitSoftware/interface/MultiProngTauSolver.h"
 
 KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
@@ -169,7 +170,7 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 
 bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTau,edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles){
   bool hasasusccessfullfit=false;
-  for(unsigned int ambiguity=0; ambiguity<SelectedKinematicDecay::NAmbiguity;ambiguity++){
+  for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
     FitSequencer *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
     int fitStatus = kinTauCreator->create(ambiguity,KFTau);
     edm::LogInfo("KinematicTauProducer") <<"KinematicTauProducer::select: fitstatus " << fitStatus ;
@@ -223,7 +224,7 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
 
   ChiSquared chiSquared(kinTauCreator->chi2(), kinTauCreator->ndf());
 
-  //if( chiSquared.probability() < 0.03 )return false;
+  if( chiSquared.probability() < 0.01 )return false;
   // Apply selection cuts
   std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality vtxSignPVRotSV " << vtxSignPVRotSV << std::endl;
   //if ( vtxSignPVRotSV < 2. )return false; // Sig. of secondary vertex

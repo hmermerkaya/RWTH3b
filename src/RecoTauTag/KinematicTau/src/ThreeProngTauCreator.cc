@@ -38,7 +38,7 @@ void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::ve
   GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
   std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
-    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,pv,true,false));
+    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,pv,true,true));
   }
 }
 
