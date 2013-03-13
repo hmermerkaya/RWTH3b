@@ -36,7 +36,6 @@
 #include "CommonTools/RecoAlgos/src/TrackToCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
-#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "CommonTools/Statistics/interface/ChiSquared.h"
 #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
@@ -72,6 +71,7 @@ private:
                                        TVector3 &tauFlghtDirNoCorr,
                                        reco::Vertex &pVtx, TLorentzVector &lorentzA1,
                                        TVector3 &tauFlghtDir,double &theta0, double &thetaMax);
+
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // BDT functions
@@ -128,9 +128,6 @@ private:
   std::vector<double> BDT_energyTFraction;
   std::vector<double> BDT_chiSquared;
   std::vector<double> BDT_iterations;      
-
-
-
 
 };
 #endif

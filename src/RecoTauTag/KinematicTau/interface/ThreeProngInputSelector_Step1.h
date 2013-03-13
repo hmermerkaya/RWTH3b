@@ -66,7 +66,7 @@ private:
   edm::InputTag trkCollectionTag_,vtxtrackCollectionTag_, primVtx_;
   edm::ProductID trkCollectionID_;
   unsigned int minTracks_, minTau_, nTauPerVtx_, cnt_, cntFound_;
-  double minTauPt_;
+  double minTauPt_,TauEtaCut_;
   std::vector<std::string> TauVtxList_;
   ParticleMassHelper PMH;
 

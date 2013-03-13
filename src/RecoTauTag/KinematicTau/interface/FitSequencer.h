@@ -25,8 +25,8 @@ public:
   virtual int create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau) = 0;
 
   virtual void  GetSelectedKinematicParticleList(unsigned int &ambiguity,SelectedKinematicParticleCollection &refitTauDecay);
-  virtual float ndf(){ return NDF_.at(0);}//double x=0; for(unsigned int i=0;i<NDF_.size() ;i++)  x+=NDF_.at(i);   return x;}
-  virtual float chi2(){ return Chi2_.at(0);}//double x=0; for(unsigned int i=0;i<Chi2_.size();i++)  x+=Chi2_.at(i);  return x;}
+  virtual float ndf(unsigned int i){if(i>=NDF_.size())return 999; return NDF_.at(i);}
+  virtual float chi2(unsigned int i){ if(i>=Chi2_.size()) return 999; return Chi2_.at(i);}
   virtual float CSum(){ double x=0; for(unsigned int i=0;i<cSum_.size();i++)  x+=cSum_.at(i);  return x;}
   virtual float Niter(){double x=0; for(unsigned int i=0;i<Niter_.size();i++) x+=Niter_.at(i); return x;}
   virtual float NConstraints(){double x=0; for(unsigned int i=0;i<NConstraints_.size();i++) x+=NConstraints_.at(i); return x;}

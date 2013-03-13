@@ -15,9 +15,6 @@
 <use   name="FWCore/ServiceRegistry"/>
 <use   name="Validation/EventGenerator"/> 
 <use   name="SimpleFits/FitSoftware"/>
-<use   name="TMVA"/>
 <use   name="rootcore"/>
 <use   name="roottmva"/>
-<use   name="boost"/>
-<use   name="zlib"/> 
 <flags   EDM_PLUGIN="1"/>

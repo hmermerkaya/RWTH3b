@@ -27,7 +27,7 @@ Modified by Ian M. Nugent
 #include <map>
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
-
+#include "TMatrixT.h"
 
 class KinematicTauAnalyzer : public edm::EDAnalyzer {
  public:
@@ -41,7 +41,7 @@ private:
 
   virtual bool doJAKID(unsigned int i);
   virtual bool isTruthTauInAcceptance(const reco::GenParticle &cand);
-  
+
   std::vector<std::string> discriminators_;
   edm::InputTag KinematicFitTauTag_,gensrc_,GenEventInfo_;
   float TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
@@ -100,7 +100,12 @@ private:
     TauFlightDir, 
     TauFlightDirInitial,
     GFAngleInitial,
-    GFAngle;
+    GFAngle,
+    chi2Vtx,
+    ndfVtx,
+    chi2probVtx,
+    FlightLength,
+    FlightLengthSig;
 
   std::vector<std::vector<MonitorElement*> >  
     Truth_TauMatch_dPhi, 
@@ -122,13 +127,19 @@ private:
     TruthVtxZ, 
     TruthSecVtxX, 
     TruthSecVtxY, 
-    TruthSecVtxZ, 
+    TruthSecVtxZ,
+    TruthSecVtxXp,
+    TruthSecVtxYp,
+    TruthSecVtxZp,
     PullVtxX, 
     PullVtxY, 
     PullVtxZ, 
     PullSecVtxX, 
     PullSecVtxY, 
     PullSecVtxZ,
+    PullSecVtxXp,
+    PullSecVtxYp,
+    PullSecVtxZp,
     TruthPVtxSig, 
     TruthSecVtxSig, 
     TruthTauFlightDir, 
@@ -138,15 +149,18 @@ private:
     Truth_TauMatch_dPtvsL, 
     Truth_TauMatch_dEvsL,
     Truth_TauMatch_dphivsL,
-    Truth_TauMatch_dthetavsL, 
+    Truth_TauMatch_dthetavsL,
+    Truth_TauMatch_reldPtvsL, 
     Truth_TauMatch_dGFAnglevsL, 
     Truth_TauMatch_dGFAngle, 
     Truth_A1Match_dPtvslength, 
     Truth_A1Match_dphivslength, 
     Truth_A1Match_dthetavslength,
+    Truth_A1Match_reldPtvslength,
     Truth_PionMatch_dPtvslength, 
     Truth_PionMatch_dphivslength, 
     Truth_PionMatch_dthetavslength,
+    Truth_PionMatch_reldPtvslength,
     Truth_TauMatch_TrueMaxGFAngle,
     Truth_TauMatch_TrueGFAngle,
     Truth_TauMatch_TrueGFAngleoverMaxGFAngle,

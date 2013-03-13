@@ -8,7 +8,8 @@ ThreeProngInputSelector_Step1::ThreeProngInputSelector_Step1(const edm::Paramete
   minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),                    // Only tau candidates with more/equal than minTracks are selected
   minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),              // Filter returns true if more/equal than minTau_ taus were selected
   nTauPerVtx_(iConfig.getUntrackedParameter<unsigned int>("nTauPerVtx", 0)),         // Number of taus per vertex: 0=no requirement; 1 = 1 tau per vertex only; 2 = 2 taus per vertex only
-  minTauPt_( iConfig.getUntrackedParameter<double>("minTauPt", 0.) ),               // Ignore pftaus below this pt threshold
+  minTauPt_( iConfig.getUntrackedParameter<double>("minTauPt", 10.) ),               // Ignore pftaus below this pt threshold
+  TauEtaCut_( iConfig.getUntrackedParameter<double>("TauEtaCut", 2.0) ),
   TauVtxList_( iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks") )
 {
   produces<std::vector<std::vector<SelectedKinematicDecay> > >("PreKinematicDecaysStep1");
@@ -72,7 +73,8 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
     for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
       reco::PFTauRef thePFTau(inputCollection, iPFTau);
       // filter candidates
-      if (thePFTau->pt() < minTauPt_) continue;
+      if(thePFTau->pt() < minTauPt_) continue;
+      if(fabs(thePFTau->eta())>TauEtaCut_)continue;
       reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
       if(tauDaughters.size()>=minTracks_){
 	// Add KF Taus Here

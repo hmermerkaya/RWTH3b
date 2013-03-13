@@ -32,7 +32,7 @@ bool Tau_JAKID_Filter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	unsigned int jak_id, TauBitMask;
 	TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
 	for(unsigned int i=0;i<JAKID_.size() && i<nprongs_.size();i++){
-	  std::cout << "JAKID " << JAKID_.at(i) << " " << jak_id << " " << nprongs_.at(i) << " " << TD.nProng(TauBitMask) << std::endl;
+	  //std::cout << "JAKID " << JAKID_.at(i) << " " << jak_id << " " << nprongs_.at(i) << " " << TD.nProng(TauBitMask) << std::endl;
 	  if(JAKID_.at(i)==(int)jak_id && (int)TD.nProng(TauBitMask)==nprongs_.at(i)){ filterValue=true; break;}
 	}
 	if(filterValue) break;
