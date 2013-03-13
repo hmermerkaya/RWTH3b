@@ -41,9 +41,9 @@ public:
   TLorentzVector                    Initial_a1_p4(){return a1_p4_;}
   std::vector<TLorentzVector>       Initial_pions(){return pions_;}
 
-private:
-  bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
+  static bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx,bool useAdaptive=false);
 
+private:
   bool hasSecondaryVertex_;
   TransientVertex tmpVtx_;
   std::vector<reco::TransientTrack> trks_;

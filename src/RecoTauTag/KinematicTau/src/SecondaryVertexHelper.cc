@@ -40,14 +40,11 @@ SecondaryVertexHelper::~SecondaryVertexHelper(){
 
 }
 
-
-
-bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx){
+bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx,bool useAdaptive){
  if(trkVct.size()<2){
     LogTrace("ThreeProngTauCreator")<<"Can't check SecVertex: Only "<<trkVct.size()<<" Tracks.";
     return false;
   }else{
-    bool useAdaptive = false;
     if(useAdaptive){
       AdaptiveVertexFitter avf;
       avf.setWeightThreshold(0.1); //weight per track. allow almost every fit, else --> exception                                                                                                                                            

@@ -80,8 +80,8 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	const TLorentzVector Nu_initial=KFTau.InitialNeutrinoGuess(ambiguity);
 	const std::vector<TLorentzVector> Pions_initial=KFTau.InitialPions();
 	
-	reco::Vertex Pvtx=KFTau.PrimaryVertexReFitAndRotated();
-	reco::Vertex Pvtx_initial=KFTau.InitialPrimaryVertexReFitAndRotated();
+	reco::Vertex Pvtx=KFTau.InitialPrimaryVertexReFit();
+	reco::Vertex Pvtx_initial=KFTau.InitialPrimaryVertexReFit();
 	
 	reco::Vertex Secvtx=KFTau.SecondaryVertex(ambiguity);
 	reco::Vertex Secvtx_initial=KFTau.InitialSecondaryVertex();
@@ -143,9 +143,14 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	mincsum.at(ambiguity)->Fill(KFTau.mincsum(ambiguity),weight);
 	chi2prob.at(ambiguity)->Fill(KFTau.chi2prob(ambiguity),weight);
 
-	chi2Vtx.at(ambiguity)->Fill(KFTau.chi2Vtx(),weight);
-	ndfVtx.at(ambiguity)->Fill(KFTau.ndfVtx(),weight);
-	chi2probVtx.at(ambiguity)->Fill(TMath::Prob(KFTau.chi2Vtx(),KFTau.ndfVtx()),weight);
+        chi2Vtx.at(ambiguity)->Fill(Pvtx.chi2(),weight);
+        ndfVtx.at(ambiguity)->Fill(Pvtx.ndof(),weight);
+        chi2probVtx.at(ambiguity)->Fill(TMath::Prob(Pvtx.chi2(),Pvtx.ndof()),weight);
+
+	chi2SVtx.at(ambiguity)->Fill(KFTau.chi2Vtx(),weight);
+	ndfSVtx.at(ambiguity)->Fill(KFTau.ndfVtx(),weight);
+	chi2probSVtx.at(ambiguity)->Fill(TMath::Prob(KFTau.chi2Vtx(),KFTau.ndfVtx()),weight);
+
 	FlightLength.at(ambiguity)->Fill(KFTau.FlightLength(),weight);
 	FlightLengthSig.at(ambiguity)->Fill(KFTau.FlightLengthSig(),weight);	
 
@@ -465,9 +470,13 @@ void KinematicTauAnalyzer::beginJob(){
       GFAngleInitial.push_back(dbe->book1D("GFAngleInitial"+amb,"|#theta_{GF}^{Lab,Initial}|"+amb,100,0.0,0.5));  GFAngleInitial.at(ambiguity)->setAxisTitle("|#theta_{GF}^{Lab,Initial}| (rad)");
       GFAngle.push_back(dbe->book1D("GFAngleKF"+amb,"|#theta_{GF}^{Lab,KF}|"+amb,100,0.0,0.5));  GFAngle.at(ambiguity)->setAxisTitle("|#theta_{GF}^{KF,Initial}| (rad)");
 
-      chi2Vtx.push_back(dbe->book1D("chi2Vtx"+amb,"Vertex chi2"+amb,100,0.0,10.0));  chi2Vtx.at(ambiguity)->setAxisTitle("Vertex #chi^{2}");
-      ndfVtx.push_back(dbe->book1D("ndfVtx"+amb,"Vertex ndf"+amb,51,-0.5,50.5));    ndfVtx.at(ambiguity)->setAxisTitle("Vertex N.D.F");
-      chi2probVtx.push_back(dbe->book1D("chi2probVtx"+amb,"Vertex chi2prob"+amb,100,0.0,1.0));  chi2probVtx.at(ambiguity)->setAxisTitle("Vertex #chi^{2} Probabilty");
+
+      chi2SVtx.push_back(dbe->book1D("chi2SVtx"+amb,"Secondary Vertex chi2"+amb,100,0.0,10.0));  chi2SVtx.at(ambiguity)->setAxisTitle("Secondary Vertex #chi^{2}");
+      ndfSVtx.push_back(dbe->book1D("ndfSVtx"+amb,"Secondary Vertex ndf"+amb,51,-0.5,50.5));    ndfSVtx.at(ambiguity)->setAxisTitle("Secondary Vertex N.D.F");
+      chi2probSVtx.push_back(dbe->book1D("chi2probSVtx"+amb,"Secondary Vertex chi2prob"+amb,100,0.0,1.0));  chi2probSVtx.at(ambiguity)->setAxisTitle("Secondary Vertex #chi^{2} Probabilty");
+      chi2Vtx.push_back(dbe->book1D("chi2PVtx"+amb,"Primary Vertex chi2"+amb,100,0.0,10.0));  chi2Vtx.at(ambiguity)->setAxisTitle("Primary Vertex #chi^{2}");
+      ndfVtx.push_back(dbe->book1D("ndfPVtx"+amb,"Primary Vertex ndf"+amb,51,-0.5,50.5));    ndfVtx.at(ambiguity)->setAxisTitle("Primary Vertex N.D.F");
+      chi2probVtx.push_back(dbe->book1D("chi2probPVtx"+amb,"Primary Vertex chi2prob"+amb,100,0.0,1.0));  chi2probVtx.at(ambiguity)->setAxisTitle("Primary Vertex #chi^{2} Probabilty");
       FlightLength.push_back(dbe->book1D("FlightLength"+amb,"Flight-Length "+amb,100,0.0,5.0));  FlightLength.at(ambiguity)->setAxisTitle("Flight-Length (cm)");
       FlightLengthSig.push_back(dbe->book1D("FlightLengthSig"+amb,"Flight-Length Significance "+amb,200,0.0,50.0));  FlightLengthSig.at(ambiguity)->setAxisTitle("Flight-Length Significance");
 
@@ -594,9 +603,9 @@ void KinematicTauAnalyzer::beginJob(){
 	  Truth_PionMatch_reldPtvslength.at(ambiguity).push_back(dbe->book2D("Truth_PionMatch_reldPtvslength"+tmp+amb,"Truth Pion Tau-Matchd Relative dP_{t}^{Lab}vs L( "+tmp+amb+")",100,0.0,5.0,100,-5,5)); Truth_PionMatch_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("P_{T}/P_{T}^{Truth}-1 (GeV)",2); Truth_PionMatch_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
 
 
-	  TruthVtxX.at(ambiguity).push_back(dbe->book1D("TruthPVtxX"+tmp+amb,"Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} "+amb,100 ,-0.1,0.1)); axis="Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} (cm)"; TruthVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-	  TruthVtxY.at(ambiguity).push_back(dbe->book1D("TruthPVtxY"+tmp+amb,"Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} (cm)"; TruthVtxY.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-	  TruthVtxZ.at(ambiguity).push_back(dbe->book1D("TruthPVtxZ"+tmp+amb,"Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} (cm)"; TruthVtxZ.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  TruthVtxX.at(ambiguity).push_back(dbe->book1D("TruthPVtxX"+tmp+amb,"Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} "+amb,100 ,-0.01,0.01)); axis="Vtx_{x,"+tmp+"}^{Prime,KF}-Vtx_{x}^{Prime,Truth} (cm)"; TruthVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  TruthVtxY.at(ambiguity).push_back(dbe->book1D("TruthPVtxY"+tmp+amb,"Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} "+amb,100 ,-0.01,0.01));axis="Vtx_{y,"+tmp+"}^{Prime,KF}-Vtx_{y}^{Prime,Truth} (cm)"; TruthVtxY.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  TruthVtxZ.at(ambiguity).push_back(dbe->book1D("TruthPVtxZ"+tmp+amb,"Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} "+amb,100 ,-0.01,0.01));axis="Vtx_{z,"+tmp+"}^{Prime,KF}-Vtx_{z}^{Prime,Truth} (cm)"; TruthVtxZ.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 
 
 	  TruthSecVtxX.at(ambiguity).push_back(dbe->book1D("TruthSecVtxX"+tmp+amb,"Vtx_{x,"+tmp+"}^{Sec.,KF}-Vtx_{x}^{Sec.,Truth} "+amb,100 ,-0.1,0.1));axis="Vtx_{x,"+tmp+"}^{Sec.,KF}-Vtx_{x}^{Sec.,Truth} (cm)"; TruthSecVtxX.at(ambiguity).at(idx)->setAxisTitle(axis.Data());

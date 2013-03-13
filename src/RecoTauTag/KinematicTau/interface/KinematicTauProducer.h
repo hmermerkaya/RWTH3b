@@ -72,7 +72,7 @@ private:
                                        reco::Vertex &pVtx, TLorentzVector &lorentzA1,
                                        TVector3 &tauFlghtDir,double &theta0, double &thetaMax);
 
-
+  bool GetNonTauTracksFromVertex(SelectedKinematicDecay cand,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks);
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // BDT functions
   void fillTree(std::vector<double> &QCVar);
@@ -82,8 +82,7 @@ private:
   const edm::ParameterSet fitParameters_;
   edm::Event * iEvent_;
   edm::InputTag primVtxTag_,KinematicTauCandTag_;
-  std::vector<std::string> VertexTags_;
-  std::vector<std::string> TauVtxList_;
+  edm::InputTag trkCollectionTag_;
   unsigned int cnt_, cntFound_;
   edm::InputTag gensrc_;
   unsigned int minTau_, minVtxTracks_;

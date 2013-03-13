@@ -18,8 +18,7 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
   primVtxTag_(iConfig.getParameter<edm::InputTag>("primVtx")),
   KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
-  VertexTags_(iConfig.getUntrackedParameter< std::vector<std::string> >("VertexTags")),
-  TauVtxList_(iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks")),
+  trkCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauDaughterTracks" ) ),
   gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
   minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)),
   etacut_(iConfig.getUntrackedParameter<double>("etacut",2.1)),
@@ -114,19 +113,18 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
         SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
         if(SVH.hasSecondaryVertex()){
-	  //std::cout << "Kinematic Fit " << i << " " << j << " has SV" << std::endl;
-          TString vertexName=KTau.PrimaryVertexReFitCollectionTag();
-          TString VTag;
-          for(unsigned int v=0;v<VertexTags_.size() && VertexTags_.size()==TauVtxList_.size();v++){
-            if(vertexName==TauVtxList_.at(v)) VTag=VertexTags_.at(v);
-          }
-	  edm::Handle<reco::VertexCollection > CurrentTauPrimaryVtx;
-          iEvent_->getByLabel(edm::InputTag(VTag.Data()),CurrentTauPrimaryVtx);
-	  //std::cout << "Kinematic Fit check PV " << std::endl;
-          if(!CurrentTauPrimaryVtx.isValid()) continue;
-          if(CurrentTauPrimaryVtx->size()==0) continue;
-	  //std::cout << "Kinematic Fit has PV " << std::endl;
-	  reco::Vertex primaryVertexReFit=CurrentTauPrimaryVtx->front();
+	  //////////////////////////////////////////////////////
+	  //Rebuild primary vertex
+	  reco::TrackCollection NonTauTracksLists_;
+	  GetNonTauTracksFromVertex(KinematicTauCandidate->at(i).at(j),trkCollectionTag_,NonTauTracksLists_);
+	  TransientVertex tmpVtx_;
+	  std::vector<reco::TransientTrack> trks_;
+	  for (reco::TrackCollection::iterator iter=NonTauTracksLists_.begin(); iter!=NonTauTracksLists_.end(); ++iter){
+	    trks_.push_back(transTrackBuilder_->build(*iter));
+	  }
+	  if (!SecondaryVertexHelper::checkSecVtx(trks_,tmpVtx_,true))continue;
+	  reco::Vertex primaryVertexReFit=tmpVtx_;
+	  //////////////////////////////////////////////////////
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
           TVector3 tauFlghtDirNoCorr;
           TVector3 tauFlghtDir;
@@ -224,8 +222,10 @@ bool KinematicTauProducer::dicriminatorByKinematicFitQuality(unsigned int &ambig
   KFTau.SetQualityCriteria(ambiguity,vtxSignPVRotSV, vtxSignPVRotPVRed, a1Mass, energyTFraction);
 
   ChiSquared chiSquared(kinTauCreator->chi2(0), kinTauCreator->ndf(0));
+  if(chiSquared.probability()<0.05)return false;
 
-  if( chiSquared.probability() < 0.05 )return false;
+  ChiSquared PvtchiSquared(primaryVtx.chi2(),primaryVtx.ndof());
+  if(PvtchiSquared.probability()<0.05)return false;
   // Apply selection cuts
   //std::cout << "KinematicTauProducer::dicriminatorByKinematicFitQuality vtxSignPVRotSV " << vtxSignPVRotSV << std::endl;
   //if ( vtxSignPVRotSV < 2. )return false; // Sig. of secondary vertex
@@ -385,6 +385,40 @@ double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,FitSequence
   return MvaOut;
 
 }
+
+bool KinematicTauProducer::GetNonTauTracksFromVertex(SelectedKinematicDecay cand,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks){
+  const std::vector<reco::TrackRef> tautracks =cand.InitialTrackTriplet();
+  const reco::Vertex match=cand.InitialPrimaryVertex();
+  // Get track list
+  edm::Handle<reco::TrackCollection> trackCollection;
+  iEvent_->getByLabel(trackCollectionTag_,trackCollection);
+  if (!trackCollection.isValid()) {
+    edm::LogError("KinematicTauProducer") << "KinematicTauProducer::GetNonTauTracksFromVertex: no track collection found!";
+    return false;
+  }
+  // remove tau tracks and only tracks associated with the vertex
+  unsigned int idx = 0;
+  for (reco::TrackCollection::const_iterator iTrk = trackCollection->begin(); iTrk != trackCollection->end(); ++iTrk, idx++) {
+    reco::TrackRef tmpRef(trackCollection, idx);
+    reco::TrackRef tmpRefForBase=tmpRef;
+    if(tmpRef->pt()<17.0){
+      bool isTauTrk = false;
+      bool fromVertex=false;
+      for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
+        if (tmpRef==*tauTrk){isTauTrk = true; break;}
+      }
+      for(std::vector<reco::TrackBaseRef>::const_iterator vtxTrkRef=match.tracks_begin();vtxTrkRef<match.tracks_end();vtxTrkRef++){
+        if(match.trackWeight(*vtxTrkRef)>0 ){
+          if((*vtxTrkRef)==reco::TrackBaseRef(tmpRefForBase)){fromVertex=true; break;}
+        }
+      }
+      if (!isTauTrk && fromVertex) nonTauTracks.push_back(*iTrk);
+    }
+  }
+  return true;
+}
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauProducer);

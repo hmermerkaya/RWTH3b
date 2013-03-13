@@ -104,6 +104,9 @@ private:
     chi2Vtx,
     ndfVtx,
     chi2probVtx,
+    chi2SVtx,
+    ndfSVtx,
+    chi2probSVtx,
     FlightLength,
     FlightLengthSig;
 
