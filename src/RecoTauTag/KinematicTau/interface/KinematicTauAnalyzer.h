@@ -176,7 +176,12 @@ private:
     Truth_TauMatch_dGFAnglevsVertexchi2,
     PullTauPx,
     PullTauPy,
-    PullTauPz;
+    PullTauPz,
+    Truth_TauMatch_dPtvsTheta,
+    Truth_TauMatch_dEvsTheta,
+    Truth_TauMatch_dthetavsTheta,
+    Truth_TauMatch_reldPtvsTheta,
+    Truth_TauMatch_dphivsTheta;
 
 
   std::map<unsigned int,unsigned int> JAKIDtoIndex;

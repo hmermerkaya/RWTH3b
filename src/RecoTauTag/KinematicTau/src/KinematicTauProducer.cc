@@ -280,7 +280,7 @@ int KinematicTauProducer::saveKinParticles(unsigned int &ambiguity,FitSequencer 
   TMatrixTSym<double> LengthpCov=ErrorMatrixPropagator::PropogateError(&MultiProngTauSolver::RotateToTauFrame,Length,LengthCov);
   double LengthSig=999;
   if(LengthpCov(2,2)!=0)LengthSig=Length(2,0)/LengthpCov(2,2);
-  KFTau.SetSecVtxInfo(kinTauCreator->chi2(1), kinTauCreator->ndf(1), Length(2,0), LengthSig);
+  KFTau.SetSecVtxInfo(kinTauCreator->chi2(0), kinTauCreator->ndf(0), Length(2,0), LengthSig);
   return refitTauDecay.size();
 }
 
