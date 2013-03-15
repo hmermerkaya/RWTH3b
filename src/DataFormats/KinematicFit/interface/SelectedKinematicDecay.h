@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.23 2012/09/03 08:59:51 inugent Exp $
+// $Id: SelectedKinematicDecay.h,v 1.24 2012/12/09 15:36:23 cherepan Exp $
 //
 //
 
@@ -34,7 +34,7 @@
 class SelectedKinematicDecay {
  public:
   enum TauType{Undefined=0,ThreePion,ThreePionAndPi0};
-  enum FitSequence{ZeroAmbiguitySolution=0,PlusSolution,MinusSolution,NAmbiguity};
+  enum FitSequence{ZeroAmbiguitySolution=0,MinusSolution,PlusSolution,NAmbiguity};
 
   SelectedKinematicDecay();
   SelectedKinematicDecay(unsigned int tauDecayMode, const reco::PFTauRef &tauRefOrig, std::vector<reco::TrackRef> &TrackTriplet, 
@@ -121,10 +121,20 @@ class SelectedKinematicDecay {
   const double a1Mass(unsigned int ambiguity=ZeroAmbiguitySolution) const;
   const double chi2prob(unsigned int ambiguity=ZeroAmbiguitySolution) const;       
   const double energyTFraction(unsigned int ambiguity=ZeroAmbiguitySolution) const;
-  
+  const float  chi2Vtx() const{return vtxchi2_;}
+  const float  ndfVtx() const{return vtxndf_;}
+  const float  FlightLength()const {return FlightLength_;}
+  const float  FlightLengthSig()const {return FlightLengthSig_;}
 
+  void SetSecVtxInfo(double thechi2, double thendf, double fltlength, double fltlengthsig){
+    vtxchi2_=thechi2; 
+    vtxndf_=thendf;
+    FlightLength_=fltlength;
+    FlightLengthSig_=fltlengthsig;
+  }
 
  private:
+  double vtxchi2_,vtxndf_,FlightLength_,FlightLengthSig_;
   // internal variables
   unsigned int                 tauDecayMode_;
   reco::PFTauRef               PFTauRefOrig_;
