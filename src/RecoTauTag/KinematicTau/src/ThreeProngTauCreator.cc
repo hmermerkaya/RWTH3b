@@ -43,8 +43,10 @@ void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::ve
   GlobalPoint cptpv;
   GlobalPoint cptsv;
   for(unsigned int i = 0; i!=transTrkVect.size();i++){
+    cptsv=transTrkVect.at(i).trajectoryStateClosestToPoint(sv).position();
     std::cout << "transTrkVect tracks Mometum [px= " << transTrkVect.at(i).track().px() << " py= " << transTrkVect.at(i).track().py() << " pz= " << transTrkVect.at(i).track().pz() << "] Reference Point [vx= "
-              << transTrkVect.at(i).track().vx() << " vy= " <<transTrkVect.at(i).track().vy() << " vz= " << transTrkVect.at(i).track().vz() << "]" << std::endl;
+              << transTrkVect.at(i).track().vx() << " vy= " <<transTrkVect.at(i).track().vy() << " vz= " << transTrkVect.at(i).track().vz() << "]" << " Trajectory State Closest To SV  [vx= "
+	      << cptsv.x() << " vy= " << cptsv.y() << " vz= " << cptsv.z() << "]" << std::endl;
   }
   std::cout << "Kalman Fit Vertex [x= " << secVtx.position().x() << " y= " << secVtx.position().y() << " z= " << secVtx.position().z() << "]" << std::endl; 
   /////////////
