@@ -40,7 +40,7 @@ SecondaryVertexHelper::~SecondaryVertexHelper(){
 
 }
 
-bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx,bool useAdaptive){
+bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx,bool useAdaptive,reco::BeamSpot *beamSpot){
  if(trkVct.size()<2){
     LogTrace("ThreeProngTauCreator")<<"Can't check SecVertex: Only "<<trkVct.size()<<" Tracks.";
     return false;
@@ -49,7 +49,8 @@ bool SecondaryVertexHelper::checkSecVtx(std::vector<reco::TransientTrack> &trkVc
       AdaptiveVertexFitter avf;
       avf.setWeightThreshold(0.1); //weight per track. allow almost every fit, else --> exception                                                                                                                                            
       try{
-        transVtx = avf.vertex(trkVct); //AdaptiveVertexFitter                                                                                                                                                                                
+        if(beamSpot==NULL){transVtx = avf.vertex(trkVct);}
+	else{transVtx = avf.vertex(trkVct,*beamSpot);}
       }catch(...){
         //LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::checkSecVtx: Secondary vertex fit failed. Skip it.";
         return false;

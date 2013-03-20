@@ -83,6 +83,7 @@ private:
   edm::Event * iEvent_;
   edm::InputTag primVtxTag_,KinematicTauCandTag_;
   edm::InputTag trkCollectionTag_;
+  edm::InputTag beamSpot_;
   unsigned int cnt_, cntFound_;
   std::vector<unsigned int> cntSVFound_,cntSVQC_,cntLCFit_,cntLCFitQC_;
   edm::InputTag gensrc_;
@@ -90,7 +91,6 @@ private:
   double etacut_, sigcut_;
   bool do_BDTTrain_;
   bool do_BDTComp_;
-
 
   TMVA::Reader *reader;
 
@@ -115,8 +115,6 @@ private:
   float ProbZero3;
   float iterZero;
   float PVSVZero;
-
-
 
   // BDT variables
   TFile *output;

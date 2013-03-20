@@ -10,6 +10,7 @@ KinematicTauProducer = cms.EDProducer("KinematicTauProducer",#creates reco::Cand
                                       primVtx = cms.InputTag("offlinePrimaryVertices"),
                                       KinematicTauCandTag = cms.InputTag("ThreeProngInputSelectorStep1","PreKinematicDecaysStep1"),
                                       tauDaughterTracks = cms.InputTag("generalTracks"),
+                                      beamSpot = cms.InputTag("offlineBeamSpot"),
                                       fitParameters = cms.PSet( maxDelta = cms.double(.01),#stopping condition
                                                                 maxNbrOfIterations = cms.int32(100),	#number of iterations
                                                                 maxReducedChiSq = cms.double(225.),

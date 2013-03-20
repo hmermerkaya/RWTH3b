@@ -19,6 +19,7 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   primVtxTag_(iConfig.getParameter<edm::InputTag>("primVtx")),
   KinematicTauCandTag_(iConfig.getParameter<edm::InputTag>("KinematicTauCandTag")),
   trkCollectionTag_( iConfig.getParameter<edm::InputTag>( "tauDaughterTracks" ) ),
+  beamSpot_( iConfig.getParameter<edm::InputTag>( "beamSpot" ) ),
   cntSVFound_(MultiProngTauSolver::NAmbiguity),
   cntSVQC_(MultiProngTauSolver::NAmbiguity),
   cntLCFit_(MultiProngTauSolver::NAmbiguity),
@@ -141,7 +142,10 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 	  for (reco::TrackCollection::iterator iter=NonTauTracksLists_.begin(); iter!=NonTauTracksLists_.end(); ++iter){
 	    trks_.push_back(transTrackBuilder_->build(*iter));
 	  }
-	  if (!SecondaryVertexHelper::checkSecVtx(trks_,tmpVtx_,true))continue;
+	  edm::Handle<reco::BeamSpot> beamSpot;
+	  iEvent_->getByLabel(beamSpot_,beamSpot);
+	  reco::BeamSpot thebeamSpot=*beamSpot;
+	  if (!SecondaryVertexHelper::checkSecVtx(trks_,tmpVtx_,true,&thebeamSpot))continue;
 	  reco::Vertex primaryVertexReFit=tmpVtx_;
 	  //////////////////////////////////////////////////////
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
