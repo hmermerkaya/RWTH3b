@@ -36,8 +36,8 @@ public:
   ~SecondaryVertexHelper();
   
   bool                              hasSecondaryVertex(){return hasSecondaryVertex_;}
-  TransientVertex                   InitialSecondaryVertex(){return tmpVtx_;}
-  std::vector<reco::TransientTrack> InitialRefittedTracks(){return trks_;}
+  TransientVertex                   SecondaryVertex(){return tmpVtx_;}
+  std::vector<reco::TransientTrack> RefittedTracks(){return trks_;}
   TLorentzVector                    Initial_a1_p4(){return a1_p4_;}
   std::vector<TLorentzVector>       Initial_pions(){return pions_;}
 

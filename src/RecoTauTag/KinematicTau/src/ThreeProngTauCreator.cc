@@ -7,30 +7,22 @@
 #include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
 
 int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay &KFTau){
-  status=0;
-  std::cout << "Fit start" << std::endl;
   std::vector<TrackParticle> pions;
   std::vector<LorentzVectorParticle> neutrino;
   std::vector<LorentzVectorParticle> daughters;
   // Helix fit for a1
   ConfigurePions(KFTau,pions);
   if(pions.size()!=3)return status;
-  SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
-  TransientVertex secVtx=SVH.InitialSecondaryVertex();
-  std::cout << "Fit start before vertex fit" << std::endl;
-  if(!FitA1(pions,/*secVtx*/PV_)){return status;}
-  std::cout << "Fit start after vertex fit" << std::endl;
+  //SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
+  //TransientVertex secVtx=SVH.SecondaryVertex();
+  if(!FitA1(pions,PV_)){return 0;}
   A1=mother();
   // Tau fit
   daughters.push_back(A1);
-  std::cout << "Fit start before Tau fit" << std::endl;
-  if(!FitTau(daughters,PV_,ambiguity)){return status;}
-  std::cout << "Fit start After vertex fit" << std::endl;
+  if(!FitTau(daughters,PV_,ambiguity)){return 1;}
   Tau=mother();
   // Fit sequence complete
-  status=1;
-  std::cout << " Fit Complete" << std::endl;
-  return status;
+  return 2;
 }
 
 void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions){
@@ -40,6 +32,22 @@ void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::ve
   for(unsigned int i = 0; i!=selectedTracks.size();i++){
     pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,pv,true,true));
   }
+  ////////// debug
+  SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
+  TransientVertex secVtx=SVH.SecondaryVertex();
+  PV_=secVtx;
+  //GlobalPoint orgin(0.0,0.0,0.0);
+  GlobalPoint sv(secVtx.position().x(),secVtx.position().y(),secVtx.position().z());
+  GlobalPoint tv(selectedTracks.at(0)->vx(),selectedTracks.at(0)->vy(),selectedTracks.at(0)->vz());
+  std::vector<reco::TransientTrack> transTrkVect=SVH.RefittedTracks();
+  GlobalPoint cptpv;
+  GlobalPoint cptsv;
+  for(unsigned int i = 0; i!=transTrkVect.size();i++){
+    std::cout << "transTrkVect tracks Mometum [px= " << transTrkVect.at(i).track().px() << " py= " << transTrkVect.at(i).track().py() << " pz= " << transTrkVect.at(i).track().pz() << "] Reference Point [vx= "
+              << transTrkVect.at(i).track().vx() << " vy= " <<transTrkVect.at(i).track().vy() << " vz= " << transTrkVect.at(i).track().vz() << "]" << std::endl;
+  }
+  std::cout << "Kalman Fit Vertex [x= " << secVtx.position().x() << " y= " << secVtx.position().y() << " z= " << secVtx.position().z() << "]" << std::endl; 
+  /////////////
 }
 
 bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex &primaryVertex,
@@ -62,9 +70,7 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   TauA1NuConstrainedFitter TauA1NU(ambiguity,unfitDaughters.at(0),pv,pvcov);
   TauA1NU.SetMaxDelta(0.01);
   TauA1NU.SetNIterMax(1000);
-  std::cout << "before fit" << std::endl;
   TauA1NU.Fit();
-  std::cout << "after fit" << std::endl;
   if (TauA1NU.isConverged()) {
     //////////////////////////////////////////////////////////////////////////////////
     // debug statments 

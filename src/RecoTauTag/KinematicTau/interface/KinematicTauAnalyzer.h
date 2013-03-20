@@ -181,7 +181,32 @@ private:
     Truth_TauMatch_dEvsTheta,
     Truth_TauMatch_dthetavsTheta,
     Truth_TauMatch_reldPtvsTheta,
-    Truth_TauMatch_dphivsTheta;
+    Truth_TauMatch_dphivsTheta,
+    Truth_TauMatch_dPtvsEta,
+    Truth_TauMatch_dEvsEta,
+    Truth_TauMatch_dthetavsEta,
+    Truth_TauMatch_reldPtvsEta,
+    Truth_TauMatch_dphivsEta,
+    Truth_TauMatch_dPtvsPt,
+    Truth_TauMatch_dEvsPt,
+    Truth_TauMatch_dphivsPt,
+    Truth_TauMatch_dthetavsPt,
+    Truth_TauMatch_reldPtvsPt,
+    Truth_TauMatch_dPtvsPtandEtaCut,
+    Truth_TauMatch_dEvsPtandEtaCut,
+    Truth_TauMatch_dphivsPtandEtaCut,
+    Truth_TauMatch_dthetavsPtandEtaCut,
+    Truth_TauMatch_reldPtvsPtandEtaCut,
+    Truth_TauMatch_dPtvsLandEtaCut,
+    Truth_TauMatch_dEvsLandEtaCut,
+    Truth_TauMatch_dphivsLandEtaCut,
+    Truth_TauMatch_dthetavsLandEtaCut,
+    Truth_TauMatch_reldPtvsLandEtaCut,
+    Truth_TauMatch_dPtvsPhiandEtaCut,
+    Truth_TauMatch_dEvsPhiandEtaCut,
+    Truth_TauMatch_dphivsPhiandEtaCut,
+    Truth_TauMatch_dthetavsPhiandEtaCut,
+    Truth_TauMatch_reldPtvsPhiandEtaCut;
 
 
   std::map<unsigned int,unsigned int> JAKIDtoIndex;

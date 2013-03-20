@@ -84,6 +84,7 @@ private:
   edm::InputTag primVtxTag_,KinematicTauCandTag_;
   edm::InputTag trkCollectionTag_;
   unsigned int cnt_, cntFound_;
+  std::vector<unsigned int> cntSVFound_,cntSVQC_,cntLCFit_,cntLCFitQC_;
   edm::InputTag gensrc_;
   unsigned int minTau_, minVtxTracks_;
   double etacut_, sigcut_;
