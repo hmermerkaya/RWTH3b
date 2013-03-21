@@ -28,6 +28,7 @@ KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   minTau_(iConfig.getUntrackedParameter<unsigned int>("minTau", 1)),
   etacut_(iConfig.getUntrackedParameter<double>("etacut",2.1)),
   sigcut_(iConfig.getUntrackedParameter<double>("sigcut",3.0)),
+  useTrackHelixFit_(iConfig.getUntrackedParameter<bool>("useTrackHelixFit",false)),
   do_BDTTrain_(iConfig.getUntrackedParameter("do_BDTTrain",(bool)(false))),
   do_BDTComp_(iConfig.getUntrackedParameter("do_BDTComp",(bool)(true))),
   BDTweightFileMinus_(iConfig.getUntrackedParameter<std::string>("BDTweightFileMinus")),
@@ -190,7 +191,7 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTau,edm::ESHandle<TransientTrackBuilder> &transTrackBuilder_,edm::Handle<reco::GenParticleCollection> &genParticles){
   bool hasasusccessfullfit=false;
   for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
-    FitSequencer *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,genParticles);
+    FitSequencer *kinTauCreator = new ThreeProngTauCreator(transTrackBuilder_, fitParameters_,useTrackHelixFit_,genParticles);
     int fitStatus = kinTauCreator->create(ambiguity,KFTau);
     if(fitStatus>=1){
       cntSVFound_.at(ambiguity)++;

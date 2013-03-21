@@ -5,17 +5,15 @@
 #include "SimpleFits/FitSoftware/interface/Chi2VertexFitter.h"
 #include "Validation/EventGenerator/interface/PdtPdgMini.h"
 #include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
+#include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
+#include <RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h>
 
 int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay &KFTau){
   std::vector<TrackParticle> pions;
   std::vector<LorentzVectorParticle> neutrino;
   std::vector<LorentzVectorParticle> daughters;
   // Helix fit for a1
-  ConfigurePions(KFTau,pions);
-  if(pions.size()!=3)return status;
-  //SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
-  //TransientVertex secVtx=SVH.SecondaryVertex();
-  if(!FitA1(pions,PV_)){return 0;}
+  if(!FitA1(KFTau)){return 0;}
   A1=mother();
   // Tau fit
   daughters.push_back(A1);
@@ -25,42 +23,7 @@ int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay 
   return 2;
 }
 
-void ThreeProngTauCreator::ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions){
-  PV_=KFTau.InitialPrimaryVertexReFit();
-  GlobalPoint pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
-  std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
-  for(unsigned int i = 0; i!=selectedTracks.size();i++){
-    pions.push_back(ParticleBuilder::CreateTrackParticle(selectedTracks.at(i),transientTrackBuilder_,pv,true,true));
-  }
-  ////////// debug
-  /*
-  SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
-  TransientVertex secVtx=SVH.SecondaryVertex();
-  PV_=secVtx;
-  //GlobalPoint orgin(0.0,0.0,0.0);
-  GlobalPoint sv(secVtx.position().x(),secVtx.position().y(),secVtx.position().z());
-  GlobalPoint tv(selectedTracks.at(0)->vx(),selectedTracks.at(0)->vy(),selectedTracks.at(0)->vz());
-  std::vector<reco::TransientTrack> transTrkVect=secVtx.refittedTracks();//SVH.RefittedTracks();
-  GlobalPoint cptpv;
-  GlobalPoint cptsv;
-  for(unsigned int i = 0; i!=transTrkVect.size();i++){
-    cptsv=transTrkVect.at(i).trajectoryStateClosestToPoint(sv).position();
-    std::cout << "transTrkVect tracks Mometum [px= " << transTrkVect.at(i).track().px() << " py= " << transTrkVect.at(i).track().py() << " pz= " << transTrkVect.at(i).track().pz() << "] Reference Point [vx= "
-              << transTrkVect.at(i).track().vx() << " vy= " <<transTrkVect.at(i).track().vy() << " vz= " << transTrkVect.at(i).track().vz() << "]" << " Trajectory State Closest To SV  [vx= "
-	      << cptsv.x() << " vy= " << cptsv.y() << " vz= " << cptsv.z() << "]" << std::endl;
-  }
-  std::cout << "Kalman Fit Vertex [x= " << secVtx.position().x() << " y= " << secVtx.position().y() << " z= " << secVtx.position().z() << "]" << std::endl; 
-  reco::Vertex mysvt=secVtx;
-  for(int i=0; i!=3; i++){ 
-    for(int j=0; j!=3; j++){std::cout << sqrt(fabs(mysvt.covariance(i,j))) << " "; }
-    std::cout << std::endl;
-  }
-  */
-  /////////////
-}
-
-bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex &primaryVertex,
-				  unsigned int &ambiguity){
+bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex &primaryVertex,unsigned int &ambiguity){
   if(unfitDaughters.size()!=1){
     edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
     return false;
@@ -81,53 +44,7 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   TauA1NU.SetNIterMax(1000);
   TauA1NU.Fit();
   if (TauA1NU.isConverged()) {
-    //////////////////////////////////////////////////////////////////////////////////
-    // debug statments 
-    /*
-    std::vector<LorentzVectorParticle> fitDaughters=TauA1NU.GetReFitDaughters();
-    LorentzVectorParticle Mother=TauA1NU.GetMother();
-
-    for(reco::GenParticleCollection::const_iterator itr = GenPart_->begin(); itr!= GenPart_->end(); ++itr){
-      if(fabs(itr->pdgId())==15){
-	const reco::GenParticle mytau=(*itr);
-	for (unsigned int i=0; i<(itr)->numberOfDaughters();i++){
-	  const reco::Candidate *dau=(itr)->daughter(i);
-	  if(fabs(dau->pdgId())==20213){
-	    std::cout << "\n ============================" << std::endl;
-	    std::cout << "Tau " << itr->p4().E() << " " << (itr)->vx() << " " << (itr)->vy() << " " << (itr)->vz()
-                      << " "    << itr->p4().Px() << " " << itr->p4().Py() << " " << itr->p4().Pz() << " " << itr->p4().M() 
-		      << " theta " << itr->p4().Theta() << " phi " << itr->p4().Phi()  <<  std::endl;
-	    std::cout << "    ";
-	    for(int i=-1; i<LorentzVectorParticle::NLorentzandVertexPar;i++){std::cout <<Mother.Parameter(i) << " ";}
-	    std::cout << "\n ============================" << std::endl;
-	    std::cout << "A1  " << dau->p4().E() << " " <<  dau->vx()  << " " << dau->vy() << " " << dau->vz() 
-		      << " "    << dau->p4().Px() << " " << dau->p4().Py() << " " << dau->p4().Pz() << " " << dau->p4().M() <<  std::endl;
-	    std::cout << "    ";
-	    for(int k=-1; k<LorentzVectorParticle::NLorentzandVertexPar;k++){std::cout << fitDaughters.at(0).Parameter(k) << " ";}
-	    std::cout << "\n ============================" << std::endl;
-	  }
-	  if(fabs(dau->pdgId())==16){
-	    std::cout << "\n ============================" << std::endl;
-	    std::cout << "Nu  " << dau->p4().E() << " " <<  dau->vx()  << " " << dau->vy() << " " << dau->vz()
-                      << " "    << dau->p4().Px() << " " << dau->p4().Py() << " " << dau->p4().Pz() << " " << dau->p4().M() <<  std::endl;
-	    std::cout << "    ";
-            for(int k=-1; k<LorentzVectorParticle::NLorentzandVertexPar;k++){std::cout << fitDaughters.at(1).Parameter(k) << " ";}
-	    std::cout << "\n ============================" << std::endl;
-	  }
-	}
-      }
-    }
-    
-    ///////////////////////////////////////////////////
-    for(unsigned int i=0;i<fitDaughters.size();i++){
-      for(unsigned int j=0;j<unfitDaughters.size();j++){
-        fitDaughters.erase (fitDaughters.begin()+i);
-        fitDaughters.push_back(unfitDaughters.at(j));
-      }
-    }
-    */
-    /////////////////////
-    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters()/*fitDaughters*/,TauA1NU.GetMother());
+    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 
@@ -135,97 +52,65 @@ bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaug
   return false;
 }
 
-bool ThreeProngTauCreator::FitA1(std::vector<TrackParticle> &pions,const reco::Vertex & primaryVertex){
-  TVector3 pv(primaryVertex.position().x(),primaryVertex.position().y(),primaryVertex.position().z());
-  Chi2VertexFitter chi2v(pions,pv);
-  chi2v.Fit();
-  double c(0); for(unsigned int i=0;i<pions.size();i++){c+=pions.at(i).Charge();}
-  int pdgid=fabs(PdtPdgMini::a_1_plus)*c;
-
-  ////////////////////////////////////////////////////////////
-  // debug
-  
-  LorentzVectorParticle LV=chi2v.GetMother(pdgid);
-  TLorentzVector A1,mc;
-  // double vx,vy,vz;
-  for(reco::GenParticleCollection::const_iterator itr = GenPart_->begin(); itr!= GenPart_->end(); ++itr){
-    if(fabs(itr->pdgId())==15){
-      const reco::GenParticle mytau=(*itr);
-      for (unsigned int i=0; i<(itr)->numberOfDaughters();i++){
-	const reco::Candidate *dau=(itr)->daughter(i);
-	if(fabs(dau->pdgId())==20213){
-	  TLorentzVector a1(dau->p4().Px(),dau->p4().Py(),dau->p4().Pz(),dau->p4().E());
-	  A1=a1;
-	  mc.SetPxPyPzE(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
-	  //if(a1.DeltaR(LV)<0.4){
-	    // Print info from matching tau
-	  /*
-	  std::cout << "A1  Px " << dau->p4().Px() << " Py " << dau->p4().Py() << " Pz " << dau->p4().Pz() << " E " << dau->p4().E() << " M " << dau->p4().M() <<  std::endl;
-	  std::cout << "A1  vx "       << dau->vx()  << " vy " << dau->vy() << " vz " << dau->vz() << std::endl;
-	  std::cout << "Tau Px " << itr->p4().Px() << " Py " << itr->p4().Py() << " Pz " << itr->p4().Pz() << " E " << itr->p4().E() << " M " << itr->p4().M() <<  std::endl;
-	  std::cout << "Tau vx "      << (itr)->vx() << " vy " << (itr)->vy() << " vz " << (itr)->vz() << std::endl;
-	  vx=(dau)->vx();
-	  vy=(dau)->vy();
-	  vz=(dau)->vz();
-	  reco::Vertex::Error ve=PV_.covariance() ;
-	  reco::Vertex::Point vp((itr)->vx(),(itr)->vy(),(itr)->vz());
-	  PV_=reco::Vertex(vp,ve);
-	  */
-	  //}
-	}
-      }
+bool ThreeProngTauCreator::FitA1(SelectedKinematicDecay &KFTau){
+  if(useTrackHelixFit_){
+    std::vector<TrackParticle> pions;
+    PV_=KFTau.InitialPrimaryVertexReFit();
+    GlobalPoint pvtx(PV_.position().x(),PV_.position().y(),PV_.position().z());
+    std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
+    for(unsigned int i = 0; i!=selectedTracks.size();i++){
+      reco::TransientTrack transTrk=transientTrackBuilder_->build(selectedTracks.at(i));
+      pions.push_back(ParticleBuilder::CreateTrackParticle(transTrk,transientTrackBuilder_,pvtx,true,true));
     }
-  }
-  /*
-  std::cout << "Chi2Vertex Fit vx " << chi2v.GetVertex().X() << " vy " << chi2v.GetVertex().Y() << " " << chi2v.GetVertex().Z() << " " << std::endl; 
-  //std::cout << "Chi2Vertex a1 Px  " << LV.Px() << " py " << LV.Py() << " pz " << LV.Pz() << std::endl; 
-  TMatrixT<double> par(LorentzVectorParticle::NLorentzandVertexPar,1);
-  TMatrixTSym<double> cov(LorentzVectorParticle::NLorentzandVertexPar);
 
-  for(unsigned int i=0; i<LorentzVectorParticle::NLorentzandVertexPar;i++){
-    par(i,0)=LV.Parameter(i);
-    for(unsigned int j=0; j<LorentzVectorParticle::NLorentzandVertexPar;j++){cov(i,j)=LV.Covariance(i,j);}
+    TVector3 pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
+    Chi2VertexFitter chi2v(pions,pv);
+    chi2v.Fit();
+    double c(0); for(unsigned int i=0;i<pions.size();i++){c+=pions.at(i).Charge();}
+    int pdgid=fabs(PdtPdgMini::a_1_plus)*c;
+
+    StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),chi2v.GetMother(pdgid));  
   }
-  par(LorentzVectorParticle::vx,0)=vx;
-  par(LorentzVectorParticle::vy,0)=vy;
-  par(LorentzVectorParticle::vz,0)=vz;
-  par(LorentzVectorParticle::px,0)=A1.Px();
-  par(LorentzVectorParticle::py,0)=A1.Py();
-  par(LorentzVectorParticle::pz,0)=A1.Pz();
-  par(LorentzVectorParticle::m,0)=A1.M();
-  LorentzVectorParticle newA1(par,cov, LV.PDGID(),LV.Charge(), LV.BField());
-  */
-  ////////////////////////////////////////////////////////////
-  /*
-  TMatrixTSym<double> M=chi2v.GetVertexError();
-  std::cout << "Chi2 Fit" << std::endl;
-  std::cout << "Vertex: " <<chi2v.GetVertex().X() << " " << chi2v.GetVertex().Y() << " " << chi2v.GetVertex().Z() << std::endl;
-  for(int i=0; i!=3; i++){
-    for(int j=0; j!=3; j++){std::cout << sqrt(fabs(M(i,j))) << " "; }
-    std::cout << std::endl;
-  }
-  TMatrixT<double> Res(5,1);
-  Res(0,0)=chi2v.GetVertex().X();
-  Res(1,0)=chi2v.GetVertex().Y();
-  Res(2,0)=chi2v.GetVertex().Z();
-  Res(3,0)=mc.Phi();
-  Res(4,0)=mc.Theta();
-  TMatrixTSym<double> ResCov(5);
-  for(unsigned int s=0;s<3;s++){
-    for(unsigned int t=0;t<3;t++){
-      ResCov(s,t)=M(s,t);
+  else{
+    // Kalman fit
+    SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
+    TransientVertex secVtx=SVH.SecondaryVertex();
+    GlobalPoint sv(secVtx.position().x(),secVtx.position().y(),secVtx.position().z());
+    std::vector<reco::TransientTrack> transTrkVect=secVtx.refittedTracks();
+    // Use CMSSW Kinematic tools to extract a1
+    KinematicParticleFactoryFromTransientTrack kinFactory;
+    float piMassSigma = sqrt(pow(10.,-12.));//not to small to avoid singularities
+    float piChi = 0., piNdf = 0.;//only initial values
+    std::vector<RefCountedKinematicParticle> pions;
+    for(unsigned int i = 0; i!=transTrkVect.size();i++){
+      pions.push_back(kinFactory.particle(transTrkVect[i],PMH.Get_piMass(),piChi,piNdf,secVtx.position(),piMassSigma));
     }
+    KinematicParticleVertexFitter kpvFitter;
+    RefCountedKinematicTree jpTree = kpvFitter.fit(pions);
+    jpTree->movePointerToTheTop();
+    const KinematicParameters parameters = jpTree->currentParticle()->currentState().kinematicParameters();
+    //const KinematicParametersError parametersError = jpTree->currentParticle()->currentState().kinematicParametersError();
+    AlgebraicSymMatrix77 cov=jpTree->currentParticle()->currentState().kinematicParametersError().matrix();    
+    // get pions
+    double c(0); 
+    std::vector<reco::Track> Tracks;
+    std::vector<LorentzVectorParticle> ReFitPions;
+    for(unsigned int i=0;i<transTrkVect.size();i++){
+      c+=transTrkVect.at(i).charge();
+      reco::Vertex V=secVtx;
+      ReFitPions.push_back(ParticleBuilder::CreateLorentzVectorParticle(transTrkVect.at(i),transientTrackBuilder_,V,true,true));      
+    }
+    // now covert a1 into LorentzVectorParticle
+    TMatrixT<double>    a1_par(LorentzVectorParticle::NLorentzandVertexPar,1);
+    TMatrixTSym<double> a1_cov(LorentzVectorParticle::NLorentzandVertexPar);
+    for(int i = 0; i<7; i++){
+      a1_par(i,0)=parameters(i);
+      for(int j = 0; j<7; j++){a1_cov(i,j)=cov(i,j);}
+    }
+    LorentzVectorParticle a1(a1_par,a1_cov,fabs(PdtPdgMini::a_1_plus)*c,c,transientTrackBuilder_->field()->inInverseGeV(sv).z());
+    // store the results
+    StoreResults(secVtx.totalChiSquared(),secVtx.degreesOfFreedom(),0,0,0,ReFitPions,a1);
   }
-  TMatrixT<double> Resp=MultiProngTauSolver::RotateToTauFrame(Res);
-  TMatrixTSym<double> RespCov=ErrorMatrixPropagator::PropogateError(&MultiProngTauSolver::RotateToTauFrame,Res,ResCov);
-  std::cout << "Vertex rotated: " <<chi2v.GetVertex().X() << " " << chi2v.GetVertex().Y() << " " << chi2v.GetVertex().Z() << std::endl;
-  for(int i=0; i!=3; i++){
-    for(int j=0; j!=3; j++){std::cout << sqrt(fabs(RespCov(i,j))) << " "; }
-    std::cout << std::endl;
-  }
-  */
-  StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),chi2v.GetMother(pdgid));  
-
   return  true;
 }
 

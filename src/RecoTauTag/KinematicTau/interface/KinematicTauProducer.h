@@ -89,6 +89,7 @@ private:
   edm::InputTag gensrc_;
   unsigned int minTau_, minVtxTracks_;
   double etacut_, sigcut_;
+  bool useTrackHelixFit_;
   bool do_BDTTrain_;
   bool do_BDTComp_;
 

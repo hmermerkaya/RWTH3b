@@ -31,8 +31,8 @@ class ThreeProngTauCreator : public FitSequencer{
 public:
   enum FitSeq{VertexFit,TauFit,NFits};
   
-  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,edm::Handle<reco::GenParticleCollection> &GenPart_):FitSequencer(transTrackBuilder,GenPart_){}
-  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,edm::Handle<reco::GenParticleCollection> &GenPart_):FitSequencer(transTrackBuilder, cfg, GenPart_){}
+  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder,bool useTrackHelixFit,edm::Handle<reco::GenParticleCollection> &GenPart_):FitSequencer(transTrackBuilder,GenPart_),useTrackHelixFit_(useTrackHelixFit){}
+  explicit ThreeProngTauCreator(edm::ESHandle<TransientTrackBuilder>  &transTrackBuilder, const edm::ParameterSet& cfg,bool useTrackHelixFit,edm::Handle<reco::GenParticleCollection> &GenPart_):FitSequencer(transTrackBuilder, cfg, GenPart_),useTrackHelixFit_(useTrackHelixFit){}
   
   TString FitSequence(int i){
     if(i==VertexFit) return "VertexFit";
@@ -43,12 +43,12 @@ public:
 private:
   int  create(unsigned int& ambiguity,SelectedKinematicDecay &KFTau);
   void ConfigurePions(SelectedKinematicDecay &KFTau, std::vector<TrackParticle> &pions);
-  bool FitA1(std::vector<TrackParticle> &pions,const reco::Vertex & primaryVertex);
+  bool FitA1(SelectedKinematicDecay &KFTau);
   bool FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex & primaryVertex,unsigned int &ambiguity);
 
   // Parameters
   ParticleMassHelper PMH;
-
+  bool useTrackHelixFit_;
 };
 
 #endif

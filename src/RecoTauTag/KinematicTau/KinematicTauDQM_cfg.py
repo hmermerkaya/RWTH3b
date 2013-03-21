@@ -180,7 +180,7 @@ process.source = cms.Source("PoolSource",
     "file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Summer12/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/AODSIM/PU_S7_START52_V9-v2/0000/E4153E58-9196-E111-A0D9-003048D4609E.root"
     )
                             )
-numberOfEvents = 1000
+numberOfEvents = 100000
 process.maxEvents = cms.untracked.PSet(
         input = cms.untracked.int32(numberOfEvents)
         )
@@ -192,7 +192,8 @@ process.options = cms.untracked.PSet(
 
 process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
 process.load("RecoTauTag.KinematicTau.KinematicTauPostProcessing_cfi")
-
+#process.KinematicTauProducer.useTrackHelixFit = cms.untracked.bool(True)
+                                      
 
 process.load('Configuration.StandardSequences.EDMtoMEAtJobEnd_cff')
 process.load("Validation.Configuration.postValidation_cff")
