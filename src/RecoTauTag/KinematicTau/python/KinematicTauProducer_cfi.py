@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.MagneticField_cff import *
-from Configuration.StandardSequences.Geometry_cff import *
+from Configuration.StandardSequences.GeometryIdeal_cff import *
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 import os, subprocess
 
