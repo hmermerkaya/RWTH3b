@@ -49,9 +49,11 @@ double ACMuon::isolationDBeta() const {
     if (pt() > 0. ) return value/pt();
     else return INFINITY;
 }
-bool ACMuon::isIsolatedLoose() const {
+bool ACMuon::isIsolatedLoose(bool useDBeta) const {
+    if (useDBeta) return isolationDBeta() <= 0.2;
     return isolation() <= 0.2;
 }
-bool ACMuon::isIsolatedTight() const {
+bool ACMuon::isIsolatedTight(bool useDBeta) const {
+    if (useDBeta) return isolationDBeta() <= 0.12;
     return isolation() <= 0.12;
 }

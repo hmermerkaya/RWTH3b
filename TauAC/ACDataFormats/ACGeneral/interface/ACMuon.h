@@ -56,9 +56,9 @@ public:
     /// calculate the dBeta corrected isolation according to the POG recommendation for 2011, 2012
     double isolationDBeta() const;
     /// whether the muon passes the recommended PF isolation for 2011, 2012
-    bool isIsolatedLoose() const;
+    bool isIsolatedLoose(bool useDBeta = true) const;
     /// whether the muon passes the recommended PF isolation for 2011, 2012
-    bool isIsolatedTight() const;
+    bool isIsolatedTight(bool useDBeta = true) const;
 
     ClassDef(ACMuon,1);
 
