@@ -1,4 +1,5 @@
 #include "RecoTauTag/KinematicTau/interface/ThreeProngInputSelector_Step1.h"
+#include "SimpleFits/FitSoftware/interface/PDGInfo.h"
 
 ThreeProngInputSelector_Step1::ThreeProngInputSelector_Step1(const edm::ParameterSet& iConfig):
   tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "hps") ),
@@ -34,13 +35,22 @@ void ThreeProngInputSelector_Step1::produce(edm::Event& iEvent, const edm::Event
 void ThreeProngInputSelector_Step1::beginJob(){
   cnt_ = 0;
   cntFound_ = 0;
+  n3track=0;
+  n3prong=0; 
+  nhps3prong=0;
+  npftaus=0;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void ThreeProngInputSelector_Step1::endJob(){
   float ratio = 0.0;
   if(cnt_!=0) ratio=(float)cntFound_/cnt_;
-  edm::LogVerbatim("ThreeProngInputSelector_Step1")<<"--> [ThreeProngInputSelector_Step1] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks and pt > "<<minTauPt_<<") per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
+  std::cout <<"--> [ThreeProngInputSelector_Step1] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks and pt > "<<minTauPt_<<") per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%" << std::endl;
+
+  std::cout <<"[ThreeProngInputSelector_Step1] found at least 3 Prong Candidates  Efficiency: " << n3prong <<"/"<<cnt_<<" = "<<std::setprecision(4)<< ((float)n3prong)/((float)cnt_)*100.0<<"%" << std::endl;
+  std::cout <<"[ThreeProngInputSelector_Step1] found at least tracks  Efficiency: " << n3track <<"/"<<cnt_<<" = "<<std::setprecision(4)<< ((float)n3track)/((float)cnt_)*100.0<<"%"<< std::endl;
+  std::cout <<"[ThreeProngInputSelector_Step1] found PFT with HPS 3 prongs  Efficiency: " << nhps3prong <<"/"<<cnt_<<" = "<<std::setprecision(4)<< ((float)nhps3prong)/((float)cnt_)*100.0<<"%"<< std::endl;
+  std::cout <<"[ThreeProngInputSelector_Step1] found at least 1 PFT Efficiency: " << npftaus <<"/"<<cnt_<<" = "<<std::setprecision(4)<< ((float)npftaus)/((float)cnt_)*100.0<<"%"<< std::endl;
 }
 
 bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates){
@@ -54,24 +64,34 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
     edm::Handle<reco::TrackCollection> trkCollection;
     iEvent_->getByLabel(trkCollectionTag_, trkCollection);
     trkCollectionID_ = trkCollection.id();
+    bool has3tracks=false;
+    bool hasHPS3prong=false;
+    bool has3prongcandidate=false;
     for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
-      reco::PFTauRef thePFTau(inputCollection, iPFTau);
+     reco::PFTauRef thePFTau(inputCollection, iPFTau);
       // filter candidates
       if(thePFTau->pt() < minTauPt_) continue;
       if(fabs(thePFTau->eta())>TauEtaCut_)continue;
       reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
+      if(tauDaughters.size()>=3) has3tracks=true;
+      if(thePFTau->decayMode()==10)hasHPS3prong=true;
       if(tauDaughters.size()>=minTracks_){
 	// Add KF Taus Here
 	unsigned int tau_idx=KFCandidates.size();
 	KFCandidates.push_back(std::vector<SelectedKinematicDecay>());
 	std::vector<reco::TrackRef> input;
-	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk){if((*trk)->algo()==reco::TrackBase::iter0 || (*trk)->algo()==reco::TrackBase::iter3) input.push_back(*trk);}
+	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk){/*if((*trk)->algo()==reco::TrackBase::iter0 || (*trk)->algo()==reco::TrackBase::iter3)*/ input.push_back(*trk);}
 	std::vector<std::vector<reco::TrackRef> > combis=choose3Prongs(input);
 	for(unsigned int i=0;i<combis.size();i++){
+	  has3prongcandidate=true;
 	  KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),"notused",1));
 	}
       }
     }
+    if(has3tracks)n3track++;
+    if(hasHPS3prong)nhps3prong++;
+    if(has3prongcandidate)n3prong++;
+    if(inputCollection->size()>0)npftaus++;
     // remove duplicates
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
@@ -111,23 +131,39 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
     LogTrace("ThreeProngInputSelector_Step1")<<"evt "<<iEvent_->id().event()<<" ThreeProngInputSelector_Step1::select: "<< ntaus <<" tau candidate(s) reconstructed.";
   }
   else LogTrace("ThreeProngInputSelector_Step1")<<"evt "<<iEvent_->id().event()<<" ThreeProngInputSelector_Step1::select: Only "<< ntaus <<" tau candidate(s) reconstructed. Skip Evt.";
-    
   return found;
 }
 
 reco::TrackRefVector ThreeProngInputSelector_Step1::getPFTauDaughters(reco::PFTauRef &PFTau){
   reco::TrackRefVector trkVct;
   const reco::PFCandidateRefVector & 	cands = PFTau->signalPFChargedHadrCands(); //candidates in signal cone 
-  //isolationPFChargedHadrCands stores tracks in isolation/veto cone
-  for (reco::PFCandidateRefVector::const_iterator iter = cands.begin(); iter!=cands.end(); ++iter) {
-    if(iter->get()->trackRef().isNonnull()) {
-      if ((*iter)->trackRef().id() != trkCollectionID_) {
-	// ignore tracks that do not origin from the desired track collection (e.g. ignore conversionStepTracks) for now
-	const edm::Provenance & prov = iEvent_->getProvenance((*iter)->trackRef().id());
-	edm::LogInfo("ThreeProngInputSelector_Step1")<<"ThreeProngInputSelector_Step1::getPFTauDaughters: Skip PFTau daughter from collection "<<prov.moduleLabel();
-	continue;
-      }
-      trkVct.push_back( (*iter)->trackRef() );
+  if(cands.size()==0) return trkVct;
+  unsigned int j=0;
+  double ptmax=0;
+  for(unsigned int i=0;i<cands.size();i++){
+    if(cands.at(i)->trackRef().isNonnull()) {
+      if(cands.at(i)->trackRef()->pt()>ptmax){ptmax=cands.at(i)->trackRef()->pt(); j=i;}
+    }
+  }
+  if(!cands.at(j)->trackRef().isNonnull() || cands.at(j)->trackRef().id() != trkCollectionID_) return trkVct;
+  trkVct.push_back( cands.at(j)->trackRef() );
+  TLorentzVector pi;
+  pi.SetXYZM(trkVct.at(0)->px(),trkVct.at(0)->py(),trkVct.at(0)->pz(),PDGInfo::pi_mass());
+  const reco::PFCandidateRefVector &  outercands = PFTau->isolationPFChargedHadrCands();
+  for(unsigned int i=0;i<cands.size();i++){
+    if(i!=j && cands.at(i)->trackRef().isNonnull() && cands.at(i)->trackRef().id() == trkCollectionID_){
+      TLorentzVector LV;
+      LV.SetXYZM(cands.at(i)->trackRef()->px(),cands.at(i)->trackRef()->py(),cands.at(i)->trackRef()->pz(),PDGInfo::pi_mass());
+      LV+=pi;
+      if(LV.M()<PDGInfo::tau_mass())trkVct.push_back(cands.at(i)->trackRef());
+    }
+  }
+  for(unsigned int i=0;i<outercands.size();i++){
+    if(outercands.at(i)->trackRef().isNonnull() && outercands.at(i)->trackRef().id() == trkCollectionID_){
+      TLorentzVector LV; 
+      LV.SetXYZM(outercands.at(i)->trackRef()->px(),outercands.at(i)->trackRef()->py(),outercands.at(i)->trackRef()->pz(),PDGInfo::pi_mass());
+      LV+=pi;
+      if(LV.M()<PDGInfo::tau_mass())trkVct.push_back(outercands.at(i)->trackRef());
     }
   }
   return trkVct;
@@ -199,18 +235,19 @@ bool ThreeProngInputSelector_Step1::sumCharge(const std::vector<reco::TrackRef> 
 std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector_Step1::permuteCombinations(const std::vector<reco::TrackRef> & vect){
   std::vector<std::vector<reco::TrackRef> > combis;
   std::vector<reco::TrackRef>::const_iterator iter1, iter2, iter3;
-  for (iter1 = vect.begin(); iter1 != vect.end(); ++iter1) {
+  if(vect.begin()!=vect.end()){
+    iter1 = vect.begin(); 
     iter2 = iter1;
-    ++iter2;
-    for (; iter2 != vect.end(); ++iter2) {
+    iter2++;
+    for (; iter2 != vect.end(); iter2++) {
       iter3 = iter2;
-      ++iter3;
-      for (; iter3 != vect.end(); ++iter3) {
+      iter3++;
+      for (; iter3 != vect.end(); iter3++) {
 	std::vector<reco::TrackRef> newCombi;
-        newCombi.push_back(*iter1);
-        newCombi.push_back(*iter2);
-        newCombi.push_back(*iter3);
-        combis.push_back(newCombi);
+	newCombi.push_back(*iter1);
+	newCombi.push_back(*iter2);
+	newCombi.push_back(*iter3);
+	combis.push_back(newCombi);
       }
     }
   }
@@ -228,7 +265,8 @@ std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector_Step1::choose3
       continue;  
     }                              
     double massA1 = getInvariantMass(*iter);  
-    if (massA1 > 2.0 || massA1 < 3*PMH.Get_piMass()) { //soft upper value     
+    double pt = getSumPt(*iter);
+    if (massA1 > 2.0 || massA1 < 3*PMH.Get_piMass() || pt<12.0) { //soft upper value     
       iter = combis.erase(iter);
       LogTrace("ThreeProngInputSelector_Step1") << "ThreeProngInputSelector_Step1::choose3Prongs: erased combi due to wrong mass. " << combis.size() << " combis left.";  
       continue;
@@ -237,6 +275,15 @@ std::vector<std::vector<reco::TrackRef> > ThreeProngInputSelector_Step1::choose3
   }  
   return combis; 
 }                   
+
+double ThreeProngInputSelector_Step1::getSumPt(std::vector<reco::TrackRef> &tracks){
+  double SumPx(0),SumPy(0);
+  for(unsigned int i=0; i<tracks.size(); i++){
+    SumPx += tracks.at(i)->px();
+    SumPy += tracks.at(i)->py();
+  }
+  return sqrt(pow(SumPx,2)+pow(SumPy,2));
+}
 
 double ThreeProngInputSelector_Step1::getInvariantMass(std::vector<reco::TrackRef> &tracks){
   double SumPx(0),SumPy(0),SumPz(0),SumE(0); 

@@ -85,6 +85,7 @@ void KinematicTauProducer::endJob(){
 				  << "+/-" <<  sqrt((float)cntFound_*(1-(float)cntFound_/(float)cnt_))/(float)cnt_ <<"%";
   for(unsigned int i=0;i<MultiProngTauSolver::NAmbiguity;i++){
     std::cout << "===========================================================================================================" << std::endl; 
+    std::cout << "Ambiguity Solution: " << i << std::endl;
     edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] Found Secondary Vertex from 3 tracks Selection efficiency: "
 				    << cntSVFound_.at(i) <<"/"<<cnt_<<" = "<<std::setprecision(4)<< (float)cntSVFound_.at(i)/(float)cnt_*100.0
 				    << "+/-" <<  sqrt((float)cntSVFound_.at(i)*(1-(float)cntSVFound_.at(i)/(float)cnt_))/(float)cnt_ <<"%";
@@ -94,7 +95,7 @@ void KinematicTauProducer::endJob(){
     edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] Found LC Fit succeeded Selection efficiency: "
                                     << cntLCFit_.at(i) <<"/"<<cnt_<<" = "<<std::setprecision(4)<< (float)cntLCFit_.at(i)/(float)cnt_*100.0
 				    << "+/-" <<  sqrt((float)cntLCFit_.at(i)*(1-(float)cntLCFit_.at(i)/(float)cnt_))/(float)cnt_ <<"%";
-    edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] Found LC Fit succeeded Selection efficiency: "
+    edm::LogVerbatim("KinematicTau")<<"--> [KinematicTauProducer] Found LC Fit QC Selection efficiency: "
                                     << cntLCFitQC_.at(i) <<"/"<<cnt_<<" = "<<std::setprecision(4)<< (float)cntLCFitQC_.at(i)/(float)cnt_*100.0
 				    << "+/-" <<  sqrt((float)cntLCFitQC_.at(i)*(1-(float)cntLCFitQC_.at(i)/(float)cnt_))/(float)cnt_ <<"%";
 
@@ -129,11 +130,19 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
       std::vector<SelectedKinematicDecay>  KFTauCandidates;
       //std::cout << "Kinematic Fit " << i << std::endl;
       //std::cout << "N candidates" << KinematicTauCandidate->at(i).size() << std::endl;
-      for(unsigned int j=0; j<KinematicTauCandidate->at(i).size();j++){
-	//std::cout << "Kinematic Fit " << i << " " << j << std::endl;
-	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
+      // pick best secondary vertex
+      unsigned int j=0;
+      double chi2=0;
+      for(unsigned int k=0; k<KinematicTauCandidate->at(i).size();k++){
+	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(k);
         SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
-        if(SVH.hasSecondaryVertex()){
+	reco::Vertex V=SVH.SecondaryVertex();
+	if(chi2<V.chi2()){chi2=V.chi2();j=k;}
+      }
+      if(j<KinematicTauCandidate->at(i).size()){
+	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
+	SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
+	if(SVH.hasSecondaryVertex()){
 	  //////////////////////////////////////////////////////
 	  //Rebuild primary vertex
 	  reco::TrackCollection NonTauTracksLists_;
@@ -150,13 +159,13 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
 	  reco::Vertex primaryVertexReFit=tmpVtx_;
 	  //////////////////////////////////////////////////////
 	  reco::Vertex primaryVertexReFitAndRotated=primaryVertexReFit;
-          TVector3 tauFlghtDirNoCorr;
-          TVector3 tauFlghtDir;
-          TLorentzVector a1_p4=SVH.Initial_a1_p4();
-          double initThetaGJ,ThetaMax;
-          TransientVertex SecondaryVertex=SVH.SecondaryVertex();
+	  TVector3 tauFlghtDirNoCorr;
+	  TVector3 tauFlghtDir;
+	  TLorentzVector a1_p4=SVH.Initial_a1_p4();
+	  double initThetaGJ,ThetaMax;
+	  TransientVertex SecondaryVertex=SVH.SecondaryVertex();
 	  std::vector<reco::TransientTrack> RefittedTracks=SVH.RefittedTracks();
-          double s = VertexRotationAndSignificance(SecondaryVertex,RefittedTracks,tauFlghtDirNoCorr,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
+	  double s = VertexRotationAndSignificance(SecondaryVertex,RefittedTracks,tauFlghtDirNoCorr,primaryVertexReFitAndRotated,a1_p4,tauFlghtDir,initThetaGJ,ThetaMax);
 	  if(/*(s<sigcut_  || fabs(initThetaGJ)<fabs(ThetaMax)) &&*/ s>=0 ){
 	    if(fabs(tauFlghtDirNoCorr.Eta())<etacut_ || fabs(tauFlghtDir.Eta())<etacut_ ){
 	      KTau.SetInitialVertexProperties(primaryVertexReFit,primaryVertexReFitAndRotated,SVH.RefittedTracks(),SVH.SecondaryVertex());
@@ -196,7 +205,7 @@ bool KinematicTauProducer::FitKinematicTauCandidate(SelectedKinematicDecay &KFTa
     if(fitStatus>=1){
       cntSVFound_.at(ambiguity)++;
       ChiSquared chiSquared(kinTauCreator->chi2(0), kinTauCreator->ndf(0));
-      if(chiSquared.probability()>0.05)cntSVQC_.at(ambiguity)++;
+      if(chiSquared.probability()>0.01)cntSVQC_.at(ambiguity)++;
     }
     
     edm::LogInfo("KinematicTauProducer") <<"KinematicTauProducer::select: fitstatus " << fitStatus ;
