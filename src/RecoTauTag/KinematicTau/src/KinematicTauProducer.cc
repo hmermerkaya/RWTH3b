@@ -59,6 +59,7 @@ void KinematicTauProducer::beginJob(){
   cnt_ = 0;
   cntFound_=0;
   if(do_BDTTrain_){
+    /*
    output = new TFile("ForTrain.root","RECREATE");
    output_tree = new TTree("t","t");
    output_tree->Branch("BDT_vtxSignPVRotSV",&BDT_vtxSignPVRotSV);
@@ -66,8 +67,10 @@ void KinematicTauProducer::beginJob(){
    output_tree->Branch("BDT_a1Mass",&BDT_a1Mass);
    output_tree->Branch("BDT_energyTFraction",&BDT_energyTFraction);
    output_tree->Branch("BDT_chiSquared",&BDT_chiSquared);
+    */
   }
   if(do_BDTComp_){
+    /*
      reader  = new TMVA::Reader();
      reader->AddVariable( "fracMins", &fracMins);
      reader->AddVariable( "a1MassMins", &a1MassMins);
@@ -75,6 +78,7 @@ void KinematicTauProducer::beginJob(){
      reader->AddVariable( "iterMins", &iterMins);
      reader->AddVariable( "PVSVMins", &PVSVMins);
      reader->BookMVA( "BDT_method",BDTweightFileZero_);
+    */
   }
   //     reader->BookMVA( "BDT_method", BDTweightFileMinus_ );
 }
@@ -339,7 +343,8 @@ double KinematicTauProducer::VertexRotationAndSignificance(TransientVertex &tmpV
 
 
 void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
-  // Configure required paramamters
+  /*  
+// Configure required paramamters
   reco::PFTau refitPFTau =  kinTauCreator->getPFTau();
   std::vector<LorentzVectorParticle> chargedDaughters = kinTauCreator->chargedDaughters();
   std::vector<LorentzVectorParticle> neutralDaughters = kinTauCreator->neutralDaughters();
@@ -360,6 +365,7 @@ void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,FitSequen
 
   ChiSquared chiSquared(kinTauCreator->chi2(0), kinTauCreator->ndf(0));
 
+  
   BDT_chiSquared.push_back(TMath::Prob( chiSquared.probability(), 3));
   BDT_energyTFraction.push_back(energyTFraction);
   BDT_vtxSignPVRotSV.push_back(vtxSignPVRotSV);
@@ -368,12 +374,12 @@ void KinematicTauProducer::FillTreeForTraining(unsigned int &ambiguity,FitSequen
   BDT_iterations.push_back(kinTauCreator->Niter());
   output_tree->Fill();
 
-
+  */
 }
 
 double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,FitSequencer *kinTauCreator, const int & fitStatus, SelectedKinematicDecay &KFTau){
   // Configure required paramamters
-
+  /*
   double MvaOut;
   reco::PFTau refitPFTau =  kinTauCreator->getPFTau();
   std::vector<LorentzVectorParticle> chargedDaughters = kinTauCreator->chargedDaughters();
@@ -419,7 +425,9 @@ double KinematicTauProducer::ReturnBDTOutput(unsigned int &ambiguity,FitSequence
     a1MassMins =a1Mass;
     MvaOut = reader->EvaluateMVA( "BDT_method" );
   }
-  return MvaOut;
+  
+  return MvaOut;*/
+  return 1.0;
 
 }
 

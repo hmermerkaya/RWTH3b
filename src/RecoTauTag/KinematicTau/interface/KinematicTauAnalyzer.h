@@ -44,19 +44,25 @@ private:
 
   std::vector<std::string> discriminators_;
   edm::InputTag KinematicFitTauTag_,gensrc_,GenEventInfo_;
+  std::string tauType_;
   float TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
   int tau_pdgid_;
   unsigned int NJAKID_;
   std::vector<int> JAKID_;
   int cnt_;
   std::vector<int> cntFound_;
+  bool doFakeRate_, doDQM_;
 
   /////////////////////////////////
   //
   // Valdiation Histograms
   //
   // Check constraints
+
   DQMStore *dbe;
+  std::vector<MonitorElement*> FakeRate_eta, FakeRate_pt,FakeRate_eta_All, FakeRate_pt_All, FakeRate_eta_Eff, FakeRate_pt_Eff, 
+    FakeRate_pt_isFit, FakeRate_eta_isFit, FakeRate_pt_isFit_Eff, FakeRate_eta_isFit_Eff;
+
   std::vector<MonitorElement*> 
     nEvt, 
     TauMass, 
@@ -71,10 +77,10 @@ private:
     SecVtxXChange, 
     SecVtxYChange, 
     SecVtxZChange,
-    TauPhiChange, 
-    TauThetaChange, 
-    TauEChange,
-    TauPtChange,
+    TauPhi, 
+    TauTheta, 
+    TauE,
+    TauPt,
     PionPhiChange, 
     PionThetaChange, 
     PionEChange,
@@ -99,7 +105,7 @@ private:
     chi2prob, 
     TauFlightDir, 
     TauFlightDirInitial,
-    GFAngleInitial,
+    GFAngle_TauRF,
     GFAngle,
     chi2Vtx,
     ndfVtx,
@@ -155,7 +161,7 @@ private:
     Truth_TauMatch_dthetavsL,
     Truth_TauMatch_reldPtvsL, 
     Truth_TauMatch_dGFAnglevsL, 
-    Truth_TauMatch_dGFAngle, 
+    Truth_TauMatch_dGFAngle,
     Truth_A1Match_dPtvslength, 
     Truth_A1Match_dphivslength, 
     Truth_A1Match_dthetavslength,
@@ -166,6 +172,8 @@ private:
     Truth_PionMatch_reldPtvslength,
     Truth_TauMatch_TrueMaxGFAngle,
     Truth_TauMatch_TrueGFAngle,
+    Truth_TauMatch_TrueGFAngle_TauRF,
+    Truth_TauMatch_GFAngleRecovsTruth_TauRF,
     Truth_TauMatch_TrueGFAngleoverMaxGFAngle,
     Truth_TauMatch_dGFAnglevsTrackchi2,
     Truth_TauMatch_dGFAnglevsTrackQuality,

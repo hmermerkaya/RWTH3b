@@ -34,10 +34,13 @@ KinematicTauAnalyzer::KinematicTauAnalyzer(const edm::ParameterSet& iConfig):
   KinematicFitTauTag_(iConfig.getParameter<edm::InputTag>("KinematicFitTauTag")),
   gensrc_(iConfig.getParameter<edm::InputTag>( "gensrc" )),
   GenEventInfo_(iConfig.getParameter<edm::InputTag>("GenEventInfo")),
+  tauType_( iConfig.getUntrackedParameter<std::string>("tauType", "hps") ),
   TauMatchingDR_( iConfig.getParameter<double>("TauMatchingDR")),
   TauPtMin_( iConfig.getParameter<double>("TauPtMin")),
   TauEtaMax_( iConfig.getParameter<double>("TauEtaMax")),
-  JAKID_( iConfig.getParameter< std::vector<int> >("jakid") )
+  JAKID_( iConfig.getParameter< std::vector<int> >("jakid") ),
+  doFakeRate_( iConfig.getParameter<bool>("doFakeRate")),
+  doDQM_( iConfig.getParameter<bool>("doDQM"))
 {
   dbe = 0;
   dbe = edm::Service<DQMStore>().operator->();
@@ -51,6 +54,50 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
   
   edm::Handle<SelectedKinematicDecayCollection> KinematicFitTaus;
   iEvent.getByLabel(KinematicFitTauTag_,KinematicFitTaus);
+
+  if(doFakeRate_){
+    edm::Handle<reco::PFTauCollection> inputCollection;
+    iEvent.getByLabel(tauType_+"PFTauProducer", inputCollection);
+
+    for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
+      for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
+	reco::PFTauRef thePFTau(inputCollection, iPFTau);
+	FakeRate_eta_All.at(ambiguity)->Fill(thePFTau->eta(),weight);
+	FakeRate_pt_All.at(ambiguity)->Fill(thePFTau->pt(),weight);
+	for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
+	  SelectedKinematicDecay KFTau=(*kinFitTau);
+	  if(pow(KFTau.PFTauRef()->eta()-thePFTau->eta(),2.0)+pow(fmod(fabs(KFTau.PFTauRef()->phi()-thePFTau->phi()),2*TMath::Pi()),2.0)<0.2){
+	    FakeRate_eta_isFit.at(ambiguity)->Fill(thePFTau->eta(),weight);
+	    FakeRate_pt_isFit.at(ambiguity)->Fill(thePFTau->pt(),weight);
+	     bool passed=true;
+	    for(std::vector<std::string>::const_iterator discr=discriminators_.begin(); discr!=discriminators_.end(); ++discr){
+	      if(kinFitTau->discriminators(ambiguity).count(*discr)>0){
+		if(!kinFitTau->discriminators(ambiguity).find(*discr)->second) passed=false;
+	      }
+	    }
+	    if(passed){
+	      FakeRate_eta.at(ambiguity)->Fill(thePFTau->eta(),weight);
+	      FakeRate_pt.at(ambiguity)->Fill(thePFTau->pt(),weight);
+	    }
+	  }
+	}
+      }
+    
+      FakeRate_pt_isFit_Eff.at(ambiguity)->Reset();
+      FakeRate_pt_isFit_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_pt_isFit.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+      
+      FakeRate_eta_isFit_Eff.at(ambiguity)->Reset();
+      FakeRate_eta_isFit_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_eta_isFit.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+      
+      FakeRate_pt_Eff.at(ambiguity)->Reset();
+      FakeRate_pt_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_pt.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+
+      FakeRate_eta_Eff.at(ambiguity)->Reset();
+      FakeRate_eta_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_eta.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+
+    }
+  }
+  if(doDQM_){
 
   edm::Handle<reco::GenParticleCollection> genParticles;
   iEvent.getByLabel(gensrc_, genParticles);
@@ -95,18 +142,20 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	Truth_TauMatched.at(ambiguity)->Fill(0.0,weight);
 	TauMass.at(ambiguity)->Fill(Tau.M(),weight);
 	dTauMass.at(ambiguity)->Fill(Tau.M()-Tau_initial.M(),weight);
-	TauPhiChange.at(ambiguity)->Fill(Tau.Phi(),weight);
-	TauThetaChange.at(ambiguity)->Fill(Tau.Theta(),weight);
-	TauEChange.at(ambiguity)->Fill(Tau.E(),weight);
-	TauPtChange.at(ambiguity)->Fill(Tau.Pt(),weight);
+	TauPhi.at(ambiguity)->Fill(Tau.Phi(),weight);
+	TauTheta.at(ambiguity)->Fill(Tau.Theta(),weight);
+	TauE.at(ambiguity)->Fill(Tau.E(),weight);
+	TauPt.at(ambiguity)->Fill(Tau.Pt(),weight);
 	TauFlightDir.at(ambiguity)->Fill(FlightDir.Angle(Tau.Vect()),weight);
         TauFlightDirInitial.at(ambiguity)->Fill(FlightDir_initial.Angle(Tau_initial.Vect()),weight);
 
 	//std::cout << "DQM " << Tau_initial.Px() << " " << Tau_initial.Py() << " " << Tau_initial.Pz() << " " << Tau_initial.E() 
 	// << " Vector " << FlightDir_initial.X() << " " << FlightDir_initial.Y() << " " <<FlightDir_initial.Z() << std::endl;
 	//std::cout << "KinematicTauAnalyzer::analyze C" << std::endl;
-	GFAngle.at(ambiguity)->Fill(a1.Angle(Tau.Vect()),weight);
-	GFAngleInitial.at(ambiguity)->Fill(a1_initial.Angle(Tau_initial.Vect()),weight);
+	GFAngle.at(ambiguity)->Fill(Tau.Angle(a1.Vect()),weight);
+	TLorentzVector a1_TauRF=a1;
+	a1_TauRF.Boost(-Tau.BoostVector());
+	GFAngle_TauRF.at(ambiguity)->Fill(cos(Tau.Angle(a1_TauRF.Vect())),weight);
 
 	for(unsigned int i=0; i<Pions.size();i++){
 	  PionMass.at(ambiguity)->Fill(Pions.at(i).M(),weight);
@@ -310,13 +359,13 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		    Truth_TauMatch_dphivsPtandEtaCut.at(ambiguity).at(idx)->Fill(mc.Pt(),Tau.E()-mc.E(),weight);
 		    Truth_TauMatch_dthetavsPtandEtaCut.at(ambiguity).at(idx)->Fill(mc.Pt(),Tau.DeltaPhi(mc),weight);
 		    Truth_TauMatch_reldPtvsPtandEtaCut.at(ambiguity).at(idx)->Fill(mc.Pt(),Tau.Theta()-mc.Theta(),weight);
-
+		    
 		    Truth_TauMatch_dPtvsLandEtaCut.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.Pt()-mc.Pt(),weight);
 		    Truth_TauMatch_dEvsLandEtaCut.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),(Tau.Pt()-mc.Pt())/mc.Pt(),weight);
 		    Truth_TauMatch_dphivsLandEtaCut.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.E()-mc.E(),weight);
 		    Truth_TauMatch_dthetavsLandEtaCut.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.DeltaPhi(mc),weight);
 		    Truth_TauMatch_reldPtvsLandEtaCut.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),Tau.Theta()-mc.Theta(),weight);
-
+		    
 		    Truth_TauMatch_dPtvsPhiandEtaCut.at(ambiguity).at(idx)->Fill(mc.Phi(),Tau.Pt()-mc.Pt(),weight);
 		    Truth_TauMatch_dEvsPhiandEtaCut.at(ambiguity).at(idx)->Fill(mc.Phi(),(Tau.Pt()-mc.Pt())/mc.Pt(),weight);
 		    Truth_TauMatch_dphivsPhiandEtaCut.at(ambiguity).at(idx)->Fill(mc.Phi(),Tau.E()-mc.E(),weight);
@@ -333,7 +382,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  }
 		  Truth_TauMatch_dGFAngle.at(ambiguity).at(idx)->Fill(a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  Truth_TauMatch_dGFAnglevsL.at(ambiguity).at(idx)->Fill(TruthFlightDir.Mag(),a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
-
+		  
 		  ///////////////////
 		  //Quality cuts and GF analge
 		  // track chi2
@@ -363,6 +412,15 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
 		  Truth_TauMatch_TrueMaxGFAngle.at(ambiguity).at(idx)->Fill(MultiProngTauSolver::ThetaGJMax(mc_a1),weight);
 		  Truth_TauMatch_TrueGFAngle.at(ambiguity).at(idx)->Fill(mc.Angle(mc_a1.Vect()),weight);
+		  TLorentzVector mc_a1_TauRF=mc_a1;
+		  mc_a1_TauRF.Boost(-mc.BoostVector());
+		  Truth_TauMatch_TrueGFAngle_TauRF.at(ambiguity).at(idx)->Fill(cos(mc.Angle(mc_a1_TauRF.Vect())),weight);
+		  //
+		  TLorentzVector a1_TauRF=a1;
+		  a1_TauRF.Boost(-Tau.BoostVector());
+		  Truth_TauMatch_GFAngleRecovsTruth_TauRF.at(ambiguity).at(idx)->Fill(cos(mc.Angle(mc_a1_TauRF.Vect())),cos(Tau.Angle(a1_TauRF.Vect())),weight);
+
+		  //
 		  if(MultiProngTauSolver::ThetaGJMax(mc_a1)!=0)Truth_TauMatch_TrueGFAngleoverMaxGFAngle.at(ambiguity).at(idx)->Fill(mc.Angle(mc_a1.Vect())/MultiProngTauSolver::ThetaGJMax(mc_a1),weight);
 		  //std::cout << "Tau  " << ambiguity << " " << idx << std::endl;
 		  Truth_A1Match_dPhi.at(ambiguity).at(idx)->Fill(a1.DeltaPhi(mc_a1));
@@ -446,6 +504,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
       }
     }
   }
+  }
 }
 
 
@@ -461,6 +520,22 @@ void KinematicTauAnalyzer::beginJob(){
       if(ambiguity==MultiProngTauSolver::plus)  amb="PlusSolution";
       if(ambiguity==MultiProngTauSolver::minus) amb="MinusSolution";
       // Number of analyzed events
+      dbe->setCurrentFolder("KinematicFitTau/FakRate");
+      FakeRate_eta.push_back(dbe->book1D("FakeRate_eta"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta.at(ambiguity)->setAxisTitle("#eta");
+      FakeRate_pt.push_back(dbe->book1D("FakeRate_pt"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt.at(ambiguity)->setAxisTitle("P_{t}");
+
+      FakeRate_eta_All.push_back(dbe->book1D("FakeRate_eta_All"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_All.at(ambiguity)->setAxisTitle("#eta");
+      FakeRate_pt_All.push_back(dbe->book1D("FakeRate_pt_All"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_All.at(ambiguity)->setAxisTitle("P_{t}");
+
+      FakeRate_eta_Eff.push_back(dbe->book1D("FakeRate_eta_Eff"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_Eff.at(ambiguity)->setAxisTitle("#eta");
+      FakeRate_pt_Eff.push_back(dbe->book1D("FakeRate_pt_Eff"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_Eff.at(ambiguity)->setAxisTitle("P_{t}");
+
+      FakeRate_eta_isFit.push_back(dbe->book1D("FakeRate_eta_isFit"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_isFit.at(ambiguity)->setAxisTitle("#eta");
+      FakeRate_pt_isFit.push_back(dbe->book1D("FakeRate_pt_isFit"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_isFit.at(ambiguity)->setAxisTitle("P_{t}");
+
+      FakeRate_eta_isFit_Eff.push_back(dbe->book1D("FakeRate_eta_isFit_Eff"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_isFit_Eff.at(ambiguity)->setAxisTitle("#eta");
+      FakeRate_pt_isFit_Eff.push_back(dbe->book1D("FakeRate_pt_isFit_Eff"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_isFit_Eff.at(ambiguity)->setAxisTitle("P_{t}");
+
       dbe->setCurrentFolder("KinematicFitTau/FitResult");
       nEvt.push_back(dbe->book1D("nEvt"+amb,"n analyzed Events "+amb, 1, 0., 1.));  nEvt.at(ambiguity)->setAxisTitle("Number of Events");
       TauMass.push_back(dbe->book1D("TauMass"+amb,"M_{Tau} "+amb,100,1.7,1.8));      TauMass.at(ambiguity)->setAxisTitle("M_{Tau} (GeV)");
@@ -478,10 +553,10 @@ void KinematicTauAnalyzer::beginJob(){
       SecVtxYChange.push_back(dbe->book1D("SecVtxYChange"+amb,"Vtx_{Y}^{Sec} "+amb,100,-0.02,0.02)); SecVtxYChange.at(ambiguity)->setAxisTitle("Vtx_{Y}^{Sec} (cm)");
       SecVtxZChange.push_back(dbe->book1D("SecVtxZChange"+amb,"Vtx_{Z}^{Sec} "+amb,100,-0.02,0.02)); SecVtxZChange.at(ambiguity)->setAxisTitle("Vtx_{Z}^{Sec} (cm)");
       
-      TauPhiChange.push_back(dbe->book1D("TauPhiChange"+amb,"phi_{#tau} "+amb,100,-TMath::Pi(),TMath::Pi()));         TauPhiChange.at(ambiguity)->setAxisTitle("#phi_{#tau} (rad)");
-      TauThetaChange.push_back(dbe->book1D("TauThetaChange"+amb,"theta_{#tau} "+amb,100,0.0,TMath::Pi()));  TauThetaChange.at(ambiguity)->setAxisTitle("#theta_{#tau} (rad)");
-      TauEChange.push_back(dbe->book1D("TauEChange"+amb,"E_{#tau} "+amb,100,0,100));                   TauEChange.at(ambiguity)->setAxisTitle("E_{#tau} (GeV)");
-      TauPtChange.push_back(dbe->book1D("TauEChange"+amb,"P_{t}^{#tau} "+amb,100,0,100)); TauPtChange.at(ambiguity)->setAxisTitle("P_{t}^{#tau} (GeV)");
+      TauPhi.push_back(dbe->book1D("TauPhi"+amb,"phi_{#tau} "+amb,100,-TMath::Pi(),TMath::Pi()));         TauPhi.at(ambiguity)->setAxisTitle("#phi_{#tau} (rad)");
+      TauTheta.push_back(dbe->book1D("TauTheta"+amb,"theta_{#tau} "+amb,100,0.0,TMath::Pi()));  TauTheta.at(ambiguity)->setAxisTitle("#theta_{#tau} (rad)");
+      TauE.push_back(dbe->book1D("TauE"+amb,"E_{#tau} "+amb,100,0,100));                   TauE.at(ambiguity)->setAxisTitle("E_{#tau} (GeV)");
+      TauPt.push_back(dbe->book1D("TauPt"+amb,"P_{t}^{#tau} "+amb,100,0,100)); TauPt.at(ambiguity)->setAxisTitle("P_{t}^{#tau} (GeV)");
       PionPhiChange.push_back(dbe->book1D("PionPhiChange"+amb,"#delta#phi_{#pi} "+amb,100,-0.05,0.05));       PionPhiChange.at(ambiguity)->setAxisTitle("#delta#phi_{#pi} (rad)");
       PionThetaChange.push_back(dbe->book1D("PionThetaChange"+amb,"#delta#theta_{#pi} "+amb,100,-0.05,0.05)); PionThetaChange.at(ambiguity)->setAxisTitle("#delta#theta_{#pi} (rad)");
       PionEChange.push_back(dbe->book1D("PionEChange"+amb,"#deltaE_{#pi} "+amb,100,-10,10));                  PionEChange.at(ambiguity)->setAxisTitle("#deltaE_{#pi} (GeV)");
@@ -508,8 +583,8 @@ void KinematicTauAnalyzer::beginJob(){
       csum.push_back(dbe->book1D("csum"+amb,"csum"+amb,51,-0.5,50.5));  csum.at(ambiguity)->setAxisTitle("csum");
       mincsum.push_back(dbe->book1D("mincsum"+amb,"mincsum"+amb,51,-0.5,50.5));  mincsum.at(ambiguity)->setAxisTitle("mincsum");
       chi2prob.push_back(dbe->book1D("chi2prob"+amb,"LC chi2prob"+amb,100,0.0,1.0));  chi2prob.at(ambiguity)->setAxisTitle("LC #chi^{2} Probabilty");
-      GFAngleInitial.push_back(dbe->book1D("GFAngleInitial"+amb,"|#theta_{GF}^{Lab,Initial}|"+amb,100,0.0,0.5));  GFAngleInitial.at(ambiguity)->setAxisTitle("|#theta_{GF}^{Lab,Initial}| (rad)");
-      GFAngle.push_back(dbe->book1D("GFAngleKF"+amb,"|#theta_{GF}^{Lab,KF}|"+amb,100,0.0,0.5));  GFAngle.at(ambiguity)->setAxisTitle("|#theta_{GF}^{KF,Initial}| (rad)");
+      GFAngle_TauRF.push_back(dbe->book1D("GFAngle_TauRF"+amb,"cos(#theta_{GF}^{#tau RF})"+amb,100,-1.0,1.0));  GFAngle_TauRF.at(ambiguity)->setAxisTitle("cos(#theta_{GF}^{#tau RF})");
+      GFAngle.push_back(dbe->book1D("GFAngleKF"+amb,"#theta_{GF}^{Lab,KF}"+amb,100,0.0,0.5));  GFAngle.at(ambiguity)->setAxisTitle("#theta_{GF}^{KF,Initial} (rad)");
 
 
       chi2SVtx.push_back(dbe->book1D("chi2SVtx"+amb,"Secondary Vertex chi2"+amb,100,0.0,10.0));  chi2SVtx.at(ambiguity)->setAxisTitle("Secondary Vertex #chi^{2}");
@@ -634,6 +709,8 @@ void KinematicTauAnalyzer::beginJob(){
 
       Truth_TauMatch_TrueMaxGFAngle.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_TrueGFAngle.push_back(std::vector<MonitorElement*>());
+      Truth_TauMatch_TrueGFAngle_TauRF.push_back(std::vector<MonitorElement*>());
+      Truth_TauMatch_GFAngleRecovsTruth_TauRF.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_TrueGFAngleoverMaxGFAngle.push_back(std::vector<MonitorElement*>());
 
       Truth_TauMatch_dGFAnglevsTrackchi2.push_back(std::vector<MonitorElement*>());
@@ -729,6 +806,12 @@ void KinematicTauAnalyzer::beginJob(){
 
 	  Truth_TauMatch_TrueMaxGFAngle.at(ambiguity).push_back(dbe->book1D("GFMaxAngle"+tmp+amb,"Truth Tau-Matched #theta_{GF}^{Max,Truth} "+tmp+amb+")",100,0.0,0.1)); Truth_TauMatch_TrueMaxGFAngle.at(ambiguity).at(idx)->setAxisTitle("#theta_{GF}^{Max,Truth} (rad)");
 	  Truth_TauMatch_TrueGFAngle.at(ambiguity).push_back(dbe->book1D("GFAngle"+tmp+amb,"Truth Tau-Matched #theta_{GF}^{Truth} "+tmp+amb+")",100,0.0,0.1)); Truth_TauMatch_TrueGFAngle.at(ambiguity).at(idx)->setAxisTitle("#theta_{GF}^{Truth} (rad)");
+
+	  Truth_TauMatch_TrueGFAngle_TauRF.at(ambiguity).push_back(dbe->book1D("GFAngle_TauRF"+tmp+amb,"Truth Tau-Matched cos(#theta_{GF}^{Truth}) "+tmp+amb+")",100,-1.0,1.0)); Truth_TauMatch_TrueGFAngle_TauRF.at(ambiguity).at(idx)->setAxisTitle("cos(#theta_{GF,#tau RF}^{Truth})");
+
+	  Truth_TauMatch_GFAngleRecovsTruth_TauRF.at(ambiguity).push_back(dbe->book2D("GFAngleRecovsTruth_TauRF"+tmp+amb,"Truth Tau-Matched cos(#theta_{GF,#tau RF}^{Truth}) vs cos(#theta_{GF,#tau RF})",50,-1.0,1.0,50,-1.0,1.0)); Truth_TauMatch_GFAngleRecovsTruth_TauRF.at(ambiguity).at(idx)->setAxisTitle("cos(#theta_{GF,#tau RF}^{Truth})",2); Truth_TauMatch_GFAngleRecovsTruth_TauRF.at(ambiguity).at(idx)->setAxisTitle("cos(#theta_{GF,#tau RF})",1);
+
+
 	  Truth_TauMatch_TrueGFAngleoverMaxGFAngle.at(ambiguity).push_back(dbe->book1D("GFAngleoverMaxGFAngle"+tmp+amb,"Truth Tau-Matched #theta_{GF}^{Truth}/#theta_{GF}^{Max,Truth} "+tmp+amb+")",100,0.0,1.0)); Truth_TauMatch_TrueGFAngleoverMaxGFAngle.at(ambiguity).at(idx)->setAxisTitle("#theta_{GF}^{Truth}/#theta_{GF}^{Max,Truth}");
 
 	  Truth_TauMatch_dGFAnglevsTrackchi2.at(ambiguity).push_back(dbe->book2D("GFResAnglevsTrackchi2"+tmp+amb,"Truth Tau-Matched d#theta_{GF}^{Lab} vs prob( "+tmp+amb+")",20,0.0,1.0,64,-0.05,0.05)); Truth_TauMatch_dGFAnglevsTrackchi2.at(ambiguity).at(idx)->setAxisTitle("d#theta_{t,#tau} (rad)",2); Truth_TauMatch_dGFAnglevsTrackchi2.at(ambiguity).at(idx)->setAxisTitle("Track Probability",1);

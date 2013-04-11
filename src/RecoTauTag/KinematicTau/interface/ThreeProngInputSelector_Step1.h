@@ -71,6 +71,7 @@ private:
   std::vector<std::string> TauVtxList_;
   ParticleMassHelper PMH;
   int n3track, n3prong, nhps3prong, npftaus;
+
 };
 
 #endif
