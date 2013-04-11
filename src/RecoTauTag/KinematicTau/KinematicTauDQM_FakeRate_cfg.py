@@ -7,8 +7,7 @@ process = cms.Process("AOD")
 process.load('Configuration/StandardSequences/Services_cff')
 process.load('SimGeneral.MixingModule.mixNoPU_cfi')
 process.load('Configuration/StandardSequences/MagneticField_38T_cff')
-process.load('Configuration.StandardSequences.GeometryExtended_cff')
-#process.load('Configuration.StandardSequences.GeometryDB_cff')
+process.load('Configuration.Geometry.GeometryIdeal_cff')
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 
 # global tag
@@ -21,7 +20,7 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.EventContent.EventContent_cff")
 process.load('HLTrigger.Configuration.HLT_GRun_cff')
 
-process.load("Configuration.StandardSequences.Geometry_cff")
+process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 

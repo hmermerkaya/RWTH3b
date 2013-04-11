@@ -186,6 +186,15 @@ std::vector<TLorentzVector> SelectedKinematicDecay::Pions(unsigned int ambiguity
   return pions;
 }
 
+std::vector<int> SelectedKinematicDecay::Pions_Charge(unsigned int ambiguity){
+  std::vector<int> pions;
+  for(std::vector<SelectedKinematicParticle>::const_iterator iParticle = particles_.begin(); iParticle != particles_.end(); ++iParticle){
+    if(abs(iParticle->pdgid())==PdtPdgMini::pi_plus  && iParticle->ambiguity()==ambiguity){
+      pions.push_back(iParticle->charge());
+    }
+  }
+  return pions;
+}
 
 TLorentzVector SelectedKinematicDecay::a1_p4(unsigned int ambiguity){
   TLorentzVector a1(0,0,0,0);

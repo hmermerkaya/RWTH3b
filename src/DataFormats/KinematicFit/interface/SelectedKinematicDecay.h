@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.24 2012/12/09 15:36:23 cherepan Exp $
+// $Id: SelectedKinematicDecay.h,v 1.25 2013/03/15 12:56:58 inugent Exp $
 //
 //
 
@@ -96,6 +96,7 @@ class SelectedKinematicDecay {
   TLorentzVector                         Tau(unsigned int ambiguity=ZeroAmbiguitySolution);
   TLorentzVector                         Neutrino(unsigned int ambiguity=ZeroAmbiguitySolution);
   std::vector<TLorentzVector>            Pions(unsigned int ambiguity=ZeroAmbiguitySolution);
+  std::vector<int>                    Pions_Charge(unsigned int ambiguity=ZeroAmbiguitySolution);
   TLorentzVector                         a1_p4(unsigned int ambiguity=ZeroAmbiguitySolution);
   reco::Vertex                           SecondaryVertex(unsigned int ambiguity=ZeroAmbiguitySolution);
 
