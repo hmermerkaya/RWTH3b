@@ -142,9 +142,18 @@ reco::TrackRefVector ThreeProngInputSelector_Step1::getPFTauDaughters(reco::PFTa
   double ptmax=0;
   for(unsigned int i=0;i<cands.size();i++){
     if(cands.at(i)->trackRef().isNonnull()) {
+      trkVct.push_back(cands.at(i)->trackRef());
+    }
+  }
+
+
+  /*
+  for(unsigned int i=0;i<cands.size();i++){
+    if(cands.at(i)->trackRef().isNonnull()) {
       if(cands.at(i)->trackRef()->pt()>ptmax){ptmax=cands.at(i)->trackRef()->pt(); j=i;}
     }
   }
+  
   if(!cands.at(j)->trackRef().isNonnull() || cands.at(j)->trackRef().id() != trkCollectionID_) return trkVct;
   trkVct.push_back( cands.at(j)->trackRef() );
   TLorentzVector pi;
@@ -166,6 +175,7 @@ reco::TrackRefVector ThreeProngInputSelector_Step1::getPFTauDaughters(reco::PFTa
       if(LV.M()<PDGInfo::tau_mass())trkVct.push_back(outercands.at(i)->trackRef());
     }
   }
+  */
   return trkVct;
 }
 

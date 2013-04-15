@@ -173,7 +173,7 @@ process.source = cms.Source("PoolSource",
     )
                             )
 
-numberOfEvents = 10000000
+numberOfEvents = 100000
 
 process.maxEvents = cms.untracked.PSet(
         input = cms.untracked.int32(numberOfEvents)
@@ -183,6 +183,7 @@ process.options = cms.untracked.PSet(
         Rethrow = cms.untracked.vstring('ProductNotFound')
         )
 
+process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
 process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
 process.load("RecoTauTag.KinematicTau.KinematicTauPostProcessing_cfi")

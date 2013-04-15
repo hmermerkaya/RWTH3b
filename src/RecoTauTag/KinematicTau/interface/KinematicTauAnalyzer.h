@@ -114,7 +114,10 @@ private:
     ndfSVtx,
     chi2probSVtx,
     FlightLength,
-    FlightLengthSig;
+    FlightLengthSig,
+    PionDr,
+    PionDrHPS,
+    PionDrHPSwithFit;
 
   std::vector<std::vector<MonitorElement*> >  
     Truth_TauMatch_dPhi, 
@@ -214,7 +217,9 @@ private:
     Truth_TauMatch_dEvsPhiandEtaCut,
     Truth_TauMatch_dphivsPhiandEtaCut,
     Truth_TauMatch_dthetavsPhiandEtaCut,
-    Truth_TauMatch_reldPtvsPhiandEtaCut;
+    Truth_TauMatch_reldPtvsPhiandEtaCut,
+    Truth_PionDr,
+    Truth_PionDrAll;
 
 
   std::map<unsigned int,unsigned int> JAKIDtoIndex;

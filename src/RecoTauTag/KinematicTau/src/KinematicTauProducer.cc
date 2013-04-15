@@ -12,7 +12,7 @@
 #include "RecoTauTag/KinematicTau/interface/ParticleBuilder.h"
 #include "SimpleFits/FitSoftware/interface/ErrorMatrixPropagator.h"
 #include "SimpleFits/FitSoftware/interface/MultiProngTauSolver.h"
-
+#include "SimpleFits/FitSoftware/interface/PDGInfo.h"
 
 KinematicTauProducer::KinematicTauProducer(const edm::ParameterSet& iConfig):
   fitParameters_( iConfig.getParameter<edm::ParameterSet>( "fitParameters" ) ),
@@ -135,13 +135,23 @@ bool KinematicTauProducer::select(SelectedKinematicDecayCollection &KinematicFit
       //std::cout << "Kinematic Fit " << i << std::endl;
       //std::cout << "N candidates" << KinematicTauCandidate->at(i).size() << std::endl;
       // pick best secondary vertex
-      unsigned int j=0;
+      unsigned int j=KinematicTauCandidate->at(i).size();
       double chi2=0;
       for(unsigned int k=0; k<KinematicTauCandidate->at(i).size();k++){
 	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(k);
         SecondaryVertexHelper SVH(transTrackBuilder_,KTau);
 	reco::Vertex V=SVH.SecondaryVertex();
-	if(chi2<V.chi2()){chi2=V.chi2();j=k;}
+	const std::vector<reco::Track> tracks=V.refittedTracks();
+	double SumPx(0),SumPy(0),SumPz(0),SumE(0);
+	for(unsigned int i=0; i<tracks.size(); i++){
+	  SumPx += tracks.at(i).px();
+	  SumPy += tracks.at(i).py();
+	  SumPz += tracks.at(i).pz();
+	  SumE += sqrt(pow(tracks.at(i).p(),2)+pow(PDGInfo::pi_mass(),2));
+	}
+	if(sqrt(pow(SumE,2)-pow(SumPx,2)-pow(SumPy,2)-pow(SumPz,2))<PDGInfo::tau_mass()){
+	  if(chi2<V.chi2()){chi2=V.chi2();j=k;}
+	}
       }
       if(j<KinematicTauCandidate->at(i).size()){
 	SelectedKinematicDecay KTau=KinematicTauCandidate->at(i).at(j);
