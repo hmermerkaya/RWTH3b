@@ -1,4 +1,3 @@
-
 import FWCore.ParameterSet.Config as cms
 import HLTrigger.HLTfilters.triggerResultsFilter_cfi as hlt
 
@@ -49,11 +48,9 @@ process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
     'file:/home/home2/institut_3b/nugent/2883A54B-3E97-E111-BA1A-001A647894E8.root',
     'file:/home/home2/institut_3b/nugent/28A87D76-5EC2-E111-923C-001D09F23174.root')
-                            
-                            
-                            )
+)
 
-numberOfEvents = 60
+numberOfEvents = 10000
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
     )
@@ -88,6 +85,17 @@ process.dqmSaver.workflow = "/KinematicFitSequencewithDQM/VAL/RECO"
 
 process.KinematicTauAnalyzer.doFakeRate  = cms.bool(True)
 process.KinematicTauAnalyzer.doDQM = cms.bool(False)
+
+PtCut=cms.double(20.0)
+EtaCut=cms.double(2.0)
+
+process.ThreeProngInputSelectorStep1.minTauPt=PtCut
+process.ThreeProngInputSelectorStep1.TauEtaCut=EtaCut
+process.KinematicTauAnalyzer.TauPtMin=PtCut
+process.KinematicTauAnalyzer.TauEtaMax=EtaCut
+process.TauJAKIDFilter.TauPtMin=PtCut
+process.TauJAKIDFilter.TauEtaMax=EtaCut
+
                                       
 
 process.endjob_step = cms.Path(process.endOfProcess)

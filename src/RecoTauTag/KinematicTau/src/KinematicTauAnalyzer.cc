@@ -1,4 +1,4 @@
-/**
+/*
  Test the KinematicTau package
 
  @author Lars Perchalla & Philip Sauerland
@@ -28,6 +28,12 @@
 #include "TMatrixTSym.h"
 #include "SimpleFits/FitSoftware/interface/ErrorMatrixPropagator.h"
 #include "SimpleFits/FitSoftware/interface/MultiProngTauSolver.h"
+#include "RecoTauTag/KinematicTau/interface/Tau_JAKID_Filter.h"
+#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
+#include <RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h>
+#include "DataFormats/BTauReco/interface/SecondaryVertexTagInfo.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
  
 KinematicTauAnalyzer::KinematicTauAnalyzer(const edm::ParameterSet& iConfig):
   discriminators_( iConfig.getParameter< std::vector<std::string> >("discriminators") ),
@@ -62,6 +68,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
     for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
       for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
 	reco::PFTauRef thePFTau(inputCollection, iPFTau);
+	if(fabs(thePFTau->eta())<TauEtaMax_ && thePFTau->pt()>TauPtMin_){
 	FakeRate_eta_All.at(ambiguity)->Fill(thePFTau->eta(),weight);
 	FakeRate_pt_All.at(ambiguity)->Fill(thePFTau->pt(),weight);
 	for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
@@ -78,50 +85,230 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	    if(passed){
 	      FakeRate_eta.at(ambiguity)->Fill(thePFTau->eta(),weight);
 	      FakeRate_pt.at(ambiguity)->Fill(thePFTau->pt(),weight);
+	      const std::vector<TLorentzVector> Pions=KFTau.Pions(ambiguity);
+	      if(Pions.size()==3){
+		std::vector<int> Charges=KFTau.Pions_Charge();
+		int charge=0;
+		for(unsigned int i=0;i<Pions.size();i++){
+		  charge+=Charges.at(i);
+		}
+		TLorentzVector LV1, LV2, LV3;
+		bool has1=false;;
+		for(unsigned int i=0;i<Pions.size();i++){
+		  if(has1==false && Charges.at(i)==charge){ LV1=Pions.at(i); has1=true;}
+		  else if(Charges.at(i)==charge){ LV2=Pions.at(i);}
+		  else{ LV3=Pions.at(i); }
+		}		
+		TLorentzVector LV13=LV1+LV3;
+		TLorentzVector LV23=LV2+LV3;
+                TLorentzVector LV12=LV1+LV2;
+		if(LV13.M()>LV23.M()){
+		  DalitzFake.at(ambiguity)->Fill(LV13.M(),LV23.M(),weight);
+		  InvMass12Fake.at(ambiguity)->Fill(LV12.M(),weight);
+		  InvMass13Fake.at(ambiguity)->Fill(LV13.M(),weight);
+		  InvMass23Fake.at(ambiguity)->Fill(LV23.M(),weight);
+		}
+		else{
+		  DalitzFake.at(ambiguity)->Fill(LV23.M(),LV13.M(),weight);
+                  InvMass12Fake.at(ambiguity)->Fill(LV12.M(),weight);
+                  InvMass13Fake.at(ambiguity)->Fill(LV13.M(),weight);
+                  InvMass23Fake.at(ambiguity)->Fill(LV23.M(),weight);
+		}
+	      }
+	    }
+	    const reco::PFCandidateRefVector & cands = thePFTau->signalPFChargedHadrCands();
+	    if(cands.size()>=3 && thePFTau->decayMode()==10){
+	      FakeRateHPS_eta.at(ambiguity)->Fill(thePFTau->eta(),weight);
+              FakeRateHPS_pt.at(ambiguity)->Fill(thePFTau->pt(),weight);
 	    }
 	  }
 	}
+	         
+	FakeRate_pt_isFit_Eff.at(ambiguity)->getTH1F()->Reset();
+	FakeRate_pt_isFit_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_pt_isFit.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+	
+	FakeRate_eta_isFit_Eff.at(ambiguity)->getTH1F()->Reset();
+	FakeRate_eta_isFit_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_eta_isFit.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+	
+	FakeRate_pt_Eff.at(ambiguity)->getTH1F()->Reset();
+	FakeRate_pt_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_pt.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+	
+	FakeRate_eta_Eff.at(ambiguity)->getTH1F()->Reset();
+	FakeRate_eta_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_eta.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+	
+	FakeRateHPS_pt_Eff.at(ambiguity)->getTH1F()->Reset();
+	FakeRateHPS_pt_Eff.at(ambiguity)->getTH1F()->Divide(FakeRateHPS_pt.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+	
+	FakeRateHPS_eta_Eff.at(ambiguity)->getTH1F()->Reset();
+	FakeRateHPS_eta_Eff.at(ambiguity)->getTH1F()->Divide(FakeRateHPS_eta.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
+	}
       }
-    
-      FakeRate_pt_isFit_Eff.at(ambiguity)->getTH1F()->Reset();
-      FakeRate_pt_isFit_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_pt_isFit.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
-      
-      FakeRate_eta_isFit_Eff.at(ambiguity)->getTH1F()->Reset();
-      FakeRate_eta_isFit_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_eta_isFit.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
-      
-      FakeRate_pt_Eff.at(ambiguity)->getTH1F()->Reset();
-      FakeRate_pt_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_pt.at(ambiguity)->getTH1F(),FakeRate_pt_All.at(ambiguity)->getTH1F(), 1., 1., "b");
-
-      FakeRate_eta_Eff.at(ambiguity)->getTH1F()->Reset();
-      FakeRate_eta_Eff.at(ambiguity)->getTH1F()->Divide(FakeRate_eta.at(ambiguity)->getTH1F(),FakeRate_eta_All.at(ambiguity)->getTH1F(), 1., 1., "b");
-
     }
   }
   if(doDQM_){
+    edm::Handle<reco::GenParticleCollection> genParticles;
+    iEvent.getByLabel(gensrc_, genParticles);
 
+    /*
+    edm::Handle<std::vector<reco::SecondaryVertexTagInfo> > SecVertexInfo;
+    iEvent.getByLabel("secondaryVertexTagInfos", SecVertexInfo);
+    //std::cout << "N SecVertexInfo " << SecVertexInfo->size() << std::endl;
+    for(unsigned int i=0;i<SecVertexInfo->size();i++){
+      //std::cout << "SecVertexInfo " << i << " " << SecVertexInfo->at(i).nVertices() << std::endl;
+
+      // & primaryVertex() 
+      for(unsigned int j=0;j<SecVertexInfo->at(i).nVertices();j++){
+
+	std::cout << "Found SecVertexInfo: " <<  SecVertexInfo->at(i).secondaryVertex(j).refittedTracks().size() << std::endl;
+	//
+	reco::Vertex V=SecVertexInfo->at(i).secondaryVertex(j);
+        const std::vector<reco::Track> tracks=V.refittedTracks();
+        double SumPx(0),SumPy(0),SumPz(0),SumE(0);
+	int charge=0;
+	TLorentzVector a1(0,0,0,0);
+        for(unsigned int i=0; i<tracks.size(); i++){
+          SumPx += tracks.at(i).px();
+          SumPy += tracks.at(i).py();
+          SumPz += tracks.at(i).pz();
+          SumE  += sqrt(pow(tracks.at(i).p(),2)+pow(PDGInfo::pi_mass(),2));
+	  charge+=tracks.at(i).charge();
+	  TLorentzVector LV(tracks.at(i).px(),tracks.at(i).py(),tracks.at(i).pz(),sqrt(pow(tracks.at(i).p(),2)+pow(PDGInfo::pi_mass(),2)));
+	  a1+=LV;
+        }
+        if(sqrt(pow(SumE,2)-pow(SumPx,2)-pow(SumPy,2)-pow(SumPz,2))<PDGInfo::tau_mass() && abs(charge)==1){
+          if(TMath::Prob(V.chi2(),V.ndof())>0.01){
+	    if(genParticles.isValid()){
+	      bool foundtruth=false;
+	      for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end() && !foundtruth; ++itr){
+		const reco::GenParticle mytau=(*itr);
+		if(Tau_JAKID_Filter::isTruthTauInAcceptance(mytau,TauPtMin_,TauEtaMax_)){
+		  TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
+		  TauDecay_CMSSWReco TD;
+		  unsigned int jak_id, TauBitMask;
+		  TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
+		  std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
+		  if(A1Matched(DecayProd,a1) && doJAKID(jak_id) &&  (int)TD.nProng(TauBitMask)==3){
+		    TLorentzVector mc_a1(0,0,0,0);
+		    for(unsigned int j=0;j<DecayProd.size();j++){
+		      if(fabs(DecayProd.at(j)->pdgId())==PdtPdgMini::a_1_plus){
+			mc_a1.SetPxPyPzE(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
+		      }
+		    }
+		    for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
+		      JAKIDHPS.at(ambiguity)->Fill(jak_id,weight);
+		      a1MassHPS.at(ambiguity)->Fill(a1.M(),weight);
+		      Truth_a1MassHPS.at(ambiguity).at(0)->Fill(a1.M()-mc_a1.M(),weight);
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+        }
+      }
+    }
+    */
+
+    edm::ESHandle<TransientTrackBuilder> transTrackBuilder_;
+    iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",transTrackBuilder_);
+
+    
     edm::Handle<reco::PFTauCollection> inputCollection;
     iEvent.getByLabel(tauType_+"PFTauProducer", inputCollection);
     for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
       reco::PFTauRef thePFTau(inputCollection, iPFTau);
-      const reco::PFCandidateRefVector & cands = thePFTau->signalPFChargedHadrCands();      
-      if(cands.size()>=3 && thePFTau->decayMode()==10){
-	TLorentzVector Pmax(1,0,0,0);
-	for(unsigned int j=0;j<cands.size();j++){
-	  TLorentzVector LV;LV.SetXYZM(cands.at(j)->px(),cands.at(j)->py(),cands.at(j)->pz(),PDGInfo::pi_mass());
-	  if(LV.Pt()>Pmax.Pt())Pmax=LV;
+      const reco::PFCandidateRefVector & cands = thePFTau->signalPFChargedHadrCands();  
+      if(fabs(thePFTau->eta())<TauEtaMax_ && thePFTau->pt()>TauPtMin_){
+	if(cands.size()>=3 && thePFTau->decayMode()==10){
+	  TLorentzVector Pmax(1,0,0,0);
+	  TLorentzVector a1(thePFTau->px(),thePFTau->py(),thePFTau->pz(),thePFTau->energy());
+	  for(unsigned int j=0;j<cands.size();j++){
+	    TLorentzVector LV;LV.SetXYZM(cands.at(j)->px(),cands.at(j)->py(),cands.at(j)->pz(),PDGInfo::pi_mass());
+	    if(LV.Pt()>Pmax.Pt())Pmax=LV;
+	  }
+	  double drmax=0;
+	  for(unsigned int j=0;j<cands.size();j++){
+	    TLorentzVector LV;LV.SetXYZM(cands.at(j)->px(),cands.at(j)->py(),cands.at(j)->pz(),PDGInfo::pi_mass());
+	    if(LV.DeltaR(Pmax)>drmax) drmax=LV.DeltaR(Pmax);
+	  }
+	
+	  //std::cout << "N Signal: " << cands.size() << " " << drmax << std::endl;
+	  if(genParticles.isValid()){
+	    bool foundtruth=false;
+	    for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end() && !foundtruth; ++itr){
+	      const reco::GenParticle mytau=(*itr);
+	      if(Tau_JAKID_Filter::isTruthTauInAcceptance(mytau,TauPtMin_,TauEtaMax_)){
+		TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
+		TauDecay_CMSSWReco TD;
+		unsigned int jak_id, TauBitMask;
+		TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
+		std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
+		if(A1Matched(DecayProd,a1) && doJAKID(jak_id) &&  (int)TD.nProng(TauBitMask)==3){
+		  TLorentzVector mc_a1(0,0,0,0);
+                  for(unsigned int j=0;j<DecayProd.size();j++){
+                    if(fabs(DecayProd.at(j)->pdgId())==PdtPdgMini::a_1_plus){
+                      mc_a1.SetPxPyPzE(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
+                    }
+                  }
+		  for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
+		    JAKIDHPS.at(ambiguity)->Fill(jak_id,weight);
+		    a1MassHPS.at(ambiguity)->Fill(a1.M(),weight);
+		    Truth_a1MassHPS.at(ambiguity).at(0)->Fill(a1.M()-mc_a1.M(),weight);
+
+		  }
+		}
+	      }
+	    }
+	  }
+	  for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){ 
+	    PionDrHPS.at(ambiguity)->Fill(drmax,weight);
+
+	    std::vector<reco::TrackRef> ITT;
+	    const reco::PFCandidateRefVector &cands = thePFTau->signalPFChargedHadrCands();
+	    for(unsigned int i=0;i<cands.size();i++){
+	      if(cands.at(i)->trackRef().isNonnull()) {                                                                                                                                                     
+		ITT.push_back(cands.at(i)->trackRef());         
+	      }     
+	    }   
+	    double minchi2prob(1.0),TrkQuality(5),maxPt(0),minPt(999),HFrac(1.0);
+	    for(unsigned int i=0;i<ITT.size();i++){
+	      double trackprob=TMath::Prob(ITT.at(i)->chi2(),ITT.at(i)->ndof());
+	      if(minchi2prob>trackprob)minchi2prob=trackprob;
+	      if(HFrac>ITT.at(i)->validFraction())HFrac=ITT.at(i)->validFraction();
+	      if(maxPt<ITT.at(i)->pt())maxPt=ITT.at(i)->pt();
+	      if(minPt>ITT.at(i)->pt())minPt=ITT.at(i)->pt();
+	      if(ITT.at(i)->quality(reco::TrackBase::confirmed)){       if(TrkQuality>3) TrkQuality=3;}
+	      else if(ITT.at(i)->quality(reco::TrackBase::highPurity)){ if(TrkQuality>2) TrkQuality=2;}
+	      else if(ITT.at(i)->quality(reco::TrackBase::tight)){      if(TrkQuality>1) TrkQuality=1;}
+	      else if(ITT.at(i)->quality(reco::TrackBase::loose)){      if(TrkQuality>0) TrkQuality=0;}//loose=0, tight=1, highPurity=2, confirmed=3, goodIterative=4                                                                        
+	      //if(ITT.quality(reco::TrackBase::goodIterative) && TrkQuality>4) TrkQuality=4;                                                                                                                                                
+	    }
+
+	    Trackchi2HPS.at(ambiguity)->Fill(minchi2prob,weight);
+	    TrackQualityHPS.at(ambiguity)->Fill(TrkQuality,weight);
+	    MaxTrackPtHPS.at(ambiguity)->Fill(maxPt,weight);
+	    MinTrackPtHPS.at(ambiguity)->Fill(minPt,weight);
+	    MinoverMaxTrackPtHPS.at(ambiguity)->Fill(minPt/maxPt,weight);
+	    HitFracHPS.at(ambiguity)->Fill(HFrac,weight);
+
+	    TransientVertex tmpVtx_;
+	    std::vector<reco::TransientTrack> trks_;
+	    for (std::vector<reco::TrackRef>::const_iterator iter=ITT.begin(); iter!=ITT.end(); ++iter){
+	      trks_.push_back(transTrackBuilder_->build(**iter));
+	    }
+	    edm::Handle<reco::BeamSpot> beamSpot;
+	    iEvent.getByLabel("offlineBeamSpot",beamSpot);
+	    reco::BeamSpot thebeamSpot=*beamSpot;
+	    if (!SecondaryVertexHelper::checkSecVtx(trks_,tmpVtx_,false,&thebeamSpot))continue;
+	    reco::Vertex primaryVertexReFit=tmpVtx_;
+
+	    Vertexchi2HPS.at(ambiguity)->Fill(TMath::Prob(primaryVertexReFit.chi2(),3),weight);
+
+	  }
 	}
-	double drmax=0;
-	for(unsigned int j=0;j<cands.size();j++){
-	  TLorentzVector LV;LV.SetXYZM(cands.at(j)->px(),cands.at(j)->py(),cands.at(j)->pz(),PDGInfo::pi_mass());
-	  if(LV.DeltaR(Pmax)>drmax) drmax=LV.DeltaR(Pmax);
-	}
-	//std::cout << "N Signal: " << cands.size() << " " << drmax << std::endl;
-	for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++) PionDrHPS.at(ambiguity)->Fill(drmax,weight);
       }
     }
-
-  edm::Handle<reco::GenParticleCollection> genParticles;
-  iEvent.getByLabel(gensrc_, genParticles);
+    
   //bool found=false;
   cnt_++;
   for(SelectedKinematicDecayCollection::const_iterator kinFitTau=KinematicFitTaus->begin();kinFitTau!=KinematicFitTaus->end();kinFitTau++){
@@ -210,7 +397,35 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	  PionDrHPSwithFit.at(ambiguity)->Fill(drmax,weight);
 	}
 
-
+	if(Pions.size()==3){
+	  std::vector<int> Charges=KFTau.Pions_Charge();
+	  int charge=0;
+	  for(unsigned int i=0;i<Pions.size();i++){
+	    charge+=Charges.at(i);
+	  }
+	  TLorentzVector LV1, LV2, LV3;
+	  bool has1=false;;
+	  for(unsigned int i=0;i<Pions.size();i++){
+	    if(has1==false && Charges.at(i)==charge){ LV1=Pions.at(i); has1=true;}
+	    else if(Charges.at(i)==charge){ LV2=Pions.at(i);}
+	    else{ LV3=Pions.at(i); }
+	  }
+	  TLorentzVector LV13=LV1+LV3;
+	  TLorentzVector LV23=LV2+LV3;
+	  TLorentzVector LV12=LV1+LV2;
+	  if(LV13.M()>LV23.M()){
+	    Dalitz.at(ambiguity)->Fill(LV13.M(),LV23.M(),weight);
+	    InvMass12.at(ambiguity)->Fill(LV12.M(),weight);
+	    InvMass13.at(ambiguity)->Fill(LV13.M(),weight);
+	    InvMass23.at(ambiguity)->Fill(LV23.M(),weight);
+	  }
+	  else{
+	    Dalitz.at(ambiguity)->Fill(LV23.M(),LV13.M(),weight);
+	    InvMass12.at(ambiguity)->Fill(LV12.M(),weight);
+	    InvMass13.at(ambiguity)->Fill(LV13.M(),weight);
+	    InvMass23.at(ambiguity)->Fill(LV23.M(),weight);
+	  }
+	}
 
 	//std::cout << "KinematicTauAnalyzer::analyze D" << std::endl;
 	NuMass.at(ambiguity)->Fill(Nu.M(),weight);
@@ -254,6 +469,30 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	FlightLength.at(ambiguity)->Fill(KFTau.FlightLength(),weight);
 	FlightLengthSig.at(ambiguity)->Fill(KFTau.FlightLengthSig(),weight);	
 
+	std::vector<reco::TrackRef> ITT=KFTau.InitialTrackTriplet();
+	double minchi2prob(1.0),TrkQuality(5),maxPt(0),minPt(999),HFrac(1.0);
+	for(unsigned int i=0;i<ITT.size();i++){
+	  double trackprob=TMath::Prob(ITT.at(i)->chi2(),ITT.at(i)->ndof());
+	  if(minchi2prob>trackprob)minchi2prob=trackprob;
+	  if(HFrac>ITT.at(i)->validFraction())HFrac=ITT.at(i)->validFraction();
+	  if(maxPt<ITT.at(i)->pt())maxPt=ITT.at(i)->pt();
+	  if(minPt>ITT.at(i)->pt())minPt=ITT.at(i)->pt();
+	  if(ITT.at(i)->quality(reco::TrackBase::confirmed)){       if(TrkQuality>3) TrkQuality=3;}
+	  else if(ITT.at(i)->quality(reco::TrackBase::highPurity)){ if(TrkQuality>2) TrkQuality=2;}
+	  else if(ITT.at(i)->quality(reco::TrackBase::tight)){      if(TrkQuality>1) TrkQuality=1;}
+	  else if(ITT.at(i)->quality(reco::TrackBase::loose)){      if(TrkQuality>0) TrkQuality=0;}//loose=0, tight=1, highPurity=2, confirmed=3, goodIterative=4                                                              
+	  //if(ITT.quality(reco::TrackBase::goodIterative) && TrkQuality>4) TrkQuality=4;                                                                                                                                      
+	}
+
+	Trackchi2.at(ambiguity)->Fill(minchi2prob,weight);
+	TrackQuality.at(ambiguity)->Fill(TrkQuality,weight);
+	MaxTrackPt.at(ambiguity)->Fill(maxPt,weight);
+	MinTrackPt.at(ambiguity)->Fill(minPt,weight);
+	MinoverMaxTrackPt.at(ambiguity)->Fill(minPt/maxPt,weight);
+	HitFrac.at(ambiguity)->Fill(HFrac,weight);
+	Vertexchi2.at(ambiguity)->Fill(TMath::Prob(KFTau.chi2Vtx(),3),weight);
+
+
 	//std::cout << "KinematicTauAnalyzer::analyze E" << std::endl;
 	// If Truth is valid run truth comparison
 	if(genParticles.isValid()){
@@ -261,68 +500,69 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	  bool foundtruth=false;
 	  for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end() && !foundtruth; ++itr){
 	    const reco::GenParticle mytau=(*itr);
-	    if(isTruthTauInAcceptance(mytau)){
+	    if(Tau_JAKID_Filter::isTruthTauInAcceptance(mytau,TauPtMin_,TauEtaMax_)){
 	      //std::cout << "KinematicTauAnalyzer::analyze FA" << std::endl;
 	      TLorentzVector mc(itr->p4().Px(),itr->p4().Py(),itr->p4().Pz(),itr->p4().E());
 	      TauDecay_CMSSWReco TD;
 	      unsigned int jak_id, TauBitMask;
 	      TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
-	      //std::cout << "KinematicTauAnalyzer::analyze FB" << std::endl;
-	      //std::cout << "MC Tau " << itr->p4().Px() << " "<< itr->p4().Py() << " "<< itr->p4().Pz() << std::endl;
-	      //std::cout << "a1 " << a1.Px() << " " << a1.Py() << " " << a1.Pz() << std::endl; 
-	      if(a1.DeltaR(mc)<TauMatchingDR_ && doJAKID(jak_id)){
+	      std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
+	      if(A1Matched(DecayProd,a1)){
 		foundtruth=true;
-		Truth_TauMatched.at(ambiguity)->Fill(1.0,weight);
-		//std::cout << "KinematicTauAnalyzer::analyze FC" << std::endl;
-		JAKID.at(ambiguity)->Fill(jak_id,weight);
-		std::vector<const reco::GenParticle* > DecayProd=TD.Get_TauDecayProducts();
-		//std::cout << "KinematicTauAnalyzer::analyze FD" << std::endl;
-		if(ambiguity==MultiProngTauSolver::plus || ambiguity==MultiProngTauSolver::minus){
-                  TLorentzVector Tau_plus=KFTau.Tau(MultiProngTauSolver::plus);
-                  TLorentzVector Tau_minus=KFTau.Tau(MultiProngTauSolver::minus);
-                  if(fabs(mc.E()-Tau_plus.E())<fabs(mc.E()-Tau_minus.E()) && Tau_plus.E()!=Tau.E())  continue;
-                  if(fabs(mc.E()-Tau_plus.E())>fabs(mc.E()-Tau_minus.E()) && Tau_minus.E()!=Tau.E()) continue;
-                }
-		//std::cout << "KinematicTauAnalyzer::analyze FE" << std::endl;
-		TVector3 TruthPvtx(itr->vx(),itr->vy(),itr->vz());
-		TVector3 TruthSvtx;
-		for( unsigned int dp=0;dp<DecayProd.size();dp++){
-		  if(fabs(DecayProd.at(dp)->pdgId())!=fabs(PdtPdgMini::tau_minus))
-		    TruthSvtx=TVector3(DecayProd.at(dp)->vx(),DecayProd.at(dp)->vy(),DecayProd.at(dp)->vz());
+		if(!(doJAKID(jak_id) &&  (int)TD.nProng(TauBitMask)==3)){
+		  JAKIDFailed.at(ambiguity)->Fill(jak_id,weight);
 		}
+		else{
+		  Truth_TauMatched.at(ambiguity)->Fill(1.0,weight);
+		  //std::cout << "KinematicTauAnalyzer::analyze FC" << std::endl;
+		  JAKID.at(ambiguity)->Fill(jak_id,weight);
+		  //std::cout << "KinematicTauAnalyzer::analyze FD" << std::endl;
+		  if(ambiguity==MultiProngTauSolver::plus || ambiguity==MultiProngTauSolver::minus){
+		    TLorentzVector Tau_plus=KFTau.Tau(MultiProngTauSolver::plus);
+		    TLorentzVector Tau_minus=KFTau.Tau(MultiProngTauSolver::minus);
+		    if(fabs(mc.E()-Tau_plus.E())<fabs(mc.E()-Tau_minus.E()) && Tau_plus.E()!=Tau.E())  continue;
+		    if(fabs(mc.E()-Tau_plus.E())>fabs(mc.E()-Tau_minus.E()) && Tau_minus.E()!=Tau.E()) continue;
+		  }
+		  //std::cout << "KinematicTauAnalyzer::analyze FE" << std::endl;
+		  TVector3 TruthPvtx(itr->vx(),itr->vy(),itr->vz());
+		  TVector3 TruthSvtx;
+		  for( unsigned int dp=0;dp<DecayProd.size();dp++){
+		    if(fabs(DecayProd.at(dp)->pdgId())!=fabs(PdtPdgMini::tau_minus))
+		      TruthSvtx=TVector3(DecayProd.at(dp)->vx(),DecayProd.at(dp)->vy(),DecayProd.at(dp)->vz());
+		  }
 
-		TVector3 dist=TruthSvtx-TruthPvtx;
-		double length=dist.Mag();
-		//std::cout << "KinematicTauAnalyzer::analyze F1" << std::endl;
-
-		if(JAKIDtoIndex.count(jak_id)==1){
-		  unsigned int idx=JAKIDtoIndex.find(jak_id)->second;
-                  TMatrixDSym Pvtx_cov(3);
-                  Pvtx_cov.ResizeTo(TMatrixDSym(3));
-                  for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Pvtx_cov(i,j) = Pvtx.covariance(i,j);//diagonals are squares of sigmas
-                  TMatrixDSym Svtx_cov(3);
-		  //std::cout << "KinematicTauAnalyzer::analyze F2" << std::endl;
-                  Svtx_cov.ResizeTo(TMatrixDSym(3));
-                  for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = Secvtx.covariance(i,j);//diagonals are squares of sigmas
-                  TVector3 Pvtx_point(Pvtx.position().x(),Pvtx.position().y(),Pvtx.position().z());
-                  TVector3 Svtx_point(Secvtx.position().x(),Secvtx.position().y(),Secvtx.position().z());
-		  //std::cout << "KinematicTauAnalyzer::analyze F3" << std::endl;
-                  TMatrixDSym Truth_cov(3);
-                  Truth_cov.ResizeTo(TMatrixDSym(3));
-                  for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = Secvtx.covariance(i,j);
-		  //std::cout << "KinematicTauAnalyzer::analyze G" << std::endl;
-		  //Tau
-		  Truth_TauMatch_dPhi.at(ambiguity).at(idx)->Fill(Tau.DeltaPhi(mc),weight);
-		  Truth_TauMatch_dTheta.at(ambiguity).at(idx)->Fill(mc.Theta()-Tau.Theta(),weight);
-		  Truth_TauMatch_dE.at(ambiguity).at(idx)->Fill(mc.E()-Tau.E(),weight);
-		  Truth_TauMatch_dPt.at(ambiguity).at(idx)->Fill(mc.Pt()-Tau.Pt(),weight);
-		  Truth_TauMatch_dPz.at(ambiguity).at(idx)->Fill(mc.Pz()-Tau.Pz(),weight);
-
-
-		  TruthVtxX.at(ambiguity).at(idx)->Fill(Pvtx.position().x()-TruthPvtx.X(),weight);
-		  TruthVtxY.at(ambiguity).at(idx)->Fill(Pvtx.position().y()-TruthPvtx.Y(),weight);
-		  TruthVtxZ.at(ambiguity).at(idx)->Fill(Pvtx.position().z()-TruthPvtx.Z(),weight);
-
+		  TVector3 dist=TruthSvtx-TruthPvtx;
+		  double length=dist.Mag();
+		  //std::cout << "KinematicTauAnalyzer::analyze F1" << std::endl;
+		  
+		  if(JAKIDtoIndex.count(jak_id)==1){
+		    unsigned int idx=JAKIDtoIndex.find(jak_id)->second;
+		    TMatrixDSym Pvtx_cov(3);
+		    Pvtx_cov.ResizeTo(TMatrixDSym(3));
+		    for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Pvtx_cov(i,j) = Pvtx.covariance(i,j);//diagonals are squares of sigmas
+		    TMatrixDSym Svtx_cov(3);
+		    //std::cout << "KinematicTauAnalyzer::analyze F2" << std::endl;
+		    Svtx_cov.ResizeTo(TMatrixDSym(3));
+		    for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = Secvtx.covariance(i,j);//diagonals are squares of sigmas
+		    TVector3 Pvtx_point(Pvtx.position().x(),Pvtx.position().y(),Pvtx.position().z());
+		    TVector3 Svtx_point(Secvtx.position().x(),Secvtx.position().y(),Secvtx.position().z());
+		    //std::cout << "KinematicTauAnalyzer::analyze F3" << std::endl;
+		    TMatrixDSym Truth_cov(3);
+		    Truth_cov.ResizeTo(TMatrixDSym(3));
+		    for(int i=0; i!=3; i++) for(int j=0; j!=3; j++) Svtx_cov(i,j) = Secvtx.covariance(i,j);
+		    //std::cout << "KinematicTauAnalyzer::analyze G" << std::endl;
+		    //Tau
+		    Truth_TauMatch_dPhi.at(ambiguity).at(idx)->Fill(Tau.DeltaPhi(mc),weight);
+		    Truth_TauMatch_dTheta.at(ambiguity).at(idx)->Fill(mc.Theta()-Tau.Theta(),weight);
+		    Truth_TauMatch_dE.at(ambiguity).at(idx)->Fill(mc.E()-Tau.E(),weight);
+		    Truth_TauMatch_dPt.at(ambiguity).at(idx)->Fill(mc.Pt()-Tau.Pt(),weight);
+		    Truth_TauMatch_dPz.at(ambiguity).at(idx)->Fill(mc.Pz()-Tau.Pz(),weight);
+		    
+		    
+		    TruthVtxX.at(ambiguity).at(idx)->Fill(Pvtx.position().x()-TruthPvtx.X(),weight);
+		    TruthVtxY.at(ambiguity).at(idx)->Fill(Pvtx.position().y()-TruthPvtx.Y(),weight);
+		    TruthVtxZ.at(ambiguity).at(idx)->Fill(Pvtx.position().z()-TruthPvtx.Z(),weight);
+		  
                   PullVtxX.at(ambiguity).at(idx)->Fill((Pvtx.position().x()-TruthPvtx.X())/sqrt(Pvtx_cov(0,0)),weight);
 		  PullVtxY.at(ambiguity).at(idx)->Fill((Pvtx.position().y()-TruthPvtx.Y())/sqrt(Pvtx_cov(1,1)),weight);
 		  PullVtxZ.at(ambiguity).at(idx)->Fill((Pvtx.position().z()-TruthPvtx.Z())/sqrt(Pvtx_cov(2,2)),weight);
@@ -435,25 +675,25 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		  //Quality cuts and GF analge
 		  // track chi2
 		  std::vector<reco::TrackRef> ITT=KFTau.InitialTrackTriplet();
-		  double minchi2prob(1.0),TrackQuality(5),maxPt(0),minPt(999),HitFrac(1.0);
+		  double minchi2prob(1.0),TrkQuality(5),maxPt(0),minPt(999),HFrac(1.0);
 		  for(unsigned int i=0;i<ITT.size();i++){
 		    double trackprob=TMath::Prob(ITT.at(i)->chi2(),ITT.at(i)->ndof());
 		    if(minchi2prob>trackprob)minchi2prob=trackprob;
-		    if(HitFrac>ITT.at(i)->validFraction())HitFrac=ITT.at(i)->validFraction();
+		    if(HFrac>ITT.at(i)->validFraction())HFrac=ITT.at(i)->validFraction();
 		    if(maxPt<ITT.at(i)->pt())maxPt=ITT.at(i)->pt();
 		    if(minPt>ITT.at(i)->pt())minPt=ITT.at(i)->pt();
-		    if(ITT.at(i)->quality(reco::TrackBase::confirmed)){       if(TrackQuality>3) TrackQuality=3;}
-		    else if(ITT.at(i)->quality(reco::TrackBase::highPurity)){ if(TrackQuality>2) TrackQuality=2;}
-		    else if(ITT.at(i)->quality(reco::TrackBase::tight)){      if(TrackQuality>1) TrackQuality=1;}
-		    else if(ITT.at(i)->quality(reco::TrackBase::loose)){      if(TrackQuality>0) TrackQuality=0;}//loose=0, tight=1, highPurity=2, confirmed=3, goodIterative=4
-		    //if(ITT.quality(reco::TrackBase::goodIterative) && TrackQuality>4) TrackQuality=4;
+		    if(ITT.at(i)->quality(reco::TrackBase::confirmed)){       if(TrkQuality>3) TrkQuality=3;}
+		    else if(ITT.at(i)->quality(reco::TrackBase::highPurity)){ if(TrkQuality>2) TrkQuality=2;}
+		    else if(ITT.at(i)->quality(reco::TrackBase::tight)){      if(TrkQuality>1) TrkQuality=1;}
+		    else if(ITT.at(i)->quality(reco::TrackBase::loose)){      if(TrkQuality>0) TrkQuality=0;}//loose=0, tight=1, highPurity=2, confirmed=3, goodIterative=4
+		    //if(ITT.quality(reco::TrackBase::goodIterative) && TrkQuality>4) TrkQuality=4;
 		  }
 		  Truth_TauMatch_dGFAnglevsTrackchi2.at(ambiguity).at(idx)->Fill(minchi2prob,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
-                  Truth_TauMatch_dGFAnglevsTrackQuality.at(ambiguity).at(idx)->Fill(TrackQuality,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
+                  Truth_TauMatch_dGFAnglevsTrackQuality.at(ambiguity).at(idx)->Fill(TrkQuality,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  Truth_TauMatch_dGFAnglevsMaxTrackPt.at(ambiguity).at(idx)->Fill(maxPt,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
                   Truth_TauMatch_dGFAnglevsMinTrackPt.at(ambiguity).at(idx)->Fill(minPt,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
                   Truth_TauMatch_dGFAnglevsMinoverMaxTrackPt.at(ambiguity).at(idx)->Fill(minPt/maxPt,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
-		  Truth_TauMatch_dGFAnglevsHitFrac.at(ambiguity).at(idx)->Fill(HitFrac,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
+		  Truth_TauMatch_dGFAnglevsHitFrac.at(ambiguity).at(idx)->Fill(HFrac,a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  Truth_TauMatch_dGFAnglevsVertexchi2.at(ambiguity).at(idx)->Fill(TMath::Prob(KFTau.chi2Vtx(),3),a1.Angle(Tau.Vect())-mc.Angle(mc_a1.Vect()),weight);
 		  //std::cout << "Prob " << TMath::Prob(KFTau.chi2(ambiguity),3) << " " << KFTau.chi2(ambiguity) << std::endl;
 		  ///////////////////
@@ -504,6 +744,7 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 			  pidrmin=delta;
 			}
 		      }
+		      Truth_MatchPionDr.at(ambiguity).at(idx)->Fill(pidrmin,weight);
 		    }
 		    if(i==0){
 		      Truth_PionDr.at(ambiguity).at(idx)->Fill(drmax,weight);
@@ -519,6 +760,8 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		      Truth_PionMatch_reldPtvslength.at(ambiguity).at(idx)->Fill(length,(Pions.at(i).Pt()-mcpion.Pt())/mcpion.Pt());
 		    }
 		  }
+
+
 		  //std::cout << "KinematicTauAnalyzer::analyze K" << std::endl;
 		  //nu
 		  TLorentzVector mcnu;
@@ -533,25 +776,27 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 		    Truth_NuMatch_dTheta.at(ambiguity).at(idx)->Fill(mcnu.Theta()-Nu.Theta(),weight);
 		    Truth_NuMatch_dE.at(ambiguity).at(idx)->Fill(mcnu.E()-Nu.E(),weight);
 		  }
+		  }
 		}
 	      }
 	    }
 	  }
+	  if(!foundtruth)JAKIDFailedMatch.at(ambiguity)->Fill(0.5,weight);
 	}
       }
     }
   }
-
   // Fill truth info for all taus within acceptance
+
   if(genParticles.isValid()){
     for(unsigned int ambiguity=0; ambiguity<MultiProngTauSolver::NAmbiguity;ambiguity++){
       bool hastau=false;
       for(reco::GenParticleCollection::const_iterator itr = genParticles->begin(); itr!= genParticles->end(); ++itr){
 	const reco::GenParticle mytau=(*itr);
-	if(isTruthTauInAcceptance(mytau)){
+	if(Tau_JAKID_Filter::isTruthTauInAcceptance(mytau,TauPtMin_,TauEtaMax_)){
 	  hastau=true;
 	  TauDecay_CMSSWReco TD;
-	  unsigned int jak_id, TauBitMask;
+	  unsigned int jak_id(0), TauBitMask(0);
 	  TD.AnalyzeTau(&mytau,jak_id,TauBitMask);
 	  JAKIDall.at(ambiguity)->Fill(jak_id,weight);
 	  //
@@ -587,11 +832,17 @@ void KinematicTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 	// nasty hack for Eff - recompute eff every event with a tau
 	JAKIDeff.at(ambiguity)->getTH1F()->Reset();
 	JAKIDeff.at(ambiguity)->getTH1F()->Divide(JAKID.at(ambiguity)->getTH1F(),JAKIDall.at(ambiguity)->getTH1F(), 1., 1., "b");
+	JAKIDHPSeff.at(ambiguity)->getTH1F()->Reset();
+        JAKIDHPSeff.at(ambiguity)->getTH1F()->Divide(JAKIDHPS.at(ambiguity)->getTH1F(),JAKIDall.at(ambiguity)->getTH1F(), 1., 1., "b");
+	JAKIDFailedEff.at(ambiguity)->getTH1F()->Reset();
+	JAKIDFailedEff.at(ambiguity)->getTH1F()->Divide(JAKIDFailed.at(ambiguity)->getTH1F(),JAKIDall.at(ambiguity)->getTH1F(), 1., 1., "b");
+	JAKIDFailedMatchEff.at(ambiguity)->getTH1F()->Reset();
+	JAKIDFailedMatchEff.at(ambiguity)->getTH1F()->Divide(JAKIDFailedMatch.at(ambiguity)->getTH1F(),nEvt.at(ambiguity)->getTH1F(),1., 1., "b");
       }
     }
   }
+    
   }
-
 }
 
 
@@ -608,8 +859,12 @@ void KinematicTauAnalyzer::beginJob(){
       if(ambiguity==MultiProngTauSolver::minus) amb="MinusSolution";
       // Number of analyzed events
       dbe->setCurrentFolder("KinematicFitTau/FakRate");
+      FakeRateHPS_eta.push_back(dbe->book1D("FakeRateHPS_eta"+amb,"FakeRateHPS_eta"+amb, 50, -2.0, 2.0));  FakeRateHPS_eta.at(ambiguity)->setAxisTitle("#eta");
+      FakeRateHPS_pt.push_back(dbe->book1D("FakeRateHPS_pt"+amb,"FakeRateHPS_pt"+amb, 50, 0.0, 100.0));  FakeRateHPS_pt.at(ambiguity)->setAxisTitle("P_{t}");
+
       FakeRate_eta.push_back(dbe->book1D("FakeRate_eta"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta.at(ambiguity)->setAxisTitle("#eta");
       FakeRate_pt.push_back(dbe->book1D("FakeRate_pt"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt.at(ambiguity)->setAxisTitle("P_{t}");
+
 
       FakeRate_eta_All.push_back(dbe->book1D("FakeRate_eta_All"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_All.at(ambiguity)->setAxisTitle("#eta");
       FakeRate_pt_All.push_back(dbe->book1D("FakeRate_pt_All"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_All.at(ambiguity)->setAxisTitle("P_{t}");
@@ -617,11 +872,21 @@ void KinematicTauAnalyzer::beginJob(){
       FakeRate_eta_Eff.push_back(dbe->book1D("FakeRate_eta_Eff"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_Eff.at(ambiguity)->setAxisTitle("#eta");
       FakeRate_pt_Eff.push_back(dbe->book1D("FakeRate_pt_Eff"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_Eff.at(ambiguity)->setAxisTitle("P_{t}");
 
+      FakeRateHPS_eta_Eff.push_back(dbe->book1D("FakeRateHPS_eta_Eff"+amb,"FakeRateHPS_eta"+amb, 50, -2.0, 2.0));  FakeRateHPS_eta_Eff.at(ambiguity)->setAxisTitle("#eta");
+      FakeRateHPS_pt_Eff.push_back(dbe->book1D("FakeRateHPS_pt_Eff"+amb,"FakeRateHPS_pt"+amb, 50, 0.0, 100.0));  FakeRateHPS_pt_Eff.at(ambiguity)->setAxisTitle("P_{t}");
+
       FakeRate_eta_isFit.push_back(dbe->book1D("FakeRate_eta_isFit"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_isFit.at(ambiguity)->setAxisTitle("#eta");
       FakeRate_pt_isFit.push_back(dbe->book1D("FakeRate_pt_isFit"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_isFit.at(ambiguity)->setAxisTitle("P_{t}");
 
       FakeRate_eta_isFit_Eff.push_back(dbe->book1D("FakeRate_eta_isFit_Eff"+amb,"FakeRate_eta"+amb, 50, -2.0, 2.0));  FakeRate_eta_isFit_Eff.at(ambiguity)->setAxisTitle("#eta");
       FakeRate_pt_isFit_Eff.push_back(dbe->book1D("FakeRate_pt_isFit_Eff"+amb,"FakeRate_pt"+amb, 50, 0.0, 100.0));  FakeRate_pt_isFit_Eff.at(ambiguity)->setAxisTitle("P_{t}");
+
+      DalitzFake.push_back(dbe->book2D("DalitzFake"+amb,"DalitzFake",100,0.0,2.0,100,0.0,2.0));
+      DalitzFake.at(ambiguity)->setAxisTitle("M_{#pi^{+}#pi^{-}} (GeV)",1); DalitzFake.at(ambiguity)->setAxisTitle("M_{#pi^{+}#pi^{-}} (GeV)",2);
+
+      InvMass12Fake.push_back(dbe->book1D("InvMass12"+amb,"InvMass12",100,0.0,2.0));  InvMass12Fake.at(ambiguity)->setAxisTitle("M_{12} (GeV)");
+      InvMass13Fake.push_back(dbe->book1D("InvMass13"+amb,"InvMass13",100,0.0,2.0));  InvMass13Fake.at(ambiguity)->setAxisTitle("M_{13} (GeV)");
+      InvMass23Fake.push_back(dbe->book1D("InvMass23"+amb,"InvMass23",100,0.0,2.0));  InvMass23Fake.at(ambiguity)->setAxisTitle("M_{23} (GeV)");
 
       dbe->setCurrentFolder("KinematicFitTau/FitResult");
       nEvt.push_back(dbe->book1D("nEvt"+amb,"n analyzed Events "+amb, 1, 0., 1.));  nEvt.at(ambiguity)->setAxisTitle("Number of Events");
@@ -660,7 +925,7 @@ void KinematicTauAnalyzer::beginJob(){
 
       vtxSignPVRotSV.push_back(dbe->book1D("vtxSignPVRotSV"+amb,"vtxSignPVRotSV "+amb,100,0.0,20));  vtxSignPVRotSV.at(ambiguity)->setAxisTitle("#sigma(V_{Prime,Rot},V_{Secondary}) ");
       vtxSignPVRotPVRed.push_back(dbe->book1D("vtxSignPVRotPVRed"+amb,"vtxSignPVRotPVRed "+amb,100,0.0,20.0));  vtxSignPVRotPVRed.at(ambiguity)->setAxisTitle("#sigma(V_{Prime,Rot},V_{Prime}) ");
-      a1Mass.push_back(dbe->book1D("a1Mass"+amb,"M_{a1}"+amb,100,0.0,10.0));  a1Mass.at(ambiguity)->setAxisTitle("M_{a1} (GeV)");
+      a1Mass.push_back(dbe->book1D("a1Mass"+amb,"M_{a1}"+amb,100,0.0,2.5));  a1Mass.at(ambiguity)->setAxisTitle("M_{a1} (GeV)");
       energyTFraction.push_back(dbe->book1D("energyTFraction"+amb,"energyTFraction"+amb,100,0.0,2.0));  energyTFraction.at(ambiguity)->setAxisTitle("E_{a1}/E_{#tau}");
       iterations.push_back(dbe->book1D("iterations"+amb,"iterations"+amb,51,-0.5,50.5));  iterations.at(ambiguity)->setAxisTitle("Number of Iterations");
       maxiterations.push_back(dbe->book1D("maxiterations"+amb,"maxiterations"+amb,51,0.5,50.5));  maxiterations.at(ambiguity)->setAxisTitle("Max Number of Iterations");
@@ -684,17 +949,52 @@ void KinematicTauAnalyzer::beginJob(){
       FlightLengthSig.push_back(dbe->book1D("FlightLengthSig"+amb,"Flight-Length Significance "+amb,200,0.0,50.0));  FlightLengthSig.at(ambiguity)->setAxisTitle("Flight-Length Significance");
 
 
-      PionDr.push_back(dbe->book1D("PionDr "+amb,"Pion Dr",100,0.0,0.5));  PionDr.at(ambiguity)->setAxisTitle("Pion Dr_{max}");
-      PionDrHPS.push_back(dbe->book1D("PionDrHPS "+amb,"Pion Dr",100,0.0,0.5));  PionDrHPS.at(ambiguity)->setAxisTitle("Pion Dr_{max}^{HPS}");
-      PionDrHPSwithFit.push_back(dbe->book1D("PionDrHPSwithFit "+amb,"Pion Dr Sel",100,0.0,0.5));  PionDrHPSwithFit.at(ambiguity)->setAxisTitle("Pion Dr_{max}^{HPS,Sel}");
+      PionDr.push_back(dbe->book1D("PionDr"+amb,"Pion Dr",100,0.0,0.5));  PionDr.at(ambiguity)->setAxisTitle("Pion Dr_{max}");
+      PionDrHPS.push_back(dbe->book1D("PionDrHPS"+amb,"Pion Dr",100,0.0,0.5));  PionDrHPS.at(ambiguity)->setAxisTitle("Pion Dr_{max}^{HPS}");
+      PionDrHPSwithFit.push_back(dbe->book1D("PionDrHPSwithFit"+amb,"Pion Dr Sel",100,0.0,0.5));  PionDrHPSwithFit.at(ambiguity)->setAxisTitle("Pion Dr_{max}^{HPS,Sel}");
+
+      a1MassHPS.push_back(dbe->book1D("a1MassHPS"+amb,"a1MassHPS",100,0.0,2.5));  a1MassHPS.at(ambiguity)->setAxisTitle("M_{a1}^{HPS}");
+      
+      Dalitz.push_back(dbe->book2D("Dalitz"+amb,"Dalitz",100,0.0,2.0,100,0.0,2.0));  Dalitz.at(ambiguity)->setAxisTitle("M_{#pi^{+}#pi^{-}} (GeV)",1); Dalitz.at(ambiguity)->setAxisTitle("M_{#pi^{+}#pi^{-}} (GeV)",2);  
+
+      InvMass12.push_back(dbe->book1D("InvMass12"+amb,"InvMass12",100,0.0,2.0));  InvMass12.at(ambiguity)->setAxisTitle("M_{12} (GeV)");
+      InvMass13.push_back(dbe->book1D("InvMass13"+amb,"InvMass13",100,0.0,2.0));  InvMass13.at(ambiguity)->setAxisTitle("M_{13} (GeV)");
+      InvMass23.push_back(dbe->book1D("InvMass23"+amb,"InvMass23",100,0.0,2.0));  InvMass23.at(ambiguity)->setAxisTitle("M_{23} (GeV)");
+
+      Trackchi2.push_back(dbe->book1D("Trackchi2"+amb,"prob( "+amb+")",20,0.0,1.0)); Trackchi2.at(ambiguity)->setAxisTitle("Track Probability",1);
+      TrackQuality.push_back(dbe->book1D("TrackQuality"+amb,"quality( "+amb+")",5,-0.5,4.5)); TrackQuality.at(ambiguity)->setAxisTitle("Track Quaility",1);
+      MaxTrackPt.push_back(dbe->book1D("MaxTrackPt"+amb,"P_{t}^{max}( "+amb+")",100,0.0,25.0)); MaxTrackPt.at(ambiguity)->setAxisTitle("P_{t}^{max} (GeV)",1);
+      MinTrackPt.push_back(dbe->book1D("MinTrackPt"+amb,"P_{t}^{min}( "+amb+")",40,0.0,10.0)); MinTrackPt.at(ambiguity)->setAxisTitle("P_{t}^{min} (GeV)",1);
+      MinoverMaxTrackPt.push_back(dbe->book1D("MinoverMaxTrackPt"+amb," P_{t}^{min}/P_{t}^{max}( "+amb+")",20,0.0,1.0));  MinoverMaxTrackPt.at(ambiguity)->setAxisTitle("P_{t}^{min}/P_{t}^{max}",1);
+      HitFrac.push_back(dbe->book1D("HitFrac"+amb,"Hit fraction( "+amb+")",22,0.0,1.1)); HitFrac.at(ambiguity)->setAxisTitle("HitFrac",1);
+      Vertexchi2.push_back(dbe->book1D("Vertexchi2"+amb,"prob( "+amb+")",20,0.0,1.0)); Vertexchi2.at(ambiguity)->setAxisTitle("Vertex Probability",1);
+
+      Trackchi2HPS.push_back(dbe->book1D("Trackchi2HPS"+amb,"prob( "+amb+")",20,0.0,1.0)); Trackchi2.at(ambiguity)->setAxisTitle("Track Probability",1);
+      TrackQualityHPS.push_back(dbe->book1D("TrackQualityHPS"+amb,"quality( "+amb+")",5,-0.5,4.5)); TrackQuality.at(ambiguity)->setAxisTitle("Track Quaility",1);
+      MaxTrackPtHPS.push_back(dbe->book1D("MaxTrackPtHPS"+amb,"P_{t}^{max}( "+amb+")",100,0.0,25.0)); MaxTrackPt.at(ambiguity)->setAxisTitle("P_{t}^{max} (GeV)",1);
+      MinTrackPtHPS.push_back(dbe->book1D("MinTrackPtHPS"+amb,"P_{t}^{min}( "+amb+")",40,0.0,10.0)); MinTrackPt.at(ambiguity)->setAxisTitle("P_{t}^{min} (GeV)",1);
+      MinoverMaxTrackPtHPS.push_back(dbe->book1D("MinoverMaxTrackPtHPS"+amb," P_{t}^{min}/P_{t}^{max}( "+amb+")",20,0.0,1.0));  MinoverMaxTrackPt.at(ambiguity)->setAxisTitle("P_{t}^{min}/P_{t}^{max}",1);
+      HitFracHPS.push_back(dbe->book1D("HitFracHPS"+amb,"Hit fraction( "+amb+")",22,0.0,1.1)); HitFrac.at(ambiguity)->setAxisTitle("HitFrac",1);
+      Vertexchi2HPS.push_back(dbe->book1D("Vertexchi2HPS"+amb,"prob( "+amb+")",20,0.0,1.0)); Vertexchi2.at(ambiguity)->setAxisTitle("Vertex Probability",1);
+
 
       /////////////////////////////////////////////////////////////////////
       // now for Truth
       dbe->setCurrentFolder("KinematicFitTau/Truth");      
-      JAKID.push_back(dbe->book1D("JAKID"+amb,"JAK ID "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));            JAKID.at(ambiguity)->setAxisTitle("JAK ID");
-      JAKIDall.push_back(dbe->book1D("JAKIDall"+amb,"JAK ID All "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5)); JAKIDall.at(ambiguity)->setAxisTitle("JAK ID");
-      JAKIDeff.push_back(dbe->book1D("JAKIDeff"+amb,"JAK ID Eff "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5)); JAKIDeff.at(ambiguity)->setAxisTitle("JAK ID");
-      Truth_TauMatched.push_back(dbe->book1D("Truth_TauMatched"+amb,"Truth_TauMatched "+amb,2,-0.5,1.5));                                      Truth_TauMatched.at(ambiguity)->setAxisTitle("Tau Matched (0=All 1=Matched)");
+      JAKID.push_back(dbe->book1D("JAKID"+amb,"JAK ID "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));              JAKID.at(ambiguity)->setAxisTitle("JAK ID");
+      JAKIDHPS.push_back(dbe->book1D("JAKIDHPS"+amb,"JAK ID "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));        JAKIDHPS.at(ambiguity)->setAxisTitle("JAK ID HPS");
+      JAKIDHPSeff.push_back(dbe->book1D("JAKIDHPSeff"+amb,"JAK ID "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));  JAKIDHPSeff.at(ambiguity)->setAxisTitle("JAK ID HPS Eff");
+      JAKIDall.push_back(dbe->book1D("JAKIDall"+amb,"JAK ID All "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));    JAKIDall.at(ambiguity)->setAxisTitle("JAK ID");
+      JAKIDeff.push_back(dbe->book1D("JAKIDeff"+amb,"JAK ID Eff "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));    JAKIDeff.at(ambiguity)->setAxisTitle("JAK ID");
+      JAKIDFailed.push_back(dbe->book1D("JAKIDFailed"+amb,"JAK ID Eff "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));  JAKIDFailed.at(ambiguity)->setAxisTitle("JAK ID");
+      JAKIDFailedEff.push_back(dbe->book1D("JAKIDFailedEff"+amb,"JAK ID Eff "+amb,TauDecay::NJAKID,-0.5,(float)(TauDecay::NJAKID)-0.5));  JAKIDFailedEff.at(ambiguity)->setAxisTitle("JAK ID");
+      JAKIDFailedMatch.push_back(dbe->book1D("JAKIDFailedMatch"+amb,"JAK ID Eff "+amb,1, 0., 1.));        JAKIDFailedMatch.at(ambiguity)->setAxisTitle("JAK ID");
+      JAKIDFailedMatchEff.push_back(dbe->book1D("JAKIDFailedMatchEff"+amb,"JAK ID Eff "+amb,1, 0., 1.));  JAKIDFailedMatchEff.at(ambiguity)->setAxisTitle("JAK ID");
+
+
+      Truth_TauMatched.push_back(dbe->book1D("Truth_TauMatched"+amb,"Truth_TauMatched "+amb,2,-0.5,1.5));                       Truth_TauMatched.at(ambiguity)->setAxisTitle("Tau Matched (0=All 1=Matched)");
+
+
 
       Truth_TauMatch_dPhi.push_back(std::vector<MonitorElement*>());
       Truth_TauMatch_dTheta.push_back(std::vector<MonitorElement*>());
@@ -813,6 +1113,10 @@ void KinematicTauAnalyzer::beginJob(){
       Truth_TauMatch_dGFAnglevsVertexchi2.push_back(std::vector<MonitorElement*>());
       Truth_PionDr.push_back(std::vector<MonitorElement*>());
       Truth_PionDrAll.push_back(std::vector<MonitorElement*>());
+      Truth_a1MassHPS.push_back(std::vector<MonitorElement*>());
+      Truth_MatchPionDr.push_back(std::vector<MonitorElement*>());
+      Truth_MatchPionDrHPS.push_back(std::vector<MonitorElement*>());
+
       for(unsigned int i=0; i<TauDecay::NJAKID;i++){
 	if(doJAKID(i)){
 	  unsigned int idx=Truth_TauMatch_dPhi.at(ambiguity).size();
@@ -836,7 +1140,7 @@ void KinematicTauAnalyzer::beginJob(){
 	  Truth_A1Match_dTheta.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdTheta"+tmp+amb,"d#theta_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-0.04,0.04)); axis="d#theta_{"+tmp+"}^{a_{1} Match} (rad)"; Truth_A1Match_dTheta.at(ambiguity).at(idx)->setAxisTitle(axis.Data()); 
 	  Truth_A1Match_dE.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdEnergy"+tmp+amb,"dE_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-15.0,15.0));       axis="dE_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	  Truth_A1Match_dPt.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdEnergy"+tmp+amb,"dE_{"+tmp+"}^{a_{1} Match} "+amb,100 ,-15.0,15.0));       axis="dE_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
-	  Truth_A1Match_M.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdM"+tmp+amb,"dM_{"+tmp+"}^{a_{1} Match} "+amb,200 ,-1.0,1.0));       axis="dM_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
+	  Truth_A1Match_M.at(ambiguity).push_back(dbe->book1D("TruthA1MatchdM"+tmp+amb,"dM_{"+tmp+"}^{a_{1} Match} "+amb,200 ,-0.5,0.5));       axis="dM_{"+tmp+"}^{a_{1} Match} (GeV)"; Truth_A1Match_dE.at(ambiguity).at(idx)->setAxisTitle(axis.Data());
 	 
 	  Truth_A1Match_dPtvslength.at(ambiguity).push_back(dbe->book2D("Truth_A1Match_dPtvslength"+tmp+amb,"Truth A1 Tau-Matchd dP_{t}^{Lab} vs L( "+tmp+amb+")",100,0.0,5.0,100,-5,5)); Truth_A1Match_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("P_{T}-P_{T}^{Truth} (GeV)",2); Truth_A1Match_dPtvslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
 	  Truth_A1Match_dphivslength.at(ambiguity).push_back(dbe->book2D("Truth_A1Match_dphivslength"+tmp+amb,"Truth A1 Tau-Matchd d#phi^{Lab} vs L( "+tmp+amb+")",100,0.0,5.0,100,-0.02,0.02)); Truth_A1Match_dphivslength.at(ambiguity).at(idx)->setAxisTitle("#phi-#phi^{Truth} (rad)",2); Truth_A1Match_dphivslength.at(ambiguity).at(idx)->setAxisTitle("L (cm)",1);
@@ -962,6 +1266,13 @@ void KinematicTauAnalyzer::beginJob(){
 
 	  Truth_PionDrAll.at(ambiguity).push_back(dbe->book1D("Truth_PionDrAll"+amb,"Truth Pion Dr",100, 0.0,0.5));  Truth_PionDrAll.at(ambiguity).at(idx)->setAxisTitle("Pion Dr_{max}^{Truth,All}");
 
+	  Truth_a1MassHPS.at(ambiguity).push_back(dbe->book1D("Truth_a1MassHPS"+amb,"Truth_a1MassHPS",100, 0.5,0.5));  Truth_a1MassHPS.at(ambiguity).at(idx)->setAxisTitle("M_{a1}^{HPS}");
+
+          Truth_MatchPionDr.at(ambiguity).push_back(dbe->book1D("Truth_MatchPionDr"+amb,"Truth Pion Dr",100, 0.0,0.5));        Truth_MatchPionDr.at(ambiguity).at(idx)->setAxisTitle("Pion Dr_{max}^{Truth}");
+          Truth_MatchPionDrHPS.at(ambiguity).push_back(dbe->book1D("Truth_MatchPionDrHPS"+amb,"Truth Pion Dr",100, 0.0,0.5));  Truth_MatchPionDrHPS.at(ambiguity).at(idx)->setAxisTitle("Pion Dr_{max}^{Truth,All}");
+
+
+
 	} 
       }
     }
@@ -982,14 +1293,20 @@ bool KinematicTauAnalyzer::doJAKID(unsigned int i){
   return false;
 }
 
-bool KinematicTauAnalyzer::isTruthTauInAcceptance(const reco::GenParticle &cand){
-  if(fabs(cand.pdgId())!=fabs(PdtPdgMini::tau_minus)) return false;
-  if(cand.status()!=2) return false; // require tau that is: 2) a particle after parton showering and ISR/FSR 
-  TLorentzVector tau(cand.p4().Px(),cand.p4().Py(),cand.p4().Pz(),cand.p4().E());
-  if(tau.Pt()<TauPtMin_ || fabs(tau.Eta())>TauEtaMax_)return false; // require tau within Pt and |eta| acceptance
-  return true;
+bool KinematicTauAnalyzer::A1Matched(std::vector<const reco::GenParticle* > &DecayProd,TLorentzVector a1){
+  TLorentzVector mc_vis(0,0,0,0);
+  for(unsigned int j=0;j<DecayProd.size();j++){
+    if(fabs(DecayProd.at(j)->pdgId())==fabs(PdtPdgMini::tau_plus)){
+      TLorentzVector LV(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
+      mc_vis+=LV;
+    }
+    if(fabs(DecayProd.at(j)->pdgId())==fabs(PdtPdgMini::nu_e) || fabs(DecayProd.at(j)->pdgId())==fabs(PdtPdgMini::nu_mu) || fabs(DecayProd.at(j)->pdgId())==fabs(PdtPdgMini::nu_tau) ){
+      TLorentzVector LV(DecayProd.at(j)->p4().Px(),DecayProd.at(j)->p4().Py(),DecayProd.at(j)->p4().Pz(),DecayProd.at(j)->p4().E());
+      mc_vis-=LV;
+    }
+  }
+  return a1.DeltaR(mc_vis)<TauMatchingDR_;
 }
-
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(KinematicTauAnalyzer);

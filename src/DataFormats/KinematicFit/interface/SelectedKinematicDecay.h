@@ -16,7 +16,7 @@
 //
 // Original Author:  Lars Perchalla, Philip Sauerland
 //         Created:  Thu Jan  21 17:29:43 CEST 2010
-// $Id: SelectedKinematicDecay.h,v 1.25 2013/03/15 12:56:58 inugent Exp $
+// $Id: SelectedKinematicDecay.h,v 1.26 2013/04/11 20:07:30 inugent Exp $
 //
 //
 
@@ -63,10 +63,15 @@ class SelectedKinematicDecay {
   void SetInitialGuess(unsigned int ambiguity,TLorentzVector &TauGuessLV,TLorentzVector &NuGuessLV,TVector3 &TauFlghtDirGuess);
   void SetKFSecondaryVertex(unsigned int ambiguity,reco::Vertex SecVtx);
 
+  void SetTrackQuality(unsigned int nTQ){nTQ_=nTQ;}
+  unsigned int TrackQuality(){return nTQ_;}
+
   //////////////////////////////////////////////////////////////////////////
   //
   // Get Functions
   //
+  unsigned int nTQ_;
+
   unsigned int                        TauDecayMode(){return tauDecayMode_;}
   unsigned int                        NumberOfTauPerVtx()const{return nTauPerVtx_;}
   std::string                         PrimaryVertexReFitCollectionTag(){return primVtxReFitTag_;}

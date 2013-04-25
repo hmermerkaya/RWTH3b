@@ -28,6 +28,7 @@ Modified by Ian M. Nugent
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
 #include "TMatrixT.h"
+#include "TLorentzVector.h"
 
 class KinematicTauAnalyzer : public edm::EDAnalyzer {
  public:
@@ -40,12 +41,12 @@ private:
   virtual void endJob();
 
   virtual bool doJAKID(unsigned int i);
-  virtual bool isTruthTauInAcceptance(const reco::GenParticle &cand);
+  virtual bool A1Matched(std::vector<const reco::GenParticle* > &DecayProd,TLorentzVector a1);
 
   std::vector<std::string> discriminators_;
   edm::InputTag KinematicFitTauTag_,gensrc_,GenEventInfo_;
   std::string tauType_;
-  float TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
+  double TauMatchingDR_,TauPtMin_,TauEtaMax_,tau_pdgid;
   int tau_pdgid_;
   unsigned int NJAKID_;
   std::vector<int> JAKID_;
@@ -61,7 +62,8 @@ private:
 
   DQMStore *dbe;
   std::vector<MonitorElement*> FakeRate_eta, FakeRate_pt,FakeRate_eta_All, FakeRate_pt_All, FakeRate_eta_Eff, FakeRate_pt_Eff, 
-    FakeRate_pt_isFit, FakeRate_eta_isFit, FakeRate_pt_isFit_Eff, FakeRate_eta_isFit_Eff;
+    FakeRate_pt_isFit, FakeRate_eta_isFit, FakeRate_pt_isFit_Eff, FakeRate_eta_isFit_Eff,
+    FakeRateHPS_eta, FakeRateHPS_pt,FakeRateHPS_eta_Eff, FakeRateHPS_pt_Eff;
 
   std::vector<MonitorElement*> 
     nEvt, 
@@ -88,8 +90,16 @@ private:
     NuThetaChange, 
     NuEChange, 
     JAKID, 
+    JAKIDHPS,
+    JAKIDHPSeff,
     JAKIDall, 
     JAKIDeff, 
+    JAKIDFailed,
+    JAKIDFailedEff,
+    JAKIDFailedMatch,
+    JAKIDFailedMatchEff,
+    dr_rejected,
+    dr_rejectedHPS,
     Truth_TauMatched,
     vtxSignPVRotSV, 
     vtxSignPVRotPVRed, 
@@ -117,7 +127,30 @@ private:
     FlightLengthSig,
     PionDr,
     PionDrHPS,
-    PionDrHPSwithFit;
+    PionDrHPSwithFit,
+    a1MassHPS,
+    Dalitz,
+    DalitzFake,
+    InvMass12,
+    InvMass13,
+    InvMass23,
+    InvMass12Fake,
+    InvMass13Fake,
+    InvMass23Fake,
+    Trackchi2,
+    TrackQuality,
+    MaxTrackPt,
+    MinTrackPt,
+    MinoverMaxTrackPt,
+    HitFrac,
+    Vertexchi2,
+    Trackchi2HPS,
+    TrackQualityHPS,
+    MaxTrackPtHPS,
+    MinTrackPtHPS,
+    MinoverMaxTrackPtHPS,
+    HitFracHPS,
+    Vertexchi2HPS;
 
   std::vector<std::vector<MonitorElement*> >  
     Truth_TauMatch_dPhi, 
@@ -219,8 +252,10 @@ private:
     Truth_TauMatch_dthetavsPhiandEtaCut,
     Truth_TauMatch_reldPtvsPhiandEtaCut,
     Truth_PionDr,
-    Truth_PionDrAll;
-
+    Truth_PionDrAll,
+    Truth_a1MassHPS,
+    Truth_MatchPionDr,
+    Truth_MatchPionDrHPS;
 
   std::map<unsigned int,unsigned int> JAKIDtoIndex;
  

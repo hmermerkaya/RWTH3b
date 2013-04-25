@@ -173,7 +173,7 @@ process.source = cms.Source("PoolSource",
     )
                             )
 
-numberOfEvents = 100000
+numberOfEvents = 10000
 
 process.maxEvents = cms.untracked.PSet(
         input = cms.untracked.int32(numberOfEvents)
@@ -182,6 +182,9 @@ process.maxEvents = cms.untracked.PSet(
 process.options = cms.untracked.PSet(
         Rethrow = cms.untracked.vstring('ProductNotFound')
         )
+
+process.load("RecoBTag.SecondaryVertex.secondaryVertexTagInfos_cfi")
+process.load("RecoBTag.ImpactParameter.impactParameter_cfi")
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
@@ -208,8 +211,24 @@ process.dqmSaver.forceRunNumber = cms.untracked.int32(1)
 process.dqmSaver.workflow = "/KinematicFitSequencewithDQM/VAL/RECO"
 #process.DQMStore.verbose=1
 
+PtCut=cms.double(20.0)
+EtaCut=cms.double(2.0)
+
+process.ThreeProngInputSelectorStep1.minTauPt=PtCut
+process.ThreeProngInputSelectorStep1.TauEtaCut=EtaCut
+process.KinematicTauAnalyzer.TauPtMin=PtCut 
+process.KinematicTauAnalyzer.TauEtaMax=EtaCut
+process.TauJAKIDFilter.TauPtMin=PtCut
+process.TauJAKIDFilter.TauEtaMax=EtaCut
+
+
+#process.vertexRecoBlock.seccut = cms.double(3.0)                              
+#process.vertexCutsBlock.fracPV = cms.double(0.10),
+#process.vertexCutsBlock.useTrackWeights = cms.bool(False),
+#process.vertexCutsBlock.multiplicityMin = cms.uint32(3),
+
 process.endjob_step = cms.Path(process.endOfProcess)
-process.KinFitSkim  = cms.Path(process.TauJAKIDFilter*process.PFTau*process.KinematicFitSequencewithDQM*process.MEtoEDMConverter*process.EDMtoME*process.dqmSaver)
+process.KinFitSkim  = cms.Path(process.TauJAKIDFilter*process.impactParameterTagInfos*process.secondaryVertexTagInfos*process.PFTau*process.KinematicFitSequencewithDQM*process.MEtoEDMConverter*process.EDMtoME*process.dqmSaver)
 process.schedule = cms.Schedule(process.KinFitSkim,process.endjob_step)
 
 #sequences for Kinematic Fit 

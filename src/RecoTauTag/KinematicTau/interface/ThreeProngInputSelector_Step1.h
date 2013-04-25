@@ -59,7 +59,6 @@ private:
   std::vector<std::vector<reco::TrackRef> > choose3Prongs(std::vector<reco::TrackRef> & input);
   std::vector<std::vector<reco::TrackRef> > permuteCombinations(const std::vector<reco::TrackRef> & vect);
   double getInvariantMass(std::vector<reco::TrackRef> &tracks);
-  double getSumPt(std::vector<reco::TrackRef> &tracks);
   template <typename T> static bool cmpPt(const T & a, const T & b);
   
   edm::Event * iEvent_;
@@ -70,7 +69,6 @@ private:
   double minTauPt_,TauEtaCut_;
   std::vector<std::string> TauVtxList_;
   ParticleMassHelper PMH;
-  int n3track, n3prong, nhps3prong, npftaus;
 
 };
 
