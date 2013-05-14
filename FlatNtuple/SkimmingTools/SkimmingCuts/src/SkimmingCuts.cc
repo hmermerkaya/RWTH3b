@@ -13,7 +13,7 @@
 //
 // Original Author:  Vladimir Cherepanov
 //         Created:  Thu Feb 23 18:53:30 CET 2012
-// $Id: SkimmingCuts.cc,v 1.2 2012/03/11 21:31:34 cherepan Exp $
+// $Id: SkimmingCuts.cc,v 1.3 2013/05/10 09:54:25 cherepan Exp $
 //
 //
 
@@ -94,12 +94,11 @@ class SkimmingCuts : public edm::EDFilter {
   double NMuons_;
   double MuonEtaCut_;
   double PFTauPtCut_;
+  double PFTauEtaCut_;
 
   double ElectronPtCut_;
   double ElectronEtaCut_;
   edm::InputTag KinFitAdvanced_;
-  double PFTauEtaCut_;
-
 
   int nMuon_;
   int nMuonPass_;
@@ -129,11 +128,11 @@ MuonPtCut_( iConfig.getParameter<double>("MuonPtCut") ),
 MuonIsGlo_( iConfig.getParameter<bool>("MuonIsGlobal") ),
 NMuons_( iConfig.getParameter<double>("NMuons") ),
 MuonEtaCut_( iConfig.getParameter<double>("MuonEtaCut") ),
+PFTauPtCut_( iConfig.getParameter<double>("PFTauPtCut") ),
+PFTauEtaCut_( iConfig.getParameter<double>("PFTauEtaCut") ),
 ElectronPtCut_( iConfig.getParameter<double>("ElectronPtCut") ),
 ElectronEtaCut_( iConfig.getParameter<double>("ElectronEtaCut") ),
-PFTauPtCut_( iConfig.getParameter<double>("PFTauPtCut") ),
-KinFitAdvanced_( iConfig.getParameter<edm::InputTag>( "kinematicTausAdvanced" ) ),
-PFTauEtaCut_( iConfig.getParameter<double>("PFTauEtaCut") )
+KinFitAdvanced_( iConfig.getParameter<edm::InputTag>( "kinematicTausAdvanced" ) )
 {
    //now do what ever initialization is needed
 
@@ -281,12 +280,14 @@ SkimmingCuts::KFitTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
   double Pt = 0;
   unsigned int tauindex=0;
   SelectedKinematicDecay LeadingKFTau;
+  bool hasLeadingKFTau=false;
   if(selected->size()!=0){
     for(SelectedKinematicDecayCollection::const_iterator decay = selected->begin(); decay != selected->end(); ++decay, tauindex++){
       SelectedKinematicDecay KFTau=(*decay);
       if(KFTau.Initial_a1_p4().Pt() > Pt){
 	Pt = KFTau.Initial_a1_p4().Pt();
 	LeadingKFTau = (*decay);
+	hasLeadingKFTau=true;
       }
     }
 
@@ -298,30 +299,21 @@ SkimmingCuts::KFitTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
     unsigned int idx =0;
     reco::PFTauRef MatchedHPSTau = getMatchedHPSTau(HPStaus,TauVisible,idx);
-
-//     std::cout<<"SkimmingCuts: MatchedHPSTau.Pt()  "<<LeadingKFTau.Initial_a1_p4().Pt()<<std::endl;
-//     std::cout<<"SkimmingCuts: LeadingKFTau.Eta()  "<<LeadingKFTau.Initial_a1_p4().Eta()<<std::endl;
-    if(LeadingKFTau.Initial_a1_p4().Pt() > PFTauPtCut_){
-      if(fabs(LeadingKFTau.Initial_a1_p4().Eta()) < PFTauEtaCut_)
-	{
-	    if((*HPSAgainstElectronsTight)[MatchedHPSTau])
-	      {
-		if((*HPSAgainstMuonTight)[MatchedHPSTau])
-		  { 
-
-		    pass = true;
-		    std::cout<<"pass1 " <<pass<<std::endl;
-		    //	      const reco::PFCandidateRefVector & 	cands =MatchedHPSTau ->signalPFChargedHadrCands(); //candidates in signal cone 
-		    
-		  }
-	      }
+    if(hasLeadingKFTau){
+      if(LeadingKFTau.Initial_a1_p4().Pt() > PFTauPtCut_){
+	if(fabs(LeadingKFTau.Initial_a1_p4().Eta()) < PFTauEtaCut_){
+	  if((*HPSAgainstElectronsTight)[MatchedHPSTau]){
+	    if((*HPSAgainstMuonTight)[MatchedHPSTau]){ 
+	      pass = true;
+	      // std::cout<<"pass1 " <<pass<<std::endl;
+	      //	      const reco::PFCandidateRefVector & 	cands =MatchedHPSTau ->signalPFChargedHadrCands(); //candidates in signal cone 
+	    }
+	  }
 	}
+      }
     }
   }
-  
   return pass;
-   
-
 }
 
 bool 
@@ -354,36 +346,26 @@ SkimmingCuts::PFTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 
   //================== KinematicFit Info ===================
-
-
   double Pt=0;
-  reco::PFTauRef LeadingHPSCandidate;
-   for ( unsigned int iPFTau = 0; iPFTau < HPStaus->size(); iPFTau++ ) {
-     reco::PFTauRef HPStauCandidate(HPStaus, iPFTau);
- 
-     if(HPStauCandidate->p4().Pt() >Pt ){
-       Pt = HPStauCandidate->p4().Pt();
-
-       LeadingHPSCandidate = HPStauCandidate;
-     }
-   }
-   
-   if(LeadingHPSCandidate->p4().Pt() > 20){
-     if((*HPSByDecayModeFinding)[LeadingHPSCandidate]){
-       if((*HPSAgainstElectronsTight)[LeadingHPSCandidate]){
-	 if((*HPSAgainstMuonTight)[LeadingHPSCandidate]){
-	   if((*HPSPFTauDiscriminationByTightIsolationMVA2)[LeadingHPSCandidate]){
-	     pass=true;
-	   }
-	 }
-       }
-     }
-   }
-   
-   
-   return pass;
-   
-
+  for ( unsigned int iPFTau = 0; iPFTau < HPStaus->size(); iPFTau++ ) {
+    reco::PFTauRef HPStauCandidate(HPStaus, iPFTau);
+    if(HPStauCandidate->p4().Pt() >Pt ){
+      pass=false;
+      Pt = HPStauCandidate->p4().Pt();
+      if(HPStauCandidate->p4().Pt() > 20){
+	if((*HPSByDecayModeFinding)[HPStauCandidate]){
+	  if((*HPSAgainstElectronsTight)[HPStauCandidate]){
+	    if((*HPSAgainstMuonTight)[HPStauCandidate]){
+	      if((*HPSPFTauDiscriminationByTightIsolationMVA2)[HPStauCandidate]){
+		pass=true;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return pass;
 }
 
 
