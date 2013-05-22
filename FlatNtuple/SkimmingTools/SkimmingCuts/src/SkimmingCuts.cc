@@ -13,7 +13,7 @@
 //
 // Original Author:  Vladimir Cherepanov
 //         Created:  Thu Feb 23 18:53:30 CET 2012
-// $Id: SkimmingCuts.cc,v 1.4 2013/05/14 16:18:00 inugent Exp $
+// $Id: SkimmingCuts.cc,v 1.5 2013/05/22 20:04:55 inugent Exp $
 //
 //
 
@@ -127,7 +127,6 @@ SkimmingCuts::SkimmingCuts(const edm::ParameterSet& iConfig):
 
 
 SkimmingCuts::~SkimmingCuts(){}
-
 
 bool SkimmingCuts::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
   cnt_++;
