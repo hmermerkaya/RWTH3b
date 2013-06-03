@@ -1,10 +1,22 @@
+// -*- C++ -*-
+//
+// Package:    PrimVtxSelector
+// Class:      PrimVtxSelector
+// 
 /**
 
- Simple primary vertex selector by minimum of included tracks and goodness of fit. produces one single vertex if possible.
+ Description: simple primary vertex selector by minimum of included tracks and goodness of fit. produces one single vertex if possible.
 
- @author Lars Perchalla & Philip Sauerland
- @date 2010
+ Implementation:
+     <Notes on implementation>
 */
+//
+// Original Author:  Lars Perchalla, Philip Sauerland
+//         Created:  Thu Nov 12 14:10:26 CET 2009
+// $Id: PrimVtxSelector.h,v 1.3 2010/01/26 14:06:37 perchall Exp $
+//
+//
+
 
 // system include files
 #include <memory>
@@ -21,8 +33,6 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"//VertexCollection
 
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-
 class PrimVtxSelector : public edm::EDFilter {
    public:
       explicit PrimVtxSelector(const edm::ParameterSet&);
@@ -38,6 +48,7 @@ private:
 	edm::InputTag primVtx_;	
 	unsigned int minTracks_;
 	double maxChi2ndf_;
+	unsigned int verbosity_;
 	
 	unsigned int cnt, cntFound;
 	

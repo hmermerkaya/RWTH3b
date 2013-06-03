@@ -6,21 +6,8 @@
   <class name="SelectedKinematicDecay"/>
   <class name="std::vector< SelectedKinematicDecay >"/>
   <class name="edm::Wrapper< std::vector< SelectedKinematicDecay > >"/>
-  <class name="std::vector<std::vector< SelectedKinematicDecay > >"/>
-  <class name="edm::Wrapper<std::vector<std::vector< SelectedKinematicDecay > > >"/>
   <class name="edm::Wrapper< std::vector< std::vector<SelectedKinematicParticle> > >"/>
   <class name="std::vector<edm::RefVector<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > >"/>
   <class name="edm::Wrapper<std::vector<edm::RefVector<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > > >"/>
-  <class name="std::vector<std::vector<edm::Ref<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > > >"/>
-  <class name="edm::Wrapper<std::vector<std::vector<edm::Ref<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > > > >"/>
-  <class name="std::vector<std::vector<std::vector<edm::Ref<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > > > >"/>
-  <class name="edm::Wrapper<std::vector<std::vector<std::vector<edm::Ref<std::vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> > > > > >"/>
-  <class name="std::map<std::string, bool>"/>
-  <class name="edm::Wrapper<std::map<std::string, bool> >"/>
-  <class name="std::vector<std::map<std::string, bool> >"/>
-  <class name="edm::Wrapper<std::vector<std::map<std::string, bool> > >"/>
-  <class name="std::vector<TLorentzVector>"/> 
-  <class name="edm::Wrapper<std::vector<TLorentzVector> >"/>
-  <class name="std::vector<TVector3>"/>
-  <class name="edm::Wrapper<std::vector<TVector3> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::PFTau>,reco::PFTau,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTau>,reco::PFTau> > >"/>
 </lcgdict>

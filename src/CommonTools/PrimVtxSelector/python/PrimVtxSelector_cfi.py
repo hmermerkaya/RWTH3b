@@ -1,8 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 
 PrimVtxSelector = cms.EDFilter("PrimVtxSelector",
-	primVtx = cms.InputTag("offlinePrimaryVertices"), #Primary vertex reconstructed using the tracks taken from the generalTracks collection
-#	primVtx = cms.InputTag("offlinePrimaryVerticesWithBS"),	#Primary vertex reconstructed using the tracks taken from the generalTracks collection, and imposing the offline beam spot as a constraint in the fit of the vertex position
+	primVtx = cms.InputTag("offlinePrimaryVertices"),#offlinePrimaryVerticesFromCTFTrack
 	minTracks = cms.untracked.int32(3),
-	maxChi2ndf = cms.untracked.double(10.0)
+	maxChi2ndf = cms.untracked.double(10.0),
+	verbosity = cms.untracked.int32(1)
 )

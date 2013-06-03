@@ -2,16 +2,15 @@ import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("PrimVtxSelectorVBFH")
 
-process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.MessageLogger.debugModules = cms.untracked.vstring('PrimVtxSelector')
-process.MessageLogger.cerr = cms.untracked.PSet(
-    threshold = cms.untracked.string('DEBUG'),
-	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
-	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(-1))
-)
+process.load("HiggsKinTau.FnlAnlzr.MessageLogger_cfi")
 
-numberOfEvents = -1
-
+###############
+#lp parameters#
+numberOfEvents = 100
+printEvents = 0
+###############
+if numberOfEvents == -1:
+	numberOfEvents = 10000
 inPath = '/disk1/perchalla/data/CMSSW_3_1_2/KinTau/tau3piFromVBFH/'
 jobName = 'AODSIMHLT_tau3piFromVBFH_145GeV'
 

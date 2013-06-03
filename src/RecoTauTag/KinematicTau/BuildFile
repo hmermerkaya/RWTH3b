@@ -1,0 +1,16 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=DataFormats/TauReco>
+<use name=DataFormats/KinematicFit>
+<use name=RecoVertex/KinematicFitPrimitives>
+<use name=RecoVertex/KinematicFit>
+<use name=DataFormats/RecoCandidate>
+<use name=CommonTools/RecoAlgos>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=RecoTauTagKinematicTau>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+</export>

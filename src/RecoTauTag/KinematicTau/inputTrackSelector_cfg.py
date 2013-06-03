@@ -1,12 +1,12 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("KinTauCreator")
+process = cms.Process("InputTrackSelector")
 
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 #process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.categories.append('KinematicTauCreator')
-process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTauProducer','InputTrackSelector')
+process.MessageLogger.debugModules = cms.untracked.vstring('InputTrackSelector')
 process.MessageLogger.cerr = cms.untracked.PSet(
     threshold = cms.untracked.string('DEBUG'),
 	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
@@ -15,7 +15,7 @@ process.MessageLogger.cerr = cms.untracked.PSet(
 )
 
 ###############
-numberOfEvents = 20
+numberOfEvents = 10
 
 ###############
 if numberOfEvents == -1:
@@ -36,9 +36,7 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
-process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
 process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
-process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
 
 #process.p = cms.Path(process.tauSelectorSeq)
-process.p = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.KinematicTauProducer)
+process.p = cms.Path(process.InputTrackSelector)
