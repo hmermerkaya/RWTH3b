@@ -13,7 +13,7 @@
 //
 // Original Author:  Vladimir Cherepanov
 //         Created:  Thu Feb 23 18:53:30 CET 2012
-// $Id$
+// $Id: SkimmingCuts.cc,v 1.7 2013/06/12 21:58:37 mschimp Exp $
 //
 //
 
@@ -35,7 +35,26 @@
 #include <DataFormats/Candidate/interface/Candidate.h>
 #include <DataFormats/MuonReco/interface/MuonIsolation.h>
 #include "DataFormats/TauReco/interface/PFTauFwd.h"
+#include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include <DataFormats/Candidate/interface/Candidate.h>
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
+#include "DataFormats/GsfTrackReco/interface/GsfTrack.h"
+#include "DataFormats/GsfTrackReco/interface/GsfTrackFwd.h"
+
+#include <TMath.h>
+#include "TMatrixDSym.h"
+#include "TVectorD.h"
+#include "TVector3.h"
+
+#include "TVectorT.h"
+#include "TH1.h"
+#include "TLorentzVector.h"
 
 
 //
@@ -43,10 +62,10 @@
 //
 
 class SkimmingCuts : public edm::EDFilter {
-   public:
-      explicit SkimmingCuts(const edm::ParameterSet&);
-      ~SkimmingCuts();
-
+  public:
+  explicit SkimmingCuts(const edm::ParameterSet&);
+  ~SkimmingCuts();
+  
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
    private:
@@ -61,10 +80,12 @@ class SkimmingCuts : public edm::EDFilter {
 
       // ----------member data ---------------------------
   bool MuonsCuts(edm::Event& iEvent, const edm::EventSetup& iSetup);
-  bool PFtausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup);
+  bool KFitTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup);
+  bool ElectronCuts(edm::Event& iEvent, const edm::EventSetup& iSetup);
+  bool PFTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup);
+
   edm::Event * iEvent_;
   edm::InputTag hpsTauProducer_;
-
 
   double MuonPtCut_;
   bool MuonIsGlo_;
@@ -73,6 +94,10 @@ class SkimmingCuts : public edm::EDFilter {
   double PFTauPtCut_;
   double PFTauEtaCut_;
 
+  double ElectronPtCut_;
+  double ElectronEtaCut_;
+  edm::InputTag KinFitAdvanced_;
+  bool doMuonOnly_;
 
   int nMuon_;
   int nMuonPass_;
@@ -85,136 +110,116 @@ class SkimmingCuts : public edm::EDFilter {
 
 };
 
-//
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 SkimmingCuts::SkimmingCuts(const edm::ParameterSet& iConfig):
-hpsTauProducer_( iConfig.getParameter<edm::InputTag>( "hpsTauProducer" ) ),
-MuonPtCut_( iConfig.getParameter<double>("MuonPtCut") ),
-MuonIsGlo_( iConfig.getParameter<bool>("MuonIsGlobal") ),
-NMuons_( iConfig.getParameter<double>("NMuons") ),
-MuonEtaCut_( iConfig.getParameter<double>("MuonEtaCut") ),
-PFTauPtCut_( iConfig.getParameter<double>("PFTauPtCut") ),
-PFTauEtaCut_( iConfig.getParameter<double>("PFTauEtaCut") )
+  hpsTauProducer_( iConfig.getParameter<edm::InputTag>( "hpsTauProducer" ) ),
+  MuonPtCut_( iConfig.getParameter<double>("MuonPtCut") ),
+  MuonIsGlo_( iConfig.getParameter<bool>("MuonIsGlobal") ),
+  NMuons_( iConfig.getParameter<double>("NMuons") ),
+  MuonEtaCut_( iConfig.getParameter<double>("MuonEtaCut") ),
+  PFTauPtCut_( iConfig.getParameter<double>("PFTauPtCut") ),
+  PFTauEtaCut_( iConfig.getParameter<double>("PFTauEtaCut") ),
+  ElectronPtCut_( iConfig.getParameter<double>("ElectronPtCut") ),
+  ElectronEtaCut_( iConfig.getParameter<double>("ElectronEtaCut") ),
+  doMuonOnly_( iConfig.getParameter<bool>("doMuonOnly") )
 {
-   //now do what ever initialization is needed
-
 }
 
 
-SkimmingCuts::~SkimmingCuts()
-{
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
+SkimmingCuts::~SkimmingCuts(){}
 
-}
-
-
-//
-// member functions
-//
-
-// ------------ method called on each new Event  ------------
-bool
-SkimmingCuts::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
+bool SkimmingCuts::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
   cnt_++;
   bool pass = false;
   iEvent_=&iEvent;
   bool AcceptMuon = MuonsCuts(iEvent, iSetup);
-  bool AcceptPFTau = PFtausCuts(iEvent, iSetup);
+  if(doMuonOnly_){
+    if(AcceptMuon){
+      pass = true;
+      cntFound_++;
+    }
+    return pass;
+  }
+  //bool AcceptKFTau = KFitTausCuts(iEvent, iSetup);
+  bool AcceptPFTau = PFTausCuts(iEvent, iSetup);
+  //bool AcceptElectron = ElectronCuts(iEvent, iSetup);
 
-  if(AcceptMuon && AcceptPFTau){
+    //----------- This Blos is for private production to analyse muon tau decay with KF
+  if(AcceptMuon && (/*AcceptKFTau || AcceptElectron ||*/ AcceptPFTau)){
     pass = true;
     cntFound_++;
   }
-   return pass;
+  return pass;
 }
 
-bool 
-SkimmingCuts::MuonsCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
-  bool pass = false;
-  bool nMuonsCut = false;
-  bool MuonPtCut = false;
+bool SkimmingCuts::MuonsCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
   edm::Handle< reco::MuonCollection > muonCollection;
   iEvent_->getByLabel("muons",  muonCollection);
-
-  int Muon_index =0;
-  reco::MuonRef HighestPtMuonRef;
-  double Pt = 0;
-  for(reco::MuonCollection::const_iterator iMuon = muonCollection->begin(); iMuon!= muonCollection->end(); ++iMuon, Muon_index++){
-    reco::MuonRef RefMuon(muonCollection, Muon_index);
-    if(RefMuon->p4().Pt() > Pt){
-      Pt = RefMuon->p4().Pt();
-      HighestPtMuonRef = RefMuon;
-    }
-  }
-  if(HighestPtMuonRef.isNonnull()){
-    nMuon_++;
-    if(HighestPtMuonRef->p4().Pt() > MuonPtCut_){
-      if(fabs(HighestPtMuonRef->p4().Eta()) < MuonEtaCut_){
-	if(HighestPtMuonRef->isGlobalMuon() == MuonIsGlo_){
-	  MuonPtCut = true;
-	  nMuonPass_++;
-	  //  std::cout<<"Muon:  "<<"Pt: " <<HighestPtMuonRef->p4().Pt() << "   global: " << HighestPtMuonRef->isGlobalMuon()  << "   eta: " << HighestPtMuonRef->p4().Eta()<<std::endl;
+  
+  for(unsigned int iMuon = 0; iMuon< muonCollection->size(); iMuon++){
+    reco::MuonRef RefMuon(muonCollection, iMuon);
+    if(RefMuon.isNonnull()){
+      if(RefMuon->p4().Pt() > MuonPtCut_ && fabs(RefMuon->p4().Eta()) < MuonEtaCut_){
+	if(RefMuon->isGlobalMuon() == MuonIsGlo_ && RefMuon->isPFMuon()){
+	  return true;
 	}
       }
     }
   }
-   if(nMuonPass_ == NMuons_){
-     nMuonsCut = true;
-   }
-
-  pass = nMuonsCut*nMuonsCut;
-
-  return pass;
+  return false;
 }
 
-bool 
-SkimmingCuts::PFtausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
-  bool pass = false;
-  edm::Handle<std::vector<reco::PFTau> > HPStaus;
-  iEvent_->getByLabel(hpsTauProducer_, HPStaus);
+bool SkimmingCuts::ElectronCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
+  edm::Handle< reco::GsfElectronCollection > electronCollection;
+  iEvent_->getByLabel("gsfElectrons", electronCollection);
   
-  reco::PFTauRef HighestPtPFTauCandidate;
-  double Pt = 0;
-
-  for ( unsigned iPFTau = 0; iPFTau < HPStaus->size(); ++iPFTau ) {
-    
-    reco::PFTauRef HPStauCandidate(HPStaus, iPFTau);
-
-    if(HPStauCandidate->p4().Pt() > Pt){
-      Pt = HPStauCandidate->p4().Pt();
-      HighestPtPFTauCandidate = HPStauCandidate;
-    }
-  }
-
-  if(HighestPtPFTauCandidate.isNonnull()){
-    nPFTaus_++;
-    if(HighestPtPFTauCandidate->p4().Pt() > PFTauPtCut_){
-      if(fabs(HighestPtPFTauCandidate->p4().Eta()) < PFTauEtaCut_){
-	  pass = true;
-	  nPFTausPass_++;
-	  // std::cout<<"PFTau:  "<<"Pt: " <<HighestPtPFTauCandidate->p4().Pt() <<"   eta: " << HighestPtPFTauCandidate->p4().Eta()<<std::endl;
-
+  for(unsigned int iElectron=0; iElectron<electronCollection->size(); iElectron++){
+    reco::GsfElectronRef RefElectron(electronCollection, iElectron);
+    if(RefElectron.isNonnull()){
+      if(RefElectron->p4().Pt()>ElectronPtCut_ && fabs(RefElectron->p4().Eta())<ElectronEtaCut_){
+	return true;
       }
     }
   }
-
-
-  return pass;
+  return false;
 }
 
 
+
+bool SkimmingCuts::PFTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
+  edm::Handle<std::vector<reco::PFTau> > PFTaus;
+  iEvent.getByLabel("hpsPFTauProducer", PFTaus);
+
+  edm::Handle<reco::PFTauDiscriminator> HPSAgainstElectronsTight;
+  iEvent.getByLabel("hpsPFTauDiscriminationByLooseElectronRejection", HPSAgainstElectronsTight);
+  
+  edm::Handle<reco::PFTauDiscriminator> HPSAgainstMuonTight;
+  iEvent.getByLabel("hpsPFTauDiscriminationByLooseMuonRejection", HPSAgainstMuonTight);
+
+  edm::Handle<reco::PFTauDiscriminator> HPSByDecayModeFinding;
+  iEvent.getByLabel("hpsPFTauDiscriminationByDecayModeFinding", HPSByDecayModeFinding);
+
+  //edm::Handle<reco::PFTauDiscriminator> HPSPFTauDiscriminationByLooseIsolationMVA2;
+  //iEvent.getByLabel("hpsPFTauDiscriminationByLooseIsolationMVA2", HPSPFTauDiscriminationByLooseIsolationMVA2);
+
+  //edm::Handle<reco::PFTauDiscriminator> HPSPFTauDiscriminationByMediumIsolationMVA2;
+  //iEvent.getByLabel("hpsPFTauDiscriminationByMediumIsolationMVA2", HPSPFTauDiscriminationByMediumIsolationMVA2);
+  
+  edm::Handle<reco::PFTauDiscriminator> HPSPFTauDiscriminationByTightIsolationMVA2;
+  iEvent.getByLabel("hpsPFTauDiscriminationByTightIsolationMVA2", HPSPFTauDiscriminationByTightIsolationMVA2);
+
+  //================== KinematicFit Info ===================
+  for ( unsigned int iPFTau = 0; iPFTau < PFTaus->size(); iPFTau++ ) {
+    reco::PFTauRef PFTauCand(PFTaus, iPFTau);
+    if(PFTauCand.isNonnull()){
+      if(PFTauCand->p4().Pt() >PFTauPtCut_ && fabs(PFTauCand->p4().eta()) <PFTauEtaCut_){
+	if((*HPSByDecayModeFinding)[PFTauCand] && PFTauCand->decayMode()==10 &&  (*HPSAgainstElectronsTight)[PFTauCand] && (*HPSAgainstMuonTight)[PFTauCand] && (*HPSPFTauDiscriminationByTightIsolationMVA2)[PFTauCand]){
+	  return true;
+	}
+      }
+    }
+  }
+  return false;
+}
 
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -229,18 +234,18 @@ SkimmingCuts::beginJob()
   cntFound_ =0;
 
 
-   std::cout<<"Starting preselection ...  " <<std::endl;
+  //   std::cout<<"Starting preselection ...  " <<std::endl;
  }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 SkimmingCuts::endJob() {
 
-  float ratioMuon = 0.0;
-  if(nMuon_!=0) ratioMuon=(float)nMuonPass_/nMuon_;
+//   float ratioMuon = 0.0;
+//   if(nMuon_!=0) ratioMuon=(float)nMuonPass_/nMuon_;
 
-  float ratioPFTau = 0.0;
-  if(nPFTaus_!=0) ratioPFTau=(float)nPFTausPass_/nPFTaus_;
+//   float ratioPFTau = 0.0;
+//   if(nPFTaus_!=0) ratioPFTau=(float)nPFTausPass_/nPFTaus_;
 
 
   float ratio = 0.0;
@@ -250,7 +255,7 @@ SkimmingCuts::endJob() {
   // std::cout<<"NPFtaus: " << nPFTaus_ <<"   NPFtausPass: "<< nPFTausPass_ <<"   Efficiency: "<< ratioPFTau*100.0 <<"%"<<std::endl;
 
 
-  std::cout<<"[SkimmingCuts]-->  "<<"NEvents: " << cnt_ <<"   NEventsPass: "<< cntFound_ <<"   Efficiency: "<< ratio*100.0 <<"%"<<std::endl;
+    std::cout<<"[SkimmingCuts]-->  "<<"NEvents: " << cnt_ <<"   NEventsPass: "<< cntFound_ <<"   Efficiency: "<< ratio*100.0 <<"%"<<std::endl;
 
 }
 
