@@ -13,7 +13,7 @@
 //
 // Original Author:  Vladimir Cherepanov
 //         Created:  Thu Feb 23 18:53:30 CET 2012
-// $Id: SkimmingCuts.cc,v 1.6 2013/05/22 20:13:21 inugent Exp $
+// $Id: SkimmingCuts.cc,v 1.7 2013/06/12 21:58:37 mschimp Exp $
 //
 //
 
@@ -35,6 +35,7 @@
 #include <DataFormats/Candidate/interface/Candidate.h>
 #include <DataFormats/MuonReco/interface/MuonIsolation.h>
 #include "DataFormats/TauReco/interface/PFTauFwd.h"
+#include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
