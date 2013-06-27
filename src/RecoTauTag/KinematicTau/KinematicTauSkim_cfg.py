@@ -1,100 +1,64 @@
-
-
 import FWCore.ParameterSet.Config as cms
-import HLTrigger.HLTfilters.triggerResultsFilter_cfi as hlt
 
-process = cms.Process("AOD")
+process = cms.Process("AODQualityTauSkim")
 
-process.load('Configuration/StandardSequences/Services_cff')
-process.load('SimGeneral.MixingModule.mixNoPU_cfi')
-process.load('Configuration/StandardSequences/MagneticField_38T_cff')
-process.load('Configuration.StandardSequences.GeometryExtended_cff')
-#process.load('Configuration.StandardSequences.GeometryDB_cff')
-process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-
-# global tag
-process.GlobalTag.globaltag = 'START44_V9B::All'
-
-process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.EventContent.EventContent_cff")
-process.load('HLTrigger.Configuration.HLT_GRun_cff')
-
-process.load("Configuration.StandardSequences.Geometry_cff")
-process.load("Configuration.StandardSequences.MagneticField_cff")
-process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
-
-process.load("Configuration.StandardSequences.EndOfProcess_cff")
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.globaltag = 'START36_V9::All'
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-
-######################################################
-
 process.MessageLogger.categories.append('InputTrackSelector')
-process.MessageLogger.categories.append('KinematicTau')
+process.MessageLogger.categories.append('KinematicTauProducer')
 process.MessageLogger.categories.append('KinematicTauSkim')
-process.MessageLogger.categories.append('ThreeProngInputSelector_Step2')
-process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTau', 'KinematicTauSkim','InputTrackSelector','ThreeProngInputSelector_Step2')
+process.MessageLogger.debugModules = cms.untracked.vstring('KinematicTauProducer', 'KinematicTauSkim')
 process.MessageLogger.cerr = cms.untracked.PSet(
-     threshold = cms.untracked.string('INFO'),
-     FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-     DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-     InputTrackSelector = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-     KinematicTau = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-     KinematicTauSkim = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
-     ThreeProngInputSelector_Step2 = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
+    threshold = cms.untracked.string('DEBUG'),
+	FwkReport = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+	DEBUG = cms.untracked.PSet(limit = cms.untracked.int32(0)),
+	InputTrackSelector = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
+	KinematicTauProducer = cms.untracked.PSet(limit = cms.untracked.int32(-1)),
+	KinematicTauSkim = cms.untracked.PSet(limit = cms.untracked.int32(-1))
+)
+
+numberOfEvents = -1
+
+# Output definition
+process.output = cms.OutputModule("PoolOutputModule",
+#	splitLevel = cms.untracked.int32(0),
+	outputCommands = process.AODSIMEventContent.outputCommands,
+	fileName = cms.untracked.string('QCD_EMEnriched_Pt30to80_AODQualityTauSkim.root'),
+    SelectEvents = cms.untracked.PSet(
+        SelectEvents = cms.vstring('skim_QualityTau')
+    )
+)
+process.output.outputCommands.extend(
+	cms.untracked.vstring(
+			'keep *_fixedConeHighEffPFTauProducer*_*_*',
+			'keep *_fixedConeHighEffPFTauDiscrimination*_*_*'
+	)
 )
 
 process.source = cms.Source("PoolSource",
 	fileNames = cms.untracked.vstring(
-    'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/6EB56796-403D-E111-B113-001EC9D83141.root',
-    'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/6EB56796-403D-E111-B113-001EC9D83141.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/FE9A1BA3-413D-E111-AA25-90E6BA19A22E.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/ECD8D599-413D-E111-9428-485B39800BD7.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/ACA5AF97-413D-E111-8C68-20CF305B0519.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/76360A97-413D-E111-B614-20CF3027A5ED.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/A6ABB3AC-413D-E111-99CF-001EC9D446AD.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/1A99E739-423D-E111-AC54-00261834B5AF.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/3C29673A-423D-E111-A2A4-E0CB4E29C514.root',
-    #'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/2244D93A-423D-E111-9967-E0CB4E553642.root',
-    'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/2A76E3FF-423D-E111-BAC4-20CF305616E1.root',
-    'file://dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/mc/Fall11/DYJetsToLL_TuneZ2_M-50_7TeV-madgraph-tauola/AODSIM/PU_S6_START44_V9B-v1/0000/6A8F05FD-423D-E111-BA9D-E0CB4E553642.root')
-                            )
+		#'dcap://grid-dcap.physik.rwth-aachen.de/pnfs/physik.rwth-aachen.de/cms/store/user/perchall/QCD_EMEnriched_Pt30to80/TauSkim/0a829d6435628d6d858898be444d1f11/QCD_EMEnriched_Pt30to80_AODTauSkim_1_1_IUg.root'
+		'file:///user/perchalla/data/CMSSW_3_6_2/QCD_EMEnriched_Pt30to80/TauSkim/0a829d6435628d6d858898be444d1f11/QCD_EMEnriched_Pt30to80_AODTauSkim_1_1_IUg.root'
+	)
+#	,duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
+)
 
-
-numberOfEvents = -1
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numberOfEvents)
 )
 
-process.options = cms.untracked.PSet(
-    Rethrow = cms.untracked.vstring('ProductNotFound')
-)
+process.load("CommonTools.PrimVtxSelector.PrimVtxSelector_cfi")
+process.load("RecoTauTag.KinematicTau.InputTrackSelector_cfi")
+process.load("RecoTauTag.KinematicTau.ThreeProngInputSelector_cff")
+process.load("RecoTauTag.KinematicTau.kinematictau_cfi")
+process.load("RecoTauTag.KinematicTau.KinematicTauSkim_cfi")
 
-
-process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
-
-process.schedule = cms.Schedule()
-
-# Output definition
-process.output = cms.OutputModule("PoolOutputModule",
-                                  #       splitLevel = cms.untracked.int32(0),
-                                  outputCommands = process.AODSIMEventContent.outputCommands,
-                                  fileName = cms.untracked.string('QualityTauSkim.root'),
-                                  SelectEvents = cms.untracked.PSet(
-    SelectEvents = cms.vstring('skim_QualityTau')
-    )
-                                  )
-process.output.outputCommands.extend(
-    cms.untracked.vstring('keep *')
-    )
-
-
-process.load("RecoTauTag.KinematicTau.KinematicFitSequences_cff")
-
-process.skim_QualityTau = cms.Path(process.PFTau*process.KinematicFitSequencewithSkim)
+process.skim_QualityTau = cms.Path(process.PrimVtxSelector*process.InputTrackSelector*process.ThreeProngInputSelector*process.KinematicTauBasicProducer*process.KinematicTauSkim)
 process.out_step = cms.EndPath(process.output)
 
 # Schedule definition
 process.schedule = cms.Schedule(process.skim_QualityTau)
 process.schedule.append(process.out_step)
-

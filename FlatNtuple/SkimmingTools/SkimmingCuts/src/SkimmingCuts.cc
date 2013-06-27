@@ -13,7 +13,7 @@
 //
 // Original Author:  Vladimir Cherepanov
 //         Created:  Thu Feb 23 18:53:30 CET 2012
-// $Id: SkimmingCuts.cc,v 1.5 2013/05/22 20:04:55 inugent Exp $
+// $Id: SkimmingCuts.cc,v 1.6 2013/05/22 20:13:21 inugent Exp $
 //
 //
 
@@ -42,7 +42,6 @@
 #include <DataFormats/Candidate/interface/Candidate.h>
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
-#include "DataFormats/KinematicFit/interface/SelectedKinematicDecay.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/GsfTrackReco/interface/GsfTrack.h"
 #include "DataFormats/GsfTrackReco/interface/GsfTrackFwd.h"
@@ -120,7 +119,6 @@ SkimmingCuts::SkimmingCuts(const edm::ParameterSet& iConfig):
   PFTauEtaCut_( iConfig.getParameter<double>("PFTauEtaCut") ),
   ElectronPtCut_( iConfig.getParameter<double>("ElectronPtCut") ),
   ElectronEtaCut_( iConfig.getParameter<double>("ElectronEtaCut") ),
-  KinFitAdvanced_( iConfig.getParameter<edm::InputTag>( "kinematicTausAdvanced" ) ),
   doMuonOnly_( iConfig.getParameter<bool>("doMuonOnly") )
 {
 }
@@ -185,44 +183,6 @@ bool SkimmingCuts::ElectronCuts(edm::Event& iEvent, const edm::EventSetup& iSetu
 }
 
 
-bool SkimmingCuts::KFitTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
-  edm::Handle<std::vector<reco::PFTau> > PFTaus;
-  iEvent.getByLabel("hpsPFTauProducer", PFTaus);
-
-  edm::Handle<reco::PFTauDiscriminator> HPSAgainstElectronsTight;
-  iEvent.getByLabel("hpsPFTauDiscriminationByLooseElectronRejection", HPSAgainstElectronsTight);
-  
-  edm::Handle<reco::PFTauDiscriminator> HPSAgainstMuonTight;
-  iEvent.getByLabel("hpsPFTauDiscriminationByLooseMuonRejection", HPSAgainstMuonTight);
-  
-  //edm::Handle<reco::PFTauDiscriminator> HPSLooseIsoDiscrDBSumPtCorr;
-  //iEvent.getByLabel("hpsPFTauDiscriminationByLooseIsolationMVA", HPSLooseIsoDiscrDBSumPtCorr);
- 
-  edm::Handle<reco::PFTauDiscriminator> HPSPFTauDiscriminationByLooseIsolationMVA2;
-  iEvent.getByLabel("hpsPFTauDiscriminationByLooseIsolationMVA2", HPSPFTauDiscriminationByLooseIsolationMVA2);
-
-  edm::Handle<reco::PFTauDiscriminator> HPSPFTauDiscriminationByTightIsolationMVA2;
-  iEvent.getByLabel("hpsPFTauDiscriminationByTightIsolationMVA2", HPSPFTauDiscriminationByTightIsolationMVA2);
-
-  edm::Handle<reco::PFTauDiscriminator> HPSByDecayModeFinding;
-  iEvent.getByLabel("hpsPFTauDiscriminationByDecayModeFinding", HPSByDecayModeFinding);
-
-  edm::Handle<SelectedKinematicDecayCollection> selected;
-  iEvent.getByLabel(KinFitAdvanced_, selected);
-  
-  for(SelectedKinematicDecayCollection::const_iterator decay = selected->begin(); decay != selected->end(); decay++){
-    SelectedKinematicDecay KFTau=(*decay);
-    const reco::PFTauRef  PFTauCand=KFTau.PFTauRef();
-    if(PFTauCand.isNonnull()){
-      if(PFTauCand->p4().Pt() >PFTauPtCut_ && fabs(PFTauCand->p4().eta()) <PFTauEtaCut_){
-	if((*HPSByDecayModeFinding)[PFTauCand] && PFTauCand->decayMode()==10 && (*HPSAgainstElectronsTight)[PFTauCand] && (*HPSAgainstMuonTight)[PFTauCand] && (*HPSPFTauDiscriminationByLooseIsolationMVA2)[PFTauCand]){
-	  return true;
-	}
-      }
-    }
-  }
-  return false;
-}
 
 bool SkimmingCuts::PFTausCuts(edm::Event& iEvent, const edm::EventSetup& iSetup){
   edm::Handle<std::vector<reco::PFTau> > PFTaus;

@@ -23,19 +23,20 @@
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+#include "RecoVertex/KinematicFitPrimitives/interface/RefCountedKinematicParticle.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidateFwd.h"
-#include "SimpleFits/FitSoftware/interface/LorentzVectorParticle.h"
+
 
 class SelectedKinematicParticle {
  public:
   SelectedKinematicParticle();
-  SelectedKinematicParticle(LorentzVectorParticle p,const int status, const int ambiguity, const reco::RecoChargedCandidateRef & CandRef);
+  SelectedKinematicParticle(const RefCountedKinematicParticle & kinparticle, const int status, const std::string & name, const int ambiguity, const reco::RecoChargedCandidateRef & CandRef);
   
   const int status() const;
-  const int pdgid() const;
+  const std::string & name() const;
   const int charge() const;
-  const unsigned int ambiguity() const;
+  const int ambiguity() const;
   
   const TVectorT<double> & parameters() const;
   const TVectorT<double> & input_parameters() const;
@@ -55,7 +56,7 @@ class SelectedKinematicParticle {
   /// status code (not in use yet)
   int status_; //
   /// particle name
-  int pdgid_; //
+  std::string name_; //
   /// particle charge
   int charge_; //
   /// DEPRECATED! ambiguity counter
@@ -73,6 +74,11 @@ class SelectedKinematicParticle {
   
   /// reference to the initial candidate
   reco::RecoChargedCandidateRef CandRef_; //
+  
+  /// conversion from AlgebraicVector7
+  const TVectorT<double> convertVector( const AlgebraicVector7 & vector );
+  /// conversion from AlgebraicSymMatrix77
+  const TMatrixDSym convertMatrix( const AlgebraicSymMatrix77 & matrix );
 };
 
 typedef std::vector<SelectedKinematicParticle> SelectedKinematicParticleCollection;

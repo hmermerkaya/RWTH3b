@@ -923,11 +923,12 @@ void ACHarvester::addHighLegend(TVirtualPad *can, const std::vector<TH1*> & hist
 	legend->SetColumnSeparation(0.00);
 	legend->SetTextAlign(12);//3*10=right,3*1=top
 	unsigned int index = 0;
+	TLegendEntry * entry;
 	for(std::vector<TH1*>::const_iterator iter=histVect.begin(); iter!=histVect.end(); ++iter, index++) {
 		std::string label = names.at(index);
         std::string drawOption = "F";
         if(std::string((*iter)->GetDrawOption()).find("P",0,1)!=std::string::npos) drawOption = "P";
-        legend->AddEntry(*iter, label.c_str(), drawOption.c_str());
+        entry = legend->AddEntry(*iter, label.c_str(), drawOption.c_str());
 		legend->SetTextSize(gStyle->GetTitleSize());//same size for labels and legend
 	}
 	legend->Draw();

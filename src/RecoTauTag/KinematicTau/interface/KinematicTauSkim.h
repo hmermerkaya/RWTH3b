@@ -18,17 +18,21 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
+
+
 class KinematicTauSkim : public edm::EDFilter {
 public:
-  explicit KinematicTauSkim(const edm::ParameterSet&);
-  ~KinematicTauSkim();
+	explicit KinematicTauSkim(const edm::ParameterSet&);
+	~KinematicTauSkim();
 	
 private:
-  virtual void beginJob() ;
-  virtual bool filter(edm::Event&, const edm::EventSetup&);
-  virtual void endJob() ;
-  
-  std::vector<std::string> discriminators_;
-  edm::InputTag KinematicFitTauTag_;
-  unsigned int minTau_, cnt_, cntFound_;	
+	virtual void beginJob() ;
+	virtual bool filter(edm::Event&, const edm::EventSetup&);
+	virtual void endJob() ;
+	
+	edm::InputTag kinTausTag_;
+	std::vector<std::string> discriminators_;
+
+	unsigned int minTau_, cnt_, cntFound_;	
 };

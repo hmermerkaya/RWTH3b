@@ -1,7 +1,7 @@
 // -*- C++ -*-
 //
 // Package:    KinematicTau
-// Class:      ThreeProngInputSelector_Step1
+// Class:      ThreeProngInputSelector_Step2
 // 
 /**
  * This framework module creates the appropriate input for the KinematicTauProducer.
@@ -37,24 +37,37 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 
+#include "DataFormats/TauReco/interface/PFTau.h"
+
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+
+#include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
+
 #include <TLorentzVector.h>
+#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
+#include <RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h>
+
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-class ThreeProngInputSelector_Step1 : public edm::EDFilter, protected KinematicTauTools {
+class ThreeProngInputSelector_Step2 : public edm::EDFilter, protected KinematicTauTools {
 public:
-  ThreeProngInputSelector_Step1(const edm::ParameterSet &);
-  virtual ~ThreeProngInputSelector_Step1();
+  ThreeProngInputSelector_Step2(const edm::ParameterSet&);
+  virtual ~ThreeProngInputSelector_Step2();
 	
 private:
   virtual void beginJob();
-  virtual bool filter(edm::Event &, const edm::EventSetup &);
+  virtual bool filter(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
-  bool select(reco::TrackCollection & nonTauTracks, vVVTrackRef & threeProngCombis);
+  bool select(std::vector<reco::TrackRefVector> & selected, reco::PFTauRefVector & taurefs, reco::VertexCollection & primaryVertex);
   
   edm::Event * iEvent_;
   edm::ParameterSet iConfig_;
-  edm::InputTag inputCollectionTag_, trackCollectionTag_;
-  unsigned int cnt_, cntFound_, minTau_;
+  edm::InputTag threeProngCollectionTag_, selectedTauCandidatesTag_, primVtxTag_;
+  unsigned int cnt_, cntFound_, minTau_, minVtxTracks_;
+  double maxChi2ndf_;    
 
 };
