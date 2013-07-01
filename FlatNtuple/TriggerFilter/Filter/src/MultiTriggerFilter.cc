@@ -35,12 +35,15 @@ MultiTriggerFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup){
       for(unsigned int i=0;i<useTriggers_.size();i++){
 	if(trigname.Contains(useTriggers_.at(i))){
 	  MyTriggerHelper.AddTrigger(trigname.Data());
+	  // std::cout<<trigname<<"  "<<triggerResults->accept(itrig)<<std::endl;
 	  if(triggerResults->accept(itrig)) passed=true;
+	 
 	}
       }
     }
   }
-  return passed;
+  // return true;
+    return passed;
 }
 
 
