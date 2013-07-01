@@ -18,6 +18,9 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
+
+
 class KinematicTauSkim : public edm::EDFilter {
 public:
   explicit KinematicTauSkim(const edm::ParameterSet&);

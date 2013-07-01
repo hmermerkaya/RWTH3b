@@ -29,12 +29,11 @@ public:
   explicit Tau_JAKID_Filter(const edm::ParameterSet&);
   ~Tau_JAKID_Filter();
 	
-  static bool isTruthTauInAcceptance(const reco::GenParticle &cand,double &TauPtMin,double &TauEtaMax);
-
 private:
   virtual void beginJob() ;
   virtual bool filter(edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
+  virtual bool isTruthTauInAcceptance(const reco::GenParticle &cand);
 
   std::vector<int> JAKID_;
   std::vector<int> nprongs_;

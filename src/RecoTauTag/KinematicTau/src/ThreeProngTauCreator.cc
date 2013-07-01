@@ -1,116 +1,315 @@
 #include "RecoTauTag/KinematicTau/interface/ThreeProngTauCreator.h"
-#include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
-#include "RecoTauTag/KinematicTau/interface/ParticleBuilder.h"
-#include "SimpleFits/FitSoftware/interface/TauA1NuConstrainedFitter.h"
-#include "SimpleFits/FitSoftware/interface/Chi2VertexFitter.h"
-#include "Validation/EventGenerator/interface/PdtPdgMini.h"
 #include "RecoTauTag/KinematicTau/interface/SecondaryVertexHelper.h"
-#include "RecoVertex/KinematicFit/interface/KinematicParticleVertexFitter.h"
-#include <RecoVertex/KinematicFitPrimitives/interface/KinematicParticleFactoryFromTransientTrack.h>
+#include "RecoTauTag/KinematicTau/interface/VertexRotation.h"
 
 int ThreeProngTauCreator::create(unsigned int &ambiguity,SelectedKinematicDecay &KFTau){
-  std::vector<TrackParticle> pions;
-  std::vector<LorentzVectorParticle> neutrino;
-  std::vector<LorentzVectorParticle> daughters;
-  // Helix fit for a1
-  if(!FitA1(KFTau)){return 0;}
-  A1=mother();
-  // Tau fit
-  daughters.push_back(A1);
-  if(!FitTau(daughters,PV_,ambiguity)){return 1;}
-  Tau=mother();
-  // Fit sequence complete
-  return 2;
+
+  std::vector<RefCountedKinematicParticle> *daughters = new std::vector<RefCountedKinematicParticle>; //3 particles (3pi)
+  std::vector<RefCountedKinematicParticle> *neutrinos = new std::vector<RefCountedKinematicParticle>; //1 or 2 particles due to ambiguity (nuGuess1 + nuGuess2)
+
+  if(!createStartScenario(ambiguity,KFTau, *daughters, *neutrinos)) return 0;
+  if (daughters->size()!=3 ||(neutrinos->size()!=1 && neutrinos->size()!=2)){
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::create: wrong daughter size. found "<<daughters->size()<<" pis and "<<neutrinos->size()<<" nus. Skip this tauCand";
+    return 0;
+  }
+  daughters->push_back(neutrinos->at(0));
+  for(unsigned int i=0;i<daughters->size();i++){
+    /*    std::cout << "Inital " 
+	      << daughters->at(i)->currentState().globalPosition().x() << " " 
+	      << daughters->at(i)->currentState().globalPosition().y() << " " 
+	      << daughters->at(i)->currentState().globalPosition().z() << " "
+	      << daughters->at(i)->currentState().globalMomentum().x() << " "
+              << daughters->at(i)->currentState().globalMomentum().y() << " "
+              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl; */
+    }
+  bool fitWorked=false;
+  fitWorked=kinematicRefit(ambiguity,*daughters, modifiedPV_);
+
+  for(unsigned int i=0;i<daughters->size();i++){
+    /*  std::cout << "Inital "
+              << daughters->at(i)->initialState().globalPosition().x() << " "
+              << daughters->at(i)->initialState().globalPosition().y() << " "
+              << daughters->at(i)->initialState().globalPosition().z() << " "
+              << daughters->at(i)->initialState().globalMomentum().x() << " "
+              << daughters->at(i)->initialState().globalMomentum().y() << " "
+              << daughters->at(i)->initialState().globalMomentum().z() << " " << std::endl;
+    std::cout << "Current "
+              << daughters->at(i)->currentState().globalPosition().x() << " "
+              << daughters->at(i)->currentState().globalPosition().y() << " "
+              << daughters->at(i)->currentState().globalPosition().z() << " "
+              << daughters->at(i)->currentState().globalMomentum().x() << " "
+              << daughters->at(i)->currentState().globalMomentum().y() << " "
+              << daughters->at(i)->currentState().globalMomentum().z() << " " << std::endl;
+    */
+  }
+
+
+    
+  delete daughters;
+  delete neutrinos;
+  
+  if(fitWorked) return 1;
+  else return 0;
 }
 
-bool ThreeProngTauCreator::FitTau(std::vector<LorentzVectorParticle>  &unfitDaughters,const reco::Vertex &primaryVertex,unsigned int &ambiguity){
-  if(unfitDaughters.size()!=1){
+bool ThreeProngTauCreator::createStartScenario(unsigned int &ambiguity,SelectedKinematicDecay &KFTau, std::vector<RefCountedKinematicParticle> &pions, std::vector<RefCountedKinematicParticle> &neutrinos){
+  KinematicParticleFactoryFromTransientTrack kinFactory;
+  float piMassSigma = sqrt(pow(10.,-12.));//not to small to avoid singularities
+  float piChi = 0., piNdf = 0.;//only initial values
+  
+  // Obtain stored values from Kinematic Tau Candidate
+  SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
+  selectedTracks_=KFTau.InitialTrackTriplet(); //uses orignal triplet tracks (why?)
+  std::vector<reco::TransientTrack> transTrkVect=SVH.InitialRefittedTracks();
+  TransientVertex secVtx=SVH.InitialSecondaryVertex();
+  TLorentzVector lorentzA1=KFTau.Initial_a1_p4();
+  double thetaMax=KFTau.InitialThetaMax();
+  double theta0=KFTau.InitialThetaGJ();
+  TVector3 tauFlghtDir;
+  if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
+    tauFlghtDir=KFTau.InitialTauFlightDirectionReFitPvtxToSvtx();
+    modifiedPV_=KFTau.InitialPrimaryVertexReFit();
+  }
+  else{
+    tauFlghtDir=KFTau.InitialTauFlightDirectionReFitandRotatedPvtxToSvtx();
+    modifiedPV_=KFTau.InitialPrimaryVertexReFitAndRotated();
+  }
+  TVector3 startingtauFlghtDir=tauFlghtDir;
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Now setup Fit parameters
+  for(unsigned int i = 0; i!=transTrkVect.size();i++){
+    pions.push_back(kinFactory.particle(transTrkVect[i],PMH.Get_piMass(),piChi,piNdf,secVtx.position(),piMassSigma));
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Quality cuts on InitialThetaGJ
+  if(theta0>TMath::Pi()/2){
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Unrealistic GJ angle ("<<theta0<<"). tauCand skipped!";
+    return false;
+  }
+  
+  if ((thetaMax - theta0) < -pow(10.0,-10.0)*thetaMax && thetaMax>0) {
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: thetaGJ = "<<theta0<<" but replaced by thetaMax = "<<thetaMax;
+    theta0 = thetaMax;
+  }
+
+  LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<modifiedPV_.x()<<","<<modifiedPV_.y()<<","<<modifiedPV_.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-modifiedPV_.position().y())/(secVtx.position().x()-modifiedPV_.position().x()))<<", theta "<<theta0;
+  
+  std::cout <<"ThreeProngTauCreator::createStartScenario: rotated PV ("<<modifiedPV_.x()<<","<<modifiedPV_.y()<<","<<modifiedPV_.z()<<"), SV ("<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<"), phi(vtxLink) "<<atan((secVtx.position().y()-modifiedPV_.position().y())/(secVtx.position().x()-modifiedPV_.position().x()))<<", theta "<<theta0 << std::endl;
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Now setup the tau and the neutrino
+  // clasical configuration
+  double tauSolutions = getTauMomentumMagnitudes(ambiguity,lorentzA1.M(),lorentzA1.P(),PMH.Get_tauMass(),thetaMax);
+  if (tauSolutions< 0. ) {
+    return false;
+  } 
+
+  TLorentzVector TauGuessLV;
+  TLorentzVector NuGuessLV;
+  tauFlghtDir = tauFlghtDir.Unit();
+  TauGuessLV.SetXYZM(tauFlghtDir.X()*tauSolutions, tauFlghtDir.Y()*tauSolutions, tauFlghtDir.Z()*tauSolutions, PMH.Get_tauMass());
+  //  std::cout << "Default: Px " << TauGuessLV.Px() << " Py " << TauGuessLV.Py() << " Pz " << TauGuessLV.Pz() << " E " << TauGuessLV.E() 
+  //    << "ambiguity  " << ambiguity << std::endl;
+
+  // Physical configuration
+  if(ambiguity==SelectedKinematicDecay::PlusSolution || ambiguity==SelectedKinematicDecay::MinusSolution){
+    if(fabs(lorentzA1.Angle(tauFlghtDir))>=fabs(thetaMax)){
+      //case when initial conditions are unphysical reset with 0.XX theta_{GF,max} for starting condition only  
+      reco::Vertex tmppVtx=modifiedPV_;
+      TransientVertex tmpVtx=secVtx;
+      double tmptheta0=theta0;
+      VertexRotation vtxC(lorentzA1);
+      vtxC.rotatePV(tmppVtx,tmpVtx,tmptheta0,startingtauFlghtDir,0.975);
+    }
+    TLorentzVector TauGuessLV1,TauGuessLV2,NuGuessLV1,NuGuessLV2;
+    SolvebyRotation(startingtauFlghtDir,lorentzA1,TauGuessLV1,TauGuessLV2,NuGuessLV1,NuGuessLV2);
+    if(ambiguity==SelectedKinematicDecay::PlusSolution)  TauGuessLV=TauGuessLV1;
+    if(ambiguity==SelectedKinematicDecay::MinusSolution) TauGuessLV=TauGuessLV2;
+      if(TauGuessLV1.E()!=TauGuessLV2.E()){
+	std::cout << "E new: Px " <<  TauGuessLV.Px() << " Py " << TauGuessLV.Py() << " Pz " << TauGuessLV.Pz() << " E " << TauGuessLV.E() 
+		  << " ambiguity  " << ambiguity << " angle " << TauGuessLV.Angle(startingtauFlghtDir) 
+		  << " thetaGF " << fabs(lorentzA1.Angle(tauFlghtDir)) << " thetaGFmax " << fabs(thetaMax) 
+		  << " Dir " <<  startingtauFlghtDir.X() << " " << startingtauFlghtDir.Y() << " " << startingtauFlghtDir.Z() << std::endl;
+    }
+  }
+  neutrinos.push_back(unknownNu(TauGuessLV, lorentzA1, secVtx,NuGuessLV));
+  //std::cout << "Sec Vtx " <<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()
+  //    << " in " << neutrinos.at(0)->currentState().globalPosition().x() << " " << neutrinos.at(0)->currentState().globalPosition().y() << " " << neutrinos.at(0)->currentState().globalPosition().z() << std::endl;
+  KFTau.SetInitialGuess(ambiguity,TauGuessLV,NuGuessLV,startingtauFlghtDir); 
+  ///////////////////////////////////////////////////////
+  if(neutrinos.size() != 1){
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::createStartScenario: Bad neutrino size = "<<neutrinos.size();
+    return false;
+  }
+  std::cout << ambiguity << " Tau E " << TauGuessLV.E() << " (" <<  TauGuessLV.Px() << "," <<  TauGuessLV.Py() << "," <<  TauGuessLV.Pz() 
+	    << ") Nu E " << NuGuessLV.E()  << " (" << NuGuessLV.Px() << "," << NuGuessLV.Py() << "," << NuGuessLV.Pz() << ")" 
+	    << std::endl;
+  return true;
+}
+
+bool ThreeProngTauCreator::kinematicRefit(unsigned int &ambiguity,std::vector<RefCountedKinematicParticle> &unfitDaughters, const reco::Vertex & primaryVertex){
+  if(unfitDaughters.size()!=4){
     edm::LogError("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit:ERROR! Wrong size of daughters. Skip tauCand.";
     return false;
   }
-  // Setup Constraint
-  TVector3 pv(primaryVertex.position().x(),primaryVertex.position().y(),primaryVertex.position().z());
-  TMatrixTSym<double> pvcov(LorentzVectorParticle::NVertex);
-  math::Error<LorentzVectorParticle::NVertex>::type pvCov;
-  primaryVertex.fill(pvCov);
-  for(int i = 0; i<LorentzVectorParticle::NVertex; i++){
-    for(int j = 0; j<LorentzVectorParticle::NVertex; j++){
-      pvcov(i,j)=pvCov(i,j);
-      pvcov(j,i)=pvCov(i,j);
-    }
+  
+  std::vector<MultiTrackKinematicConstraint* > constraintVector;
+  MultiTrackKinematicConstraint *tauMass_c = new MultiTrackMassNumericalKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size(),1.0); //MultiTrackMassKinematicConstraint(PMH.Get_tauMass(), unfitDaughters.size());
+  constraintVector.push_back(tauMass_c);
+  GlobalPoint linP(primaryVertex.x(), primaryVertex.y(), primaryVertex.z());
+  MultiTrackKinematicConstraint *pointing_c = new MultiTrackSmartPointingNumericalKinematicConstraint(linP,1.0);//new MultiTrackVertexLinkKinematicConstraint(linP);
+  constraintVector.push_back(pointing_c);
+  MultiTrackKinematicConstraint *combiC = new CombinedKinematicConstraint(constraintVector);
+  
+  GlobalPoint vtxGuess = unfitDaughters[3]->currentState().globalPosition();//nu was created at common/corrected vertex of pions
+  try{
+    kinTree_ = kcvFitter_->fit(unfitDaughters,combiC,&vtxGuess);
   }
-  TauA1NuConstrainedFitter TauA1NU(ambiguity,unfitDaughters.at(0),pv,pvcov);
-  TauA1NU.SetMaxDelta(0.01);
-  TauA1NU.SetNIterMax(1000);
-  TauA1NU.Fit();
-  if (TauA1NU.isConverged()) {
-    StoreResults(TauA1NU.ChiSquare(),TauA1NU.NDF(),TauA1NU.CSum(),TauA1NU.NIter(),TauA1NU.NConstraints(),TauA1NU.GetReFitDaughters(),TauA1NU.GetMother());
+  catch(VertexException){//("KinematicStatePropagator without material::propagation failed!")
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: VertexException. Skip tau candidate.";
+    return false;
+  }
+  
+  //delete combiC;
+  delete pointing_c;
+  delete tauMass_c;
+  
+  // Test whether the fit is valid. This is mainly due to unconverged fits.
+  if (kinTree_->isValid()) {
     LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Valid tree.";
     return true;
   } 
-  LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Warning! Tree is not converged. Skip tauCand.";//DEBUG
-  return false;
+  else {
+    LogTrace("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: Warning! Tree is not valid. Skip tauCand.";//DEBUG
+    //edm::LogVerbatim("ThreeProngTauCreator")<<"ThreeProngTauCreator::kinematicRefit: ERROR! Tree is not valid. Skip tauCand.";//INFO
+    return false;
+  }
 }
 
-bool ThreeProngTauCreator::FitA1(SelectedKinematicDecay &KFTau){
-  if(useTrackHelixFit_){
-    std::vector<TrackParticle> pions;
-    PV_=KFTau.InitialPrimaryVertexReFit();
-    GlobalPoint pvtx(PV_.position().x(),PV_.position().y(),PV_.position().z());
-    std::vector<reco::TrackRef> selectedTracks=KFTau.InitialTrackTriplet();
-    for(unsigned int i = 0; i!=selectedTracks.size();i++){
-      reco::TransientTrack transTrk=transientTrackBuilder_->build(selectedTracks.at(i));
-      pions.push_back(ParticleBuilder::CreateTrackParticle(transTrk,transientTrackBuilder_,pvtx,true,true));
-    }
-
-    TVector3 pv(PV_.position().x(),PV_.position().y(),PV_.position().z());
-    Chi2VertexFitter chi2v(pions,pv);
-    chi2v.Fit();
-    double c(0); for(unsigned int i=0;i<pions.size();i++){c+=pions.at(i).Charge();}
-    int pdgid=fabs(PdtPdgMini::a_1_plus)*c;
-
-    StoreResults(chi2v.ChiSquare(),chi2v.NDF(),0,0,0,chi2v.GetReFitLorentzVectorParticles(),chi2v.GetMother(pdgid));  
+double ThreeProngTauCreator::getTauMomentumMagnitudes(unsigned int& ambiguity,double ma1,double pa1,double M,double theta){
+  // return -1. in case of a problem
+  double tauMomentumMagnitude = -1.;
+  double denominator = (2*pow(ma1,2) + 2*pow(pa1,2)*pow(sin(theta),2));
+  if (denominator==0.) {
+    LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Bad tau magnitude due to zero denominator. Return 0.";
+    return tauMomentumMagnitude;
   }
-  else{
-    // Kalman fit
-    SecondaryVertexHelper SVH(transientTrackBuilder_,KFTau);
-    TransientVertex secVtx=SVH.SecondaryVertex();
-    GlobalPoint sv(secVtx.position().x(),secVtx.position().y(),secVtx.position().z());
-    std::vector<reco::TransientTrack> transTrkVect=secVtx.refittedTracks();
-    // Use CMSSW Kinematic tools to extract a1
-    KinematicParticleFactoryFromTransientTrack kinFactory;
-    float piMassSigma = sqrt(pow(10.,-12.));//not to small to avoid singularities
-    float piChi = 0., piNdf = 0.;//only initial values
-    std::vector<RefCountedKinematicParticle> pions;
-    for(unsigned int i = 0; i!=transTrkVect.size();i++){
-      pions.push_back(kinFactory.particle(transTrkVect[i],PMH.Get_piMass(),piChi,piNdf,secVtx.position(),piMassSigma));
-    }
-    KinematicParticleVertexFitter kpvFitter;
-    RefCountedKinematicTree jpTree = kpvFitter.fit(pions);
-    jpTree->movePointerToTheTop();
-    const KinematicParameters parameters = jpTree->currentParticle()->currentState().kinematicParameters();
-    //const KinematicParametersError parametersError = jpTree->currentParticle()->currentState().kinematicParametersError();
-    AlgebraicSymMatrix77 cov=jpTree->currentParticle()->currentState().kinematicParametersError().matrix();    
-    // get pions
-    double c(0); 
-    std::vector<reco::Track> Tracks;
-    std::vector<LorentzVectorParticle> ReFitPions;
-    for(unsigned int i=0;i<transTrkVect.size();i++){
-      c+=transTrkVect.at(i).charge();
-      reco::Vertex V=secVtx;
-      ReFitPions.push_back(ParticleBuilder::CreateLorentzVectorParticle(transTrkVect.at(i),transientTrackBuilder_,V,true,true));      
-    }
-    // now covert a1 into LorentzVectorParticle
-    TMatrixT<double>    a1_par(LorentzVectorParticle::NLorentzandVertexPar,1);
-    TMatrixTSym<double> a1_cov(LorentzVectorParticle::NLorentzandVertexPar);
-    for(int i = 0; i<7; i++){
-      a1_par(i,0)=parameters(i);
-      for(int j = 0; j<7; j++){a1_cov(i,j)=cov(i,j);}
-    }
-    LorentzVectorParticle a1(a1_par,a1_cov,fabs(PdtPdgMini::a_1_plus)*c,c,transientTrackBuilder_->field()->inInverseGeV(sv).z());
-    // store the results
-    StoreResults(secVtx.totalChiSquared(),secVtx.degreesOfFreedom(),0,0,0,ReFitPions,a1);
+  
+  double root = (pow(ma1,2) + pow(pa1,2))*(pow(pow(ma1,2) - pow(M,2),2) -4*pow(M,2)*pow(pa1,2)*pow(sin(theta),2));
+  if (root < 0.) {
+    LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Bad tau magnitude due to negative root. Skip the root part and calculate the solution for a maximal GJ angle. Both solutions will be equal.";
+    root = 0.;
+  } 
+  else root = sqrt(root);
+  
+  double numerator = (pow(ma1,2) + pow(M,2))*pa1*cos(theta);
+  if(ambiguity==SelectedKinematicDecay::ZeroAmbiguitySolution) tauMomentumMagnitude = numerator/denominator;
+  if(ambiguity==SelectedKinematicDecay::PlusSolution)          tauMomentumMagnitude = (numerator + root) / denominator;
+  if(ambiguity==SelectedKinematicDecay::MinusSolution)         tauMomentumMagnitude = (numerator - root) / denominator;
+  
+  //catch negatives and 'nan' and negatives.
+  if(!(tauMomentumMagnitude>0.)) {
+    LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::getTauMomentumMagnitudes: Still bad tau magnitude1 of "<<tauMomentumMagnitude <<" replaced by "<<0.;        
+    tauMomentumMagnitude = -1.;
   }
-  return  true;
+  return tauMomentumMagnitude;
 }
 
+RefCountedKinematicParticle ThreeProngTauCreator::unknownNu(TLorentzVector &tauGuess, TLorentzVector &a1, TransientVertex & secVtx,TLorentzVector &NuGuessLV){
+  NuGuessLV = tauGuess-a1;
+  LogTrace("KinematicTauCreator")<<"ThreeProngTauCreator::unknownNu: nuGuess (vx, vy, vz, px,py,pz,m) "<<secVtx.position().x()<<","<<secVtx.position().y()<<","<<secVtx.position().z()<<","<<NuGuessLV.Px()<<","<<NuGuessLV.Py()<<","<<NuGuessLV.Pz()<<","<<NuGuessLV.M()<<", phi: "<<NuGuessLV.Phi();
+  if(tauGuess.P()==0.)  NuGuessLV.SetXYZM(1,1,1,0);
+  return virtualKinematicParticle(secVtx, NuGuessLV);
+}
+
+RefCountedKinematicParticle ThreeProngTauCreator::virtualKinematicParticle(const TransientVertex & vtxGuess, const TLorentzVector & nuGuess){
+  VirtualKinematicParticleFactory factory;
+  //(x,y,z,p_x,p_y,p_z,m)
+  const KinematicParameters parameters(AlgebraicVector7(vtxGuess.position().x(),vtxGuess.position().y(),vtxGuess.position().z(),nuGuess.Px(),nuGuess.Py(),nuGuess.Pz(),nuGuess.M()));
+  ROOT::Math::SVector<double,28> svector28;
+  for(unsigned int i=1; i!=22; i++) svector28(i-1) = 0.0;
+  for(unsigned int i=22; i!=28; i++) svector28(i-1) = 0.0;//correlation between mass and momentum/vertex
+  for(unsigned int n=1; n!=7; n++) svector28(n*(n+1)/2 - 1) = pow(10.,2.);//diagonals, huge error method
+  svector28(27) = pow(10.,-12.);//mass error
+  //insert 3prong vertex errors
+  svector28[0] = vtxGuess.positionError().cxx()*100;
+  svector28[1] = vtxGuess.positionError().cyx()*100;
+  svector28[2] = vtxGuess.positionError().cyy()*100;
+  svector28[3] = vtxGuess.positionError().czx()*100;
+  svector28[4] = vtxGuess.positionError().czy()*100;
+  svector28[5] = vtxGuess.positionError().czz()*100;
+  
+  if (std::abs(nuGuess.Px()) >= 5.0) {
+    svector28[9] = pow(nuGuess.Px(), 2); //assume an error of 100% of the neutrino momentum component
+  } 
+  else {
+    svector28[9] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
+  }
+  if (std::abs(nuGuess.Py()) >= 5.0) {
+    svector28[14] = pow(nuGuess.Py(), 2); //assume an error of 100% of the neutrino momentum component
+  } 
+  else {
+    svector28[14] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
+  }
+  if (std::abs(nuGuess.Pz()) >= 5.0) {
+    svector28[20] = pow(nuGuess.Pz(), 2); //assume an error of 100% of the neutrino momentum component
+  } 
+  else {
+    svector28[20] = pow(5.0, 2); //for momenta smaller than 5 GeV set the error to a static value
+  }
+  
+  ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> > matrix(svector28);
+  const KinematicParametersError parametersError(matrix);
+  const TrackCharge charge = 0;
+  KinematicState kineState(parameters, parametersError, charge, transientTrackBuilder_->field());
+  float chiSquared=0.0, degreesOfFr=0.0;
+  return factory.particle(kineState, chiSquared, degreesOfFr, 0,0);
+}
+
+int ThreeProngTauCreator::ndf() const {
+  int freeParameters = 28-15-4-3;
+  int constraints = (int)kinTree_->topParticle()->degreesOfFreedom();
+  int ndf = constraints - freeParameters;
+  //if(ndf != 2) printf("ThreeProngTauCreator::ndf: Warning! Unexpected ndf of %i. Expected 2.\n", ndf );
+  return ndf;
+}
+
+
+void ThreeProngTauCreator::quadratic(double &x_plus,double &x_minus,double a, double b, double c){
+  double R=b*b-4*a*c;
+  if(R<0){R=0;}
+  x_minus=(-b-sqrt(R))/(2.0*a);
+  x_plus=(-b+sqrt(R))/(2.0*a);
+}
+
+void ThreeProngTauCreator::ESolver(double &Pnuz1,double &Pnuz2,double Ea1,double ma1, double Pz, double Pt){
+  double mtau=PMH.Get_tauMass();
+  double a=(Pz*Pz)/(Ea1*Ea1)-1.0;
+  double K=(mtau*mtau-ma1*ma1-2.0*Pt*Pt)/(2.0*Ea1);
+  double b=2.0*K*Pz/Ea1;
+  double c=K*K-Pt*Pt;
+  quadratic(Pnuz1,Pnuz2,a,b,c);
+}
+
+
+void ThreeProngTauCreator::SolvebyRotation(TVector3 TauDir,TLorentzVector a1, TLorentzVector &Tau1,TLorentzVector &Tau2,
+					   TLorentzVector &nu1,TLorentzVector &nu2){
+  TLorentzVector a1rot=a1;
+  double phi(TauDir.Phi()),theta(TauDir.Theta());
+  a1rot.RotateZ(-phi);
+  a1rot.RotateY(-theta);
+  double NuSolution1(0), NuSolution2(0), Ea1(a1.E()),Pz(a1rot.Pz()),Pt(a1rot.Pt()),ma1(a1.M());
+  ESolver(NuSolution1,NuSolution2,Ea1,ma1,Pz,Pt);
+  TLorentzVector Neutrino1(-a1rot.Px(),-a1rot.Py(),NuSolution1,sqrt(NuSolution1*NuSolution1+Pt*Pt));
+  Neutrino1.RotateY(theta);
+  Neutrino1.RotateZ(phi);
+  Tau1=a1+Neutrino1;
+  nu1=Neutrino1;
+  TLorentzVector Neutrino2(-a1rot.Px(),-a1rot.Py(),NuSolution2,sqrt(NuSolution2*NuSolution2+Pt*Pt));
+  Neutrino2.RotateY(theta);
+  Neutrino2.RotateZ(phi);
+  Tau2=a1+Neutrino2;
+  a1rot.RotateY(theta);
+  a1rot.RotateZ(phi);
+  nu2=Neutrino2;
+}

@@ -51,7 +51,7 @@ private:
   virtual void beginJob();
   virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob();
-  bool select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates);
+  bool select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_);
   reco::TrackRefVector getPFTauDaughters(reco::PFTauRef &PFTau);
   bool GetNonTauTracks(edm::Event *iEvent,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks, std::vector<reco::TrackRef> &tautracks);
   bool GetNonTauTracksFromVertex(SelectedKinematicDecay cand,edm::InputTag &trackCollectionTag_,reco::TrackCollection &nonTauTracks);
@@ -66,7 +66,7 @@ private:
   edm::InputTag trkCollectionTag_,vtxtrackCollectionTag_, primVtx_;
   edm::ProductID trkCollectionID_;
   unsigned int minTracks_, minTau_, nTauPerVtx_, cnt_, cntFound_;
-  double minTauPt_,TauEtaCut_;
+  double minTauPt_;
   std::vector<std::string> TauVtxList_;
   ParticleMassHelper PMH;
 

@@ -10,8 +10,9 @@ ThreeProngInputSelectorStep1 = cms.EDProducer("ThreeProngInputSelector_Step1",#c
                                               tauType = cms.untracked.string(pfTau),	#default is hps
                                               minTracks = cms.uint32(3),	#only tau candidates with more/equal than minTracks are selected
                                               minTau = cms.untracked.uint32(1),	#minimum taus to select (otherwise filter returns false)
-                                              minTauPt = cms.double(10.0),   #ignore pftaus below this pt threshold (default is 0.)
-                                              TauEtaCut=cms.double(2.0),
+                                              minTauPt = cms.untracked.double(0.),   #ignore pftaus below this pt threshold (default is 0.)
                                               tauDaughterTracks = cms.InputTag("generalTracks"),   #ignore tracks that do not origin from this desired track collection (e.g. ignore conversionStepTracks)
                                               primVtx = cms.InputTag("offlinePrimaryVertices"),
+                                              NonTauTracks = cms.untracked.vstring("NonTauTracks"),
+                                              nTauPerVtx = cms.untracked.uint32(0)
                                               )

@@ -7,10 +7,14 @@ ThreeProngInputSelector_Step1::ThreeProngInputSelector_Step1(const edm::Paramete
   primVtx_(iConfig.getParameter<edm::InputTag>("primVtx")),
   minTracks_( iConfig.getParameter<unsigned int>("minTracks") ),                    // Only tau candidates with more/equal than minTracks are selected
   minTau_( iConfig.getUntrackedParameter<unsigned int>("minTau", 1) ),              // Filter returns true if more/equal than minTau_ taus were selected
-  minTauPt_( iConfig.getParameter<double>("minTauPt") ),               // Ignore pftaus below this pt threshold
-  TauEtaCut_( iConfig.getParameter<double>("TauEtaCut") )
+  nTauPerVtx_(iConfig.getUntrackedParameter<unsigned int>("nTauPerVtx", 0)),         // Number of taus per vertex: 0=no requirement; 1 = 1 tau per vertex only; 2 = 2 taus per vertex only
+  minTauPt_( iConfig.getUntrackedParameter<double>("minTauPt", 0.) ),               // Ignore pftaus below this pt threshold
+  TauVtxList_( iConfig.getUntrackedParameter< std::vector<std::string> >("NonTauTracks") )
 {
   produces<std::vector<std::vector<SelectedKinematicDecay> > >("PreKinematicDecaysStep1");
+  for(unsigned int i=0; i<TauVtxList_.size(); i++){
+    produces<reco::TrackCollection>(TauVtxList_.at(i)); //save collection of tracks not belonging to any tau candidate
+  }
 }
 
 
@@ -21,13 +25,23 @@ ThreeProngInputSelector_Step1::~ThreeProngInputSelector_Step1(){
 void ThreeProngInputSelector_Step1::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   cnt_++;
   iEvent_ = &iEvent;
-
   std::auto_ptr<std::vector<std::vector<SelectedKinematicDecay> > > KFCandidates_ = std::auto_ptr<std::vector<std::vector<SelectedKinematicDecay> > >(new std::vector<std::vector<SelectedKinematicDecay> >);
   std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates = *KFCandidates_;
 
-  select(KFCandidates);
+  std::vector<reco::TrackCollection> NonTauTracksLists_;
+  for(unsigned int i=0;i<TauVtxList_.size(); i++){
+    NonTauTracksLists_.push_back(reco::TrackCollection());
+  }
+
+  select(KFCandidates,NonTauTracksLists_);
 
   iEvent_->put(KFCandidates_,"PreKinematicDecaysStep1");
+  for(unsigned int i=0;i<TauVtxList_.size(); i++){
+    std::auto_ptr<reco::TrackCollection > NonTauTracks_ = std::auto_ptr<reco::TrackCollection >(new reco::TrackCollection);
+    *NonTauTracks_ =NonTauTracksLists_.at(i);
+    iEvent_->put(NonTauTracks_,TauVtxList_.at(i));
+  }
+
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -43,10 +57,11 @@ void ThreeProngInputSelector_Step1::endJob(){
   edm::LogVerbatim("ThreeProngInputSelector_Step1")<<"--> [ThreeProngInputSelector_Step1] found at least "<<minTau_<<" tau candidate(s) of type "<<tauType_<<" (with at least "<<minTracks_<<" tracks and pt > "<<minTauPt_<<") per event. Efficiency: "<<cntFound_<<"/"<<cnt_<<" = "<<std::setprecision(4)<<ratio*100.0<<"%";
 }
 
-bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates){
+bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinematicDecay> > &KFCandidates,std::vector<reco::TrackCollection> &NonTauTracksLists_){
   bool found = false;
   edm::Handle<reco::VertexCollection > primaryVertexCollection;
   iEvent_->getByLabel(primVtx_,primaryVertexCollection);
+  
   if(primaryVertexCollection->size()>0){
     edm::Handle<reco::PFTauCollection> inputCollection;
     iEvent_->getByLabel(tauType_+"PFTauProducer", inputCollection);
@@ -54,24 +69,36 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
     edm::Handle<reco::TrackCollection> trkCollection;
     iEvent_->getByLabel(trkCollectionTag_, trkCollection);
     trkCollectionID_ = trkCollection.id();
+    unsigned int p=0;
     for(reco::PFTauCollection::size_type iPFTau = 0; iPFTau < inputCollection->size(); iPFTau++) {
       reco::PFTauRef thePFTau(inputCollection, iPFTau);
       // filter candidates
-      if(thePFTau->pt() < minTauPt_) continue;
-      if(fabs(thePFTau->eta())>TauEtaCut_)continue;
+      if (thePFTau->pt() < minTauPt_) continue;
       reco::TrackRefVector tauDaughters = getPFTauDaughters(thePFTau);
       if(tauDaughters.size()>=minTracks_){
 	// Add KF Taus Here
 	unsigned int tau_idx=KFCandidates.size();
 	KFCandidates.push_back(std::vector<SelectedKinematicDecay>());
 	std::vector<reco::TrackRef> input;
-	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk){if((*trk)->algo()==reco::TrackBase::iter0 || (*trk)->algo()==reco::TrackBase::iter3) input.push_back(*trk);}
+	for (reco::TrackRefVector::iterator trk =tauDaughters.begin(); trk!=tauDaughters.end(); ++trk) input.push_back(*trk);
 	std::vector<std::vector<reco::TrackRef> > combis=choose3Prongs(input);
 	for(unsigned int i=0;i<combis.size();i++){
-	  KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),"notused",1));
+	  if(NonTauTracksLists_.size()==1 && NonTauTracksLists_.size()==TauVtxList_.size() && nTauPerVtx_==0){
+	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(0),nTauPerVtx_));
+	  }
+	  else if(NonTauTracksLists_.size()>1 && TauVtxList_.size()==NonTauTracksLists_.size() && nTauPerVtx_==1){
+	    //Code to find best vertex would go here
+	    KFCandidates.at(tau_idx).push_back(SelectedKinematicDecay(SelectedKinematicDecay::ThreePion,thePFTau,combis.at(i),primaryVertexCollection->front(),TauVtxList_.at(p),nTauPerVtx_));
+	    p++;
+	  }
+	  else{
+	    edm::LogWarning("ThreeProngInputSelector_Step1")<<"ThreeProngInputSelector_Step1::select WARNING!!! Number of allowed verticies out of range size: " <<  TauVtxList_.size() << " value: " << p
+						   <<"Skipping Tau candidate ";
+	  }
 	}
       }
     }
+      
     // remove duplicates
     std::vector<reco::TrackRef> tautracks;
     for(unsigned int i=0;i<KFCandidates.size();i++){
@@ -95,6 +122,22 @@ bool ThreeProngInputSelector_Step1::select(std::vector<std::vector<SelectedKinem
 	      if(duplicates==3){KFCandidates.at(k).erase(KFCandidates.at(k).begin()+l); l--;}
 	    }
 	  }
+	}
+      }
+    }
+    
+    // Get Vertex Tracks List
+    if(NonTauTracksLists_.size()==1 && nTauPerVtx_==0){
+      GetNonTauTracks(iEvent_,trkCollectionTag_,NonTauTracksLists_.at(0),tautracks);
+    }
+    else if(nTauPerVtx_==1){
+      unsigned int p=0;
+      for(unsigned int i=0;i<KFCandidates.size();i++){
+	for(unsigned int j=0;j<KFCandidates.at(i).size();j++){
+	  if(p<NonTauTracksLists_.size()){
+	    GetNonTauTracksFromVertex(KFCandidates.at(i).at(j),trkCollectionTag_,NonTauTracksLists_.at(p));
+	  }
+	  p++;
 	}
       }
     }
@@ -171,19 +214,17 @@ bool ThreeProngInputSelector_Step1::GetNonTauTracksFromVertex(SelectedKinematicD
   for (reco::TrackCollection::const_iterator iTrk = trackCollection->begin(); iTrk != trackCollection->end(); ++iTrk, idx++) {
     reco::TrackRef tmpRef(trackCollection, idx);
     reco::TrackRef tmpRefForBase=tmpRef;
-    if(tmpRef->pt()<17.0){
-      bool isTauTrk = false;
-      bool fromVertex=false;
-      for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
-	if (tmpRef==*tauTrk){isTauTrk = true; break;}
-      }
-      for(std::vector<reco::TrackBaseRef>::const_iterator vtxTrkRef=match.tracks_begin();vtxTrkRef<match.tracks_end();vtxTrkRef++){
-	if(match.trackWeight(*vtxTrkRef)>0 ){
-	  if((*vtxTrkRef)==reco::TrackBaseRef(tmpRefForBase)){fromVertex=true; break;}
-	}
-      }
-      if (!isTauTrk && fromVertex) nonTauTracks.push_back(*iTrk);
+    bool isTauTrk = false;
+    bool fromVertex=false;
+    for (std::vector<reco::TrackRef>::const_iterator tauTrk = tautracks.begin(); tauTrk != tautracks.end(); ++tauTrk) {
+      if (tmpRef==*tauTrk){isTauTrk = true; break;}
     }
+    for(std::vector<reco::TrackBaseRef>::const_iterator vtxTrkRef=match.tracks_begin();vtxTrkRef<match.tracks_end();vtxTrkRef++){
+      if(match.trackWeight(*vtxTrkRef)>0 ){
+	if((*vtxTrkRef)==reco::TrackBaseRef(tmpRefForBase)){fromVertex=true; break;}
+      }
+    }
+    if (!isTauTrk && fromVertex) nonTauTracks.push_back(*iTrk);
   }
   return true;
 }

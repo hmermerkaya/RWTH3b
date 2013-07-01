@@ -36,14 +36,14 @@ public:
   ~SecondaryVertexHelper();
   
   bool                              hasSecondaryVertex(){return hasSecondaryVertex_;}
-  TransientVertex                   SecondaryVertex(){return tmpVtx_;}
-  std::vector<reco::TransientTrack> RefittedTracks(){return trks_;}
+  TransientVertex                   InitialSecondaryVertex(){return tmpVtx_;}
+  std::vector<reco::TransientTrack> InitialRefittedTracks(){return trks_;}
   TLorentzVector                    Initial_a1_p4(){return a1_p4_;}
   std::vector<TLorentzVector>       Initial_pions(){return pions_;}
 
-  static bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx,bool useAdaptive=false,reco::BeamSpot *beamSpot=NULL);
-
 private:
+  bool checkSecVtx(std::vector<reco::TransientTrack> &trkVct, TransientVertex & transVtx);
+
   bool hasSecondaryVertex_;
   TransientVertex tmpVtx_;
   std::vector<reco::TransientTrack> trks_;
